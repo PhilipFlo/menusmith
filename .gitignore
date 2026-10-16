@@ -1,0 +1,11 @@
+node_modules/
+dist/
+web/dist/
+.env
+.env.*
+!.env.example
+# Fetched third-party pages are cached locally only — never committed.
+.cache/
+bench/private/
+*.log
+.DS_Store
