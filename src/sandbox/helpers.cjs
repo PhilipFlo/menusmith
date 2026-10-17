@@ -53,8 +53,11 @@ function cleanText(s) {
 function normName(s) {
   return cleanText(s)
     .toLowerCase()
+    // đ (Vietnamese) and ł (Polish) don't decompose under NFKD.
+    .replace(/đ/g, 'd')
+    .replace(/ł/g, 'l')
     .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/\(.*?\)/g, ' ')
     .replace(/[^a-z0-9æøå ]+/g, ' ')
     .replace(/\s+/g, ' ')

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meny | Café Loft</title>
+<meta name="description" content="Frokost, lunsj, bakst og kaffe i Stavanger sentrum.">
+<link rel="canonical" href="https://cafeloft.example/meny/">
+<link rel="stylesheet" href="/css/main.css?v=5185ea">
+<style>
+body{font-family:"Work Sans",system-ui,sans-serif;background:#f7f3ee;color:#2b2622;margin:0}
+dl.meny{display:grid;grid-template-columns:1fr auto;column-gap:1rem}
+dl.meny dt{font-weight:600;grid-column:1}
+dl.meny dd{margin:0}
+dl.meny dd.beskrivelse{grid-column:1;color:#6b625b;font-size:.9rem}
+dl.meny dd.pris{grid-column:2;text-align:right}
+.loft-row--muted{letter-spacing:.01em;font-weight:400;border-radius:2px;max-width:720px;gap:12px}.loft-form--large{padding:8px 8px;transition:all .3s ease-in-out;background-color:#d73c8f;font-size:0.750rem;display:block}.loft-icon--large{transition:all .4s ease-in-out;border-radius:6px}.loft-footer__inner{transition:all .1s ease-in-out;color:#317bed;border-radius:0px}.loft-wrapper::after{max-width:1140px;padding:16px 16px;z-index:21;padding:20px 16px}.loft-grid--active{border-radius:2px;font-weight:400;letter-spacing:.07em;padding:8px 8px}
+.loft-nav{letter-spacing:.08em;border-radius:0px}.loft-banner--large{display:none;background-color:#77a867;padding:16px 8px;padding:12px 4px;letter-spacing:.07em}.loft-container--primary{max-width:1200px;letter-spacing:.05em;display:grid;font-weight:500;display:inline-flex}.loft-subtitle--primary{border-radius:6px;color:#376ca9;background-color:#ad6863;display:flex}.loft-grid--primary{font-weight:300;max-width:720px;font-weight:500}.loft-badge--primary{background-color:#f01a81;line-height:1.5;gap:8px;border-radius:8px}
+.loft-divider:hover{line-height:1.4;border-radius:0px;display:grid;margin:8px 16px;display:flex}.loft-form{transition:all .4s ease-in-out;display:block;font-weight:500}.loft-nav::after{font-size:1.500rem;transition:all .4s ease-in-out;color:#7f41e8;display:flex;margin:0px 16px}.loft-input:hover{display:none;background-color:#5625fd;display:none;line-height:1.1}.loft-wrapper{font-size:1.000rem;padding:16px 0px;display:inline-flex;display:inline-flex}.loft-nav{max-width:1280px;margin:0px 16px;max-width:1280px;display:flex}
+.loft-footer::after{z-index:40;line-height:1.4;margin:24px 0;max-width:720px}.loft-social--muted{background-color:#c63892;background-color:#68d587;background-color:#58bed8}.loft-card--muted{gap:4px;max-width:960px;z-index:41}.loft-overlay:hover{margin:0px 0;z-index:46;background-color:#42856d;z-index:41}.loft-nav__inner{color:#c418d3;letter-spacing:.02em;display:none}.loft-wrapper--primary{letter-spacing:.02em;padding:4px 16px;letter-spacing:.07em;font-weight:400}
+.loft-container:hover{font-size:1.750rem;font-weight:300;font-weight:300;margin:8px 0;line-height:1.4}.loft-wrapper__inner{z-index:44;font-weight:400;letter-spacing:.05em;line-height:1.3;max-width:1280px}.loft-social__inner{background-color:#bfa269;font-size:1.000rem;gap:8px;line-height:1.5}.loft-divider--primary{color:#7025ec;padding:12px 4px}.loft-input:hover{background-color:#643c1a;color:#341f69}.loft-hero--large{background-color:#18a9ea;font-weight:300;z-index:58;line-height:1.6;transition:all .5s ease-in-out}
+.loft-divider--small{max-width:1200px;gap:16px;max-width:1280px}.loft-overlay::after{max-width:1280px;display:grid;background-color:#f970b1;color:#5ee596}.loft-social__inner{line-height:1.2;transition:all .2s ease-in-out;font-size:1.250rem;gap:16px;padding:16px 12px}.loft-hero__inner{gap:0px;font-size:1.750rem;line-height:1.2;padding:4px 12px}.loft-wrapper__inner{max-width:960px;z-index:15;border-radius:8px;gap:8px}.loft-subtitle--small{max-width:1280px;background-color:#872fc8}
+.loft-row__inner{line-height:1.5;background-color:#d40ceb}.loft-grid--primary{line-height:1.1;z-index:26;border-radius:6px;display:grid;padding:8px 4px}.loft-card--active{transition:all .2s ease-in-out;letter-spacing:.05em}.loft-hero__inner{border-radius:0px;letter-spacing:.03em;border-radius:0px}.loft-hero::after{line-height:1.2;margin:24px 16px;transition:all .4s ease-in-out;z-index:85}.loft-header__inner{line-height:1.3;background-color:#9822d7;line-height:1.4;color:#db141c}
+.loft-card--muted{padding:20px 0px;z-index:1;background-color:#66f9da}.loft-modal--primary{font-size:1.875rem;padding:0px 4px;border-radius:8px}.loft-icon__text{letter-spacing:.07em;font-size:1.000rem;transition:all .5s ease-in-out;margin:16px auto}.loft-badge:hover{border-radius:2px;border-radius:0px;font-weight:600;margin:16px auto;line-height:1.5}.loft-nav--muted{background-color:#be8be1;transition:all .3s ease-in-out;letter-spacing:.03em;background-color:#f1deed;letter-spacing:.07em}.loft-row__inner{background-color:#668f4c;background-color:#5ef6f5;z-index:12;background-color:#f0d847}
+.loft-modal--small{font-weight:300;font-weight:400}.loft-badge--large{font-size:1.125rem;gap:0px;z-index:63}.loft-overlay__inner{transition:all .5s ease-in-out;transition:all .1s ease-in-out;color:#2a2055;padding:0px 20px;padding:8px 4px}.loft-banner__inner{max-width:1200px;margin:0px auto;background-color:#990d82;background-color:#5e245c}.loft-btn{gap:12px;padding:20px 16px}.loft-btn--small{padding:4px 16px;transition:all .4s ease-in-out;line-height:1.4}
+.loft-social--small{display:block;gap:16px}.loft-social--primary{font-size:1.375rem;display:inline-flex;z-index:51}.loft-input__inner{max-width:1140px;transition:all .2s ease-in-out}.loft-divider:hover{background-color:#07d0c4;padding:16px 8px;transition:all .1s ease-in-out;margin:0px auto}.loft-title{padding:12px 4px;background-color:#e2c484;transition:all .1s ease-in-out;font-size:1.625rem;transition:all .3s ease-in-out}.loft-input--primary{z-index:78;background-color:#44893f;font-weight:400;padding:8px 8px;font-weight:600}
+.loft-footer--muted{color:#f16be1;transition:all .5s ease-in-out}.loft-icon:hover{margin:0px auto;transition:all .1s ease-in-out;max-width:1280px;border-radius:8px}.loft-logo--small{background-color:#042991;font-size:1.625rem}.loft-divider__text{font-weight:300;background-color:#b3e4cc}.loft-social--active{transition:all .1s ease-in-out;font-size:1.375rem}.loft-banner__inner{max-width:1200px;color:#706f49;z-index:68;font-weight:300}
+.loft-input--small{font-size:0.875rem;z-index:39;line-height:1.5}.loft-col__text{font-weight:300;display:none;background-color:#486693;background-color:#057595}.loft-footer:hover{gap:4px;display:none;transition:all .3s ease-in-out;letter-spacing:.08em;color:#1b94ac}.loft-grid:hover{max-width:1200px;max-width:1280px;max-width:1200px;transition:all .4s ease-in-out;border-radius:2px}.loft-row__inner{font-weight:600;max-width:960px}.loft-card--active{max-width:1280px;padding:12px 16px;padding:0px 8px}
+.loft-banner--active{font-size:1.375rem;font-size:1.250rem;line-height:1.5}.loft-modal--active{line-height:1.6;font-weight:500;max-width:720px;gap:12px;font-size:1.375rem}.loft-modal__inner{gap:16px;line-height:1.4}.loft-nav--large{border-radius:6px;color:#a482f4;max-width:1200px;letter-spacing:.04em}.loft-card__inner{background-color:#1c6cf4;max-width:960px;z-index:14;line-height:1.6;padding:4px 12px}.loft-input__inner{font-size:1.375rem;margin:16px 0;gap:8px;gap:0px}
+.loft-overlay--large{border-radius:2px;line-height:1.6;font-weight:300}.loft-container--active{max-width:720px;z-index:92;letter-spacing:.00em;max-width:960px;display:inline-flex}.loft-badge--large{line-height:1.5;font-weight:700;font-weight:700;margin:0px auto}.loft-container__inner{font-size:1.250rem;font-size:0.750rem;font-size:1.375rem;border-radius:6px;max-width:1200px}.loft-banner__inner{display:inline-flex;padding:12px 0px;transition:all .5s ease-in-out;gap:16px}.loft-input{line-height:1.6;letter-spacing:.07em}
+.loft-link--muted{max-width:1140px;transition:all .5s ease-in-out;color:#a7ce4c;display:none}.loft-overlay--small{font-size:0.875rem;color:#7fd021;gap:12px}.loft-divider__text{border-radius:0px;font-weight:300;font-weight:300;transition:all .4s ease-in-out}.loft-footer--small{color:#e78c89;font-size:1.000rem;color:#539017}.loft-card:hover{transition:all .4s ease-in-out;z-index:35;padding:0px 20px;font-weight:500}.loft-overlay__inner{padding:8px 8px;display:none;gap:8px}
+.loft-footer:hover{background-color:#8783fc;transition:all .4s ease-in-out}.loft-icon--small{padding:16px 4px;font-weight:600}.loft-title--large{background-color:#8be6cf;max-width:1140px;border-radius:2px;display:grid}.loft-container{padding:20px 8px;gap:0px;margin:0px 0;margin:24px 0}.loft-hero--muted{font-weight:700;z-index:17;letter-spacing:.06em;background-color:#5f2b31}.loft-icon__text{background-color:#b95729;z-index:56;font-weight:300;border-radius:2px;gap:8px}
+.loft-link--muted{gap:0px;border-radius:4px;background-color:#54e33b}.loft-modal--small{display:grid;transition:all .4s ease-in-out;padding:20px 8px}.loft-col--active{max-width:1200px;border-radius:0px}.loft-btn::after{font-weight:600;gap:4px;font-size:1.250rem;font-size:0.875rem}
+@media (max-width:767px){.loft-header{padding:12px 16px}.loft-nav{display:none}.loft-grid{grid-template-columns:1fr}}
+</style>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});})(window,document,'script','dataLayer','GTM-XXXXXX');</script>
+</head>
+<body>
+<header class="loft-header">
+  <a class="loft-logo" href="/">Café Loft</a>
+  <nav><ul class="loft-nav-list">
+  <li class="loft-nav-item"><a href="https://cafeloft.example/" class="loft-nav-link">Hjem</a></li>
+  <li class="loft-nav-item loft-nav-item--current"><a href="https://cafeloft.example/meny" class="loft-nav-link">Meny</a></li>
+  <li class="loft-nav-item"><a href="https://cafeloft.example/bestill-bord" class="loft-nav-link">Bestill bord</a></li>
+  <li class="loft-nav-item"><a href="https://cafeloft.example/selskap" class="loft-nav-link">Selskap</a></li>
+  <li class="loft-nav-item"><a href="https://cafeloft.example/gavekort" class="loft-nav-link">Gavekort</a></li>
+  <li class="loft-nav-item"><a href="https://cafeloft.example/om-oss" class="loft-nav-link">Om oss</a></li>
+  <li class="loft-nav-item"><a href="https://cafeloft.example/kontakt" class="loft-nav-link">Kontakt</a></li>
+</ul></nav>
+</header>
+<main class="loft-main">
+  <h1>Meny</h1>
+  <p class="ingress">Vi baker alt selv, og kaffen er brent av Loft Kaffebrenneri i Hillevåg. Frokost serveres til kl. 12, lunsj fra 11.</p>
+  <div class="meny-kolonner">
+<div class="meny-blokk">
+  <h2>FROKOST</h2>
+  <dl class="meny">
+    <dt>Eggs Benedict</dt>
+    <dd class="beskrivelse">Pocherte egg, skinke og hollandaise på surdeig</dd>
+    <dd class="pris">165,-</dd>
+    <dt>AVOKADOTOAST</dt>
+    <dd class="beskrivelse">Surdeig, avokado, chili, lime og pochert egg</dd>
+    <dd class="pris">149,-</dd>
+    <dt>grøt med bær</dt>
+    <dd class="beskrivelse">Havregrøt, kanel, bringebær og mandler</dd>
+    <dd class="pris">89,-</dd>
+    <dt>Yoghurtbolle</dt>
+    <dd class="beskrivelse">Gresk yoghurt, granola, honning og frisk frukt</dd>
+    <dd class="pris">95,-</dd>
+    <dt>FULL FROKOST</dt>
+    <dd class="beskrivelse">Egg, bacon, pølse, bønner, sopp og toast</dd>
+    <dd class="pris">189,-</dd>
+  </dl>
+</div>
+<div class="meny-blokk">
+  <h2>LUNSJ</h2>
+  <dl class="meny">
+    <dt>Dagens suppe</dt>
+    <dd class="beskrivelse">Med hjemmebakt brød og smør</dd>
+    <dd class="pris">Dagens pris</dd>
+    <dt>Kyllingsalat</dt>
+    <dd class="beskrivelse">Grillet kylling, quinoa, granateple og urtedressing</dd>
+    <dd class="pris">175,-</dd>
+    <dt>Toast Skagen</dt>
+    <dd class="beskrivelse">Reker, majones, dill og løyrom på briochetoast</dd>
+    <dd class="pris">185,-</dd>
+    <dt>croque monsieur</dt>
+    <dd class="beskrivelse">Skinke, gruyère og béchamel</dd>
+    <dd class="pris">155,-</dd>
+    <dt>Dagens fisk</dt>
+    <dd class="beskrivelse">Spør betjeningen</dd>
+    <dd class="pris">Dagens pris</dd>
+  </dl>
+</div>
+<div class="meny-blokk">
+  <h2>BAKST</h2>
+  <dl class="meny">
+    <dt>Kanelsnurr</dt>
+    <dd class="pris">42,-</dd>
+    <dt>Kardemommebolle</dt>
+    <dd class="pris">42,-</dd>
+    <dt>Skolebolle</dt>
+    <dd class="beskrivelse">Vaniljekrem og kokos</dd>
+    <dd class="pris">45,-</dd>
+    <dt>Gulrotkake</dt>
+    <dd class="beskrivelse">Med ostekrem</dd>
+    <dd class="pris">65,-</dd>
+  </dl>
+</div>
+<div class="meny-blokk">
+  <h2>KAFFE &amp; TE</h2>
+  <dl class="meny">
+    <dt>Espresso</dt>
+    <dd class="pris">36,-</dd>
+    <dt>Cappuccino</dt>
+    <dd class="pris">52,-</dd>
+    <dt>Caffè latte</dt>
+    <dd class="pris">55,-</dd>
+    <dt>Chai latte</dt>
+    <dd class="beskrivelse">Med havremelk</dd>
+    <dd class="pris">58,-</dd>
+  </dl>
+</div>
+  </div>
+  <p><small>Alle priser er oppgitt i norske kroner inkl. mva. Har du allergier eller intoleranser? Gi beskjed til betjeningen, så hjelper vi deg. Allergenoversikt finnes i restauranten og kan sendes på e-post.</small></p>
+  <section class="loft-om"><h2>Om Loft</h2>
+<p>Café Loft startet som en liten drøm ved et kjøkkenbord, og har siden vokst til et nabolagssted der stamgjestene kjenner hverandre ved navn. Vi lager det meste fra bunnen av hver dag, og samarbeider med lokale produsenter så langt det lar seg gjøre.</p>
+<p>Råvarene våre kommer fra gårder og leverandører vi kjenner personlig. Menyen endres litt med sesongene, men favorittene blir stående. Spør gjerne betjeningen om dagens anbefalinger og hva som passer til drikken du har valgt.</p>
+<p>Vi har plass til rundt 60 gjester inne og 30 på uteserveringen når været tillater det. Bordbestilling anbefales i helgene, men vi holder alltid av noen bord til gjester som kommer innom.</p>
+  </section>
+  <section class="loft-catering"><h2>Catering</h2><p>Vi leverer frokost- og lunsjbuffet til bedrifter i Stavanger-området. Minimum 10 personer, bestilling senest to dager før.</p><p>Skal du feire noe? Vi tar imot selskaper fra 10 til 60 personer og setter gjerne sammen en egen meny etter ønske. Ta kontakt på e-post for tilbud, så svarer vi innen to virkedager.</p></section>
+  <section><div class="loft-reviews">
+  <blockquote class="loft-review"><p>“Fantastisk service og nydelig mat. Kommer garantert tilbake!”</p><cite>— Ingrid, Google</cite></blockquote>
+  <blockquote class="loft-review"><p>“Byens beste! Hyggelig personale og god stemning hele kvelden.”</p><cite>— Thomas, Tripadvisor</cite></blockquote>
+  <blockquote class="loft-review"><p>“Perfekt sted for en uformell middag med venner.”</p><cite>— Maria, Facebook</cite></blockquote>
+</div></section>
+</main>
+<footer class="loft-footer">
+  <address class="loft-address">
+  <strong>Café Loft</strong><br>
+  Loftsveien 2B<br>
+  4006 Stavanger<br>
+  <a href="tel:+4751002345">+47 51 00 23 45</a><br>
+  <a href="mailto:hei@cafeloft.example">hei@cafeloft.example</a>
+</address>
+  <div class="loft-hours">
+  <h4 class="loft-hours__title">Åpningstider</h4>
+  <table class="loft-hours__table" role="presentation"><tbody>
+    <tr><th scope="row">Mandag–torsdag</th><td>11:00–22:00</td></tr>
+    <tr><th scope="row">Fredag</th><td>11:00–23:00</td></tr>
+    <tr><th scope="row">Lørdag</th><td>12:00–23:00</td></tr>
+    <tr><th scope="row">Søndag</th><td>13:00–21:00</td></tr>
+  </tbody></table>
+  <p class="loft-hours__note">Avvikende åpningstider i høytider annonseres på Instagram og Facebook.</p>
+</div>
+  <div class="loft-newsletter">
+  <h3 class="loft-newsletter__title">Meld deg på nyhetsbrevet</h3>
+  <p class="loft-newsletter__text">Få tilbud, arrangementer og nye retter rett i innboksen. Vi sender maks to e-poster i måneden, og du kan melde deg av når som helst.</p>
+  <form class="loft-newsletter__form" action="https://list-manage.example/subscribe/post?u=a92755efb9b2" method="post" novalidate>
+    <label for="loft-nl-email" class="loft-sr-only">Din e-postadresse</label>
+    <input type="email" id="loft-nl-email" name="EMAIL" placeholder="Din e-postadresse" autocomplete="email" required>
+    <div style="position:absolute;left:-5000px" aria-hidden="true"><input type="text" name="b_cafeloft_hp" tabindex="-1" value=""></div>
+    <button type="submit" class="loft-btn loft-btn--primary">Meld meg på</button>
+  </form>
+</div>
+  <ul class="loft-social">
+  <li><a href="https://instagram.example/cafe-loft" aria-label="Instagram"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2z"/></svg></a></li>
+  <li><a href="https://facebook.example/cafe-loft" aria-label="Facebook"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a></li>
+</ul>
+  <p>© 2026 Café Loft. Alle rettigheter reservert.</p>
+</footer>
+<div id="loft-cookie-banner" class="loft-cookie-banner" role="dialog" aria-live="polite" aria-label="Vi bruker informasjonskapsler">
+  <div class="loft-cookie-banner__inner">
+    <p class="loft-cookie-banner__title"><strong>Vi bruker informasjonskapsler</strong></p>
+    <p class="loft-cookie-banner__text">Vi bruker informasjonskapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikken på nettstedet og tilpasse innhold. Noen er nødvendige for at siden skal fungere, andre hjelper oss å forstå hvordan siden brukes. Du kan når som helst endre eller trekke tilbake samtykket ditt. <a href="https://cafeloft.example/personvernerkl-ring">Personvernerklæring</a></p>
+    <div class="loft-cookie-banner__actions">
+      <button type="button" class="loft-btn loft-btn--primary" data-consent="all">Godta alle</button>
+      <button type="button" class="loft-btn loft-btn--secondary" data-consent="necessary">Kun nødvendige</button>
+      <button type="button" class="loft-btn loft-btn--link" data-consent="settings">Innstillinger</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

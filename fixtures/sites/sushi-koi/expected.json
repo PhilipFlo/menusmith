@@ -1,0 +1,336 @@
+{
+  "restaurant": "Sushi Koi",
+  "platform": "unknown",
+  "currency": "NOK",
+  "url": "https://sushikoi.example/meny",
+  "fictional": true,
+  "notes": "schema.org Menu in JSON-LD plus visual cards (\"69,-\"). Redesign: Next.js hashed classes, JSON-LD inside @graph, \"kr 69\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Laks nigiri",
+      "from": 69,
+      "to": 75
+    },
+    {
+      "type": "price",
+      "name": "Koi Roll",
+      "from": 189,
+      "to": 199
+    },
+    {
+      "type": "added",
+      "section": "Nigiri",
+      "name": "Laks sashimi",
+      "price": 129
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Spesialruller",
+        "Nigiri",
+        "Maki",
+        "Varmretter",
+        "Dessert og drikke"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Nigiri",
+      "name": "Laks nigiri",
+      "description": "2 stk",
+      "price": 69
+    },
+    {
+      "section": "Nigiri",
+      "name": "Tunfisk nigiri",
+      "description": "2 stk",
+      "price": 89
+    },
+    {
+      "section": "Nigiri",
+      "name": "Kamskjell nigiri",
+      "description": "2 stk, flambert med yuzu",
+      "price": 95
+    },
+    {
+      "section": "Nigiri",
+      "name": "Unagi nigiri",
+      "description": "2 stk, grillet ål med teriyaki",
+      "price": 89
+    },
+    {
+      "section": "Nigiri",
+      "name": "Ebi nigiri",
+      "description": "2 stk, kokt reke",
+      "price": 75
+    },
+    {
+      "section": "Nigiri",
+      "name": "Tamago nigiri",
+      "description": "2 stk, søt japansk omelett",
+      "price": 59
+    },
+    {
+      "section": "Maki",
+      "name": "Laksemaki",
+      "description": "8 stk",
+      "price": 99
+    },
+    {
+      "section": "Maki",
+      "name": "Tunfiskmaki",
+      "description": "8 stk",
+      "price": 109
+    },
+    {
+      "section": "Maki",
+      "name": "Avokadomaki",
+      "description": "8 stk",
+      "price": 79
+    },
+    {
+      "section": "Maki",
+      "name": "Agurkmaki",
+      "description": "8 stk",
+      "price": 69
+    },
+    {
+      "section": "Maki",
+      "name": "Spicy tuna maki",
+      "description": "8 stk, chilimajones og vårløk",
+      "price": 119
+    },
+    {
+      "section": "Maki",
+      "name": "California maki",
+      "description": "8 stk, krabbe, avokado, agurk og masago",
+      "price": 115
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Koi Roll",
+      "description": "Tempurareke og avokado, toppet med flambert laks og teriyaki",
+      "price": 189
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Dragon Roll",
+      "description": "Ål og agurk, toppet med avokado og unagisaus",
+      "price": 195
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Rainbow Roll",
+      "description": "California-rull toppet med laks, tunfisk, kamskjell og avokado",
+      "price": 179
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Crispy Salmon Roll",
+      "description": "Friterte ruller med laks og kremost, sweet chili",
+      "price": 175
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Spider Roll",
+      "description": "Softshell-krabbe i tempura, agurk og spicy mayo",
+      "price": 199
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Green Garden Roll",
+      "description": "Vegansk: avokado, mango, asparges og sesam",
+      "price": 159
+    },
+    {
+      "section": "Varmretter",
+      "name": "Kyllingyakitori",
+      "description": "3 spyd med teriyaki",
+      "price": 129
+    },
+    {
+      "section": "Varmretter",
+      "name": "Gyoza",
+      "description": "6 stk, svin og kål, med ponzu",
+      "price": 109
+    },
+    {
+      "section": "Varmretter",
+      "name": "Tempura reker",
+      "description": "5 stk, med tentsuyu",
+      "price": 139
+    },
+    {
+      "section": "Varmretter",
+      "name": "Misosuppe",
+      "description": "Tofu, wakame og vårløk",
+      "price": 49
+    },
+    {
+      "section": "Dessert og drikke",
+      "name": "Mochi-is",
+      "description": "3 stk: matcha, mango og sort sesam",
+      "price": 89
+    },
+    {
+      "section": "Dessert og drikke",
+      "name": "Matcha latte",
+      "description": "Varm eller iskald",
+      "price": 59
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Spesialruller",
+      "name": "Koi Roll",
+      "description": "Tempurareke og avokado, toppet med flambert laks og teriyaki",
+      "price": 199
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Dragon Roll",
+      "description": "Ål og agurk, toppet med avokado og unagisaus",
+      "price": 195
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Rainbow Roll",
+      "description": "California-rull toppet med laks, tunfisk, kamskjell og avokado",
+      "price": 179
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Crispy Salmon Roll",
+      "description": "Friterte ruller med laks og kremost, sweet chili",
+      "price": 175
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Spider Roll",
+      "description": "Softshell-krabbe i tempura, agurk og spicy mayo",
+      "price": 199
+    },
+    {
+      "section": "Spesialruller",
+      "name": "Green Garden Roll",
+      "description": "Vegansk: avokado, mango, asparges og sesam",
+      "price": 159
+    },
+    {
+      "section": "Nigiri",
+      "name": "Laks nigiri",
+      "description": "2 stk",
+      "price": 75
+    },
+    {
+      "section": "Nigiri",
+      "name": "Tunfisk nigiri",
+      "description": "2 stk",
+      "price": 89
+    },
+    {
+      "section": "Nigiri",
+      "name": "Kamskjell nigiri",
+      "description": "2 stk, flambert med yuzu",
+      "price": 95
+    },
+    {
+      "section": "Nigiri",
+      "name": "Unagi nigiri",
+      "description": "2 stk, grillet ål med teriyaki",
+      "price": 89
+    },
+    {
+      "section": "Nigiri",
+      "name": "Ebi nigiri",
+      "description": "2 stk, kokt reke",
+      "price": 75
+    },
+    {
+      "section": "Nigiri",
+      "name": "Tamago nigiri",
+      "description": "2 stk, søt japansk omelett",
+      "price": 59
+    },
+    {
+      "section": "Nigiri",
+      "name": "Laks sashimi",
+      "description": "5 skiver",
+      "price": 129
+    },
+    {
+      "section": "Maki",
+      "name": "Laksemaki",
+      "description": "8 stk",
+      "price": 99
+    },
+    {
+      "section": "Maki",
+      "name": "Tunfiskmaki",
+      "description": "8 stk",
+      "price": 109
+    },
+    {
+      "section": "Maki",
+      "name": "Avokadomaki",
+      "description": "8 stk",
+      "price": 79
+    },
+    {
+      "section": "Maki",
+      "name": "Agurkmaki",
+      "description": "8 stk",
+      "price": 69
+    },
+    {
+      "section": "Maki",
+      "name": "Spicy tuna maki",
+      "description": "8 stk, chilimajones og vårløk",
+      "price": 119
+    },
+    {
+      "section": "Maki",
+      "name": "California maki",
+      "description": "8 stk, krabbe, avokado, agurk og masago",
+      "price": 115
+    },
+    {
+      "section": "Varmretter",
+      "name": "Kyllingyakitori",
+      "description": "3 spyd med teriyaki",
+      "price": 129
+    },
+    {
+      "section": "Varmretter",
+      "name": "Gyoza",
+      "description": "6 stk, svin og kål, med ponzu",
+      "price": 109
+    },
+    {
+      "section": "Varmretter",
+      "name": "Tempura reker",
+      "description": "5 stk, med tentsuyu",
+      "price": 139
+    },
+    {
+      "section": "Varmretter",
+      "name": "Misosuppe",
+      "description": "Tofu, wakame og vårløk",
+      "price": 49
+    },
+    {
+      "section": "Dessert og drikke",
+      "name": "Mochi-is",
+      "description": "3 stk: matcha, mango og sort sesam",
+      "price": 89
+    },
+    {
+      "section": "Dessert og drikke",
+      "name": "Matcha latte",
+      "description": "Varm eller iskald",
+      "price": 59
+    }
+  ]
+}

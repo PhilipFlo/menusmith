@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config } from '../config.ts';
-import { jsonMenuView } from '../html/jsonview.ts';
+import { jsonMenuLines } from '../html/jsonview.ts';
 import { reacquire } from '../agent/acquire.ts';
 import { priceDensity } from '../agent/discover.ts';
 import { pageText } from '../html/simplify.ts';
 import { Ledger } from '../llm/client.ts';
-import { listExtractors, updateBaseline, type StoredExtractor } from '../library/store.ts';
+import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, type StoredExtractor } from '../library/store.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import type { Emit, MenuItem } from '../types.ts';
 import { itemsHash, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
@@ -52,18 +52,7 @@ export interface FleetReport {
   totals: { extractors: number; stable: number; changed: number; healed: number; broken: number; error: number; tokens: number; costUsd: number; ms: number };
 }
 
-const snapDir = () => resolve(config.libraryDir, 'snapshots');
 const reportDir = () => resolve(config.libraryDir, 'fleet');
-
-/** Last item list per extractor — needed to compute real price changes. */
-function loadSnapshot(id: string): MenuItem[] | null {
-  const f = resolve(snapDir(), `${id}.json`);
-  return existsSync(f) ? (JSON.parse(readFileSync(f, 'utf8')) as MenuItem[]) : null;
-}
-function saveSnapshot(id: string, items: MenuItem[]) {
-  mkdirSync(snapDir(), { recursive: true });
-  writeFileSync(resolve(snapDir(), `${id}.json`), JSON.stringify(items, null, 1));
-}
 
 export function diffItems(prev: MenuItem[], next: MenuItem[]): PriceChange[] {
   const key = (i: MenuItem) => `${normName(i.section ?? '')}|${normName(i.name)}`;
@@ -145,10 +134,11 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
   if (!opts.heal) return done({ status: 'broken', detail: broken, items: run.items.length, changes: [] });
 
   // Suspected breakage. Ask the oracle what the page says now.
+  let freshOracle: MenuItem[] | undefined;
   let text = src.html ? pageText(src.html) : '';
   if (mode === 'json' && (!src.html || priceDensity(src.html) < 5)) {
     try {
-      text = jsonMenuView(JSON.parse(src.payload));
+      text = jsonMenuLines(JSON.parse(src.payload));
     } catch {
       /* keep page text */
     }
@@ -156,6 +146,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
   try {
     const o = await readMenu(text, { url: x.meta.url, restaurant: x.meta.restaurant }, ledger, emit);
     const oracle = groundOracle(o.items, text).kept;
+    freshOracle = oracle.length >= 3 ? oracle : undefined;
     if (run.ok && oracle.length && scoreAgainstOracle(oracle, run.items, text).pass) {
       // The extractor agrees with a fresh reading — the restaurant really shrank its menu.
       const changes = diffItems(prev, run.items);
@@ -168,7 +159,8 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
   }
 
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: ${broken} — healing` });
-  const healed = await forge({ url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason: broken } }, emit);
+  const tagged: Emit = (e) => emit({ ...e, target: x.meta.id } as typeof e);
+  const healed = await forge({ url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason: broken }, oracle: freshOracle }, tagged);
   for (const [m, v] of Object.entries(healed.ledger.byModel)) {
     ledger.byModel[m] = v;
   }

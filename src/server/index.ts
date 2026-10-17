@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
@@ -64,6 +64,8 @@ app.post('/api/forge', async (c) => {
           tokens: out.ledger.promptTokens + out.ledger.completionTokens,
           byModel: out.ledger.byModel,
           id: out.meta?.id,
+          version: out.meta?.version,
+          items: out.items?.length ?? 0,
         }),
       });
     } catch (e) {
@@ -135,11 +137,14 @@ app.get('/api/bench', (c) => {
 });
 
 // ---- static web app ---------------------------------------------------------------
+// Checked per request, so a build made after the server started is picked up.
 const dist = resolve(ROOT, 'web/dist');
-if (existsSync(dist)) {
-  app.use('/*', serveStatic({ root: 'web/dist' }));
-  app.get('*', (c) => c.html(readFileSync(resolve(dist, 'index.html'), 'utf8')));
-}
+app.use('/*', serveStatic({ root: relative(process.cwd(), dist) || '.' }));
+app.get('*', (c) =>
+  existsSync(resolve(dist, 'index.html'))
+    ? c.html(readFileSync(resolve(dist, 'index.html'), 'utf8'))
+    : c.text('Web app not built yet — run `npm run build`, or use `npm run dev` for the dev server.', 404),
+);
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`Menusmith API on http://localhost:${info.port}  (LLM mode: ${config.llmMode}, Nebius key: ${config.nebiusApiKey ? 'yes' : 'NO'}, Tavily key: ${config.tavilyApiKey ? 'yes' : 'NO'})`);

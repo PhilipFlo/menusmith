@@ -53,6 +53,7 @@ export function scoreAgainstOracle(
   oracle: MenuItem[],
   extracted: MenuItem[],
   pageText = '',
+  opts: { rejected?: Set<string> } = {},
 ): Score {
   const page = normName(pageText);
   const o = oracle.map((it) => ({ it, n: normName(it.name), used: false }));
@@ -62,7 +63,9 @@ export function scoreAgainstOracle(
   let nameMatched = 0;
   const wrongPrice: Score['wrongPrice'] = [];
   const extra: MenuItem[] = [];
+  const grounded: MenuItem[] = [];
   let groundedExtras = 0;
+  let duplicates = 0;
 
   for (const ex of e) {
     // Best unused oracle item by name, preferring one whose price also agrees.
@@ -86,8 +89,15 @@ export function scoreAgainstOracle(
       if (samePrice(ex.it.price, cand.it.price)) correct++;
       else if (wrongPrice.length < MAX_LISTED)
         wrongPrice.push({ name: cand.it.name, expected: cand.it.price, got: ex.it.price });
-    } else if (ex.n && page.includes(ex.n)) {
+    } else if (o.some((c) => c.used && nameSimilarity(ex.n, c.n) >= 0.9)) {
+      // A second copy of a dish we already matched (mobile + desktop copies, or a
+      // container matched as if it were an item) — always an error.
+      duplicates++;
+      if (extra.length < MAX_LISTED) extra.push({ ...ex.it, name: `${ex.it.name} (duplicate)` });
+    } else if (ex.n && page.includes(ex.n) && !opts.rejected?.has(ex.n)) {
+      // On the page but not in the reference: the oracle may have missed it.
       groundedExtras++;
+      if (grounded.length < MAX_LISTED) grounded.push(ex.it);
     } else if (extra.length < MAX_LISTED) {
       extra.push(ex.it);
     }
@@ -122,6 +132,8 @@ export function scoreAgainstOracle(
     extractorCount: extracted.length,
     missing,
     extra,
+    grounded,
+    duplicates,
     wrongPrice,
     pass,
   };

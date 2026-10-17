@@ -1,0 +1,145 @@
+{
+  "description": "Synthetic, fictional restaurant menu pages imitating real platform markup. index.html = original, redesign.html = same menu after a redesign (see expected.json redesignChanges).",
+  "sites": [
+    {
+      "slug": "trattoria-sole",
+      "restaurant": "Trattoria Sole",
+      "platform": "wordpress",
+      "currency": "NOK",
+      "url": "https://trattoria-sole.example/meny/",
+      "items": 25,
+      "redesignItems": 26,
+      "sections": 4,
+      "bytes": {
+        "index": 50833,
+        "redesign": 25794
+      }
+    },
+    {
+      "slug": "fjord-burger",
+      "restaurant": "Fjord Burger",
+      "platform": "squarespace",
+      "currency": "NOK",
+      "url": "https://fjord-burger.example/meny",
+      "items": 18,
+      "redesignItems": 19,
+      "sections": 4,
+      "bytes": {
+        "index": 33058,
+        "redesign": 28888
+      }
+    },
+    {
+      "slug": "pho-hanoi-house",
+      "restaurant": "Pho Hanoi House",
+      "platform": "wix",
+      "currency": "USD",
+      "url": "https://phohanoihouse.example/menu",
+      "items": 30,
+      "redesignItems": 31,
+      "sections": 5,
+      "bytes": {
+        "index": 63727,
+        "redesign": 62976
+      }
+    },
+    {
+      "slug": "blue-oak-bistro",
+      "restaurant": "Blue Oak Bistro",
+      "platform": "webflow",
+      "currency": "USD",
+      "url": "https://blueoakbistro.example/menu",
+      "items": 20,
+      "redesignItems": 21,
+      "sections": 5,
+      "bytes": {
+        "index": 31753,
+        "redesign": 25176
+      }
+    },
+    {
+      "slug": "kebab-kongen",
+      "restaurant": "Kebab Kongen",
+      "platform": "unknown",
+      "currency": "NOK",
+      "url": "https://kebabkongen.example/meny.html",
+      "items": 22,
+      "redesignItems": 23,
+      "sections": 6,
+      "bytes": {
+        "index": 16756,
+        "redesign": 18706
+      }
+    },
+    {
+      "slug": "sushi-koi",
+      "restaurant": "Sushi Koi",
+      "platform": "unknown",
+      "currency": "NOK",
+      "url": "https://sushikoi.example/meny",
+      "items": 24,
+      "redesignItems": 25,
+      "sections": 5,
+      "bytes": {
+        "index": 34706,
+        "redesign": 26045
+      }
+    },
+    {
+      "slug": "cafe-loft",
+      "restaurant": "Café Loft",
+      "platform": "unknown",
+      "currency": "NOK",
+      "url": "https://cafeloft.example/meny/",
+      "items": 18,
+      "redesignItems": 19,
+      "sections": 4,
+      "bytes": {
+        "index": 18353,
+        "redesign": 18585
+      }
+    },
+    {
+      "slug": "taqueria-luna",
+      "restaurant": "Taqueria Luna",
+      "platform": "shopify",
+      "currency": "USD",
+      "url": "https://taqueria-luna.example/collections/menu",
+      "items": 16,
+      "redesignItems": 17,
+      "sections": 4,
+      "bytes": {
+        "index": 79597,
+        "redesign": 30743
+      }
+    },
+    {
+      "slug": "bao-street",
+      "restaurant": "Bao Street",
+      "platform": "unknown",
+      "currency": "NOK",
+      "url": "https://baostreet.example/",
+      "items": 14,
+      "redesignItems": 15,
+      "sections": 3,
+      "bytes": {
+        "index": 17172,
+        "redesign": 19238
+      }
+    },
+    {
+      "slug": "nonna-pizza",
+      "restaurant": "Nonna Pizza",
+      "platform": "unknown",
+      "currency": "NOK",
+      "url": "https://nonnapizza.example/meny",
+      "items": 18,
+      "redesignItems": 19,
+      "sections": 5,
+      "bytes": {
+        "index": 18514,
+        "redesign": 21428
+      }
+    }
+  ]
+}

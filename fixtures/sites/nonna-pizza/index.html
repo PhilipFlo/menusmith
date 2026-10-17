@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meny – Nonna Pizza – Napolitansk pizza i Trondheim</title>
+<meta name="description" content="Vedfyrt napolitansk pizza, insalate og dolci.">
+<link rel="canonical" href="https://nonnapizza.example/meny">
+<link rel="stylesheet" href="/css/style.css?v=3">
+<style>
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+.menu-list{list-style:none;padding:0}
+.menu-list li{display:flex;flex-wrap:wrap;gap:.25rem;padding:.5rem 0;border-bottom:1px solid #eee}
+.menu-list .desc{flex-basis:100%;order:3;color:#777;font-size:.9em}
+.menu-list .price{margin-left:auto}
+.np-grid--small{display:none;letter-spacing:.03em;max-width:1200px;display:block;max-width:1200px}.np-grid--large{z-index:91;max-width:720px;border-radius:6px}.np-grid--large{border-radius:4px;display:grid;z-index:69}.np-nav--active{color:#efee17;z-index:40}.np-footer--primary{letter-spacing:.03em;line-height:1.2;padding:20px 12px;gap:0px}.np-row:hover{display:grid;font-size:1.625rem;max-width:1200px;letter-spacing:.05em;color:#4731f8}
+.np-hero--muted{display:flex;max-width:1280px;letter-spacing:.08em;line-height:1.1}.np-header--large{color:#d54ac2;transition:all .5s ease-in-out;line-height:1.4;line-height:1.6;border-radius:6px}.np-row{color:#c05191;gap:8px;transition:all .4s ease-in-out;max-width:720px;max-width:960px}.np-btn--small{border-radius:6px;border-radius:0px}.np-container--small{font-weight:600;font-size:0.875rem;border-radius:6px;z-index:84;background-color:#9eb5a8}.np-overlay{border-radius:4px;z-index:22;max-width:1200px;background-color:#16a5e5;padding:16px 20px}
+.np-social__inner{background-color:#1eb2b8;color:#612470}.np-subtitle__text{font-weight:300;transition:all .4s ease-in-out}.np-input--active{font-size:1.625rem;transition:all .2s ease-in-out}.np-grid:hover{line-height:1.3;z-index:93;font-size:1.500rem;padding:20px 4px}.np-logo__inner{padding:4px 16px;font-size:0.875rem;transition:all .5s ease-in-out}.np-input--primary{display:inline-flex;color:#1785dc;font-weight:500}
+.np-overlay--small{max-width:720px;display:grid;transition:all .2s ease-in-out}.np-grid:hover{transition:all .1s ease-in-out;border-radius:4px;border-radius:4px;z-index:36}.np-btn--small{letter-spacing:.07em;font-size:0.875rem;gap:4px}.np-container--large{gap:0px;padding:12px 12px;gap:16px}.np-input:hover{z-index:9;font-weight:600;color:#3d4f73;color:#b7e80e}.np-wrapper--large{z-index:22;padding:12px 8px}
+.np-social--small{border-radius:8px;transition:all .2s ease-in-out;color:#55b612;line-height:1.1;display:flex}.np-footer:hover{margin:0px auto;font-weight:500;max-width:720px}.np-logo::after{margin:24px 16px;margin:8px auto;transition:all .1s ease-in-out}.np-social--small{font-size:1.375rem;transition:all .1s ease-in-out;transition:all .5s ease-in-out}.np-container--muted{margin:24px 0;z-index:30;display:none}.np-modal--muted{color:#38c669;border-radius:6px;gap:16px;font-weight:700;letter-spacing:.06em}
+.np-col--active{letter-spacing:.01em;transition:all .5s ease-in-out}.np-logo--active{z-index:35;margin:16px auto}.np-hero__text{max-width:1200px;z-index:48;font-weight:400;margin:24px 16px;padding:8px 12px}.np-divider__inner{letter-spacing:.01em;display:grid;border-radius:8px;max-width:1140px;transition:all .1s ease-in-out}.np-banner__inner{gap:0px;border-radius:4px;background-color:#50f9d3;display:block}.np-divider--muted{color:#fe1855;border-radius:4px;padding:20px 12px}
+.np-social__text{padding:8px 12px;display:none}.np-overlay--large{margin:16px 0;padding:12px 20px;display:grid;letter-spacing:.06em}.np-input--active{color:#3ae1ed;font-size:1.125rem;padding:12px 16px;max-width:1280px;line-height:1.4}.np-form--active{display:none;border-radius:6px;max-width:720px;gap:0px;font-size:1.375rem}.np-wrapper__text{gap:8px;padding:0px 4px;padding:4px 8px;z-index:26;border-radius:4px}.np-col--small{font-weight:400;max-width:1280px;background-color:#f6a956}
+.np-wrapper::after{padding:12px 16px;font-weight:600;font-size:1.000rem}.np-form--primary{display:inline-flex;display:grid}.np-badge--small{letter-spacing:.07em;letter-spacing:.05em}.np-hero--primary{background-color:#600073;color:#897bfe}.np-input::after{color:#663789;line-height:1.6}.np-form--active{transition:all .1s ease-in-out;transition:all .4s ease-in-out;letter-spacing:.05em;z-index:61;color:#fed347}
+.np-header__inner{background-color:#4d0d74;max-width:1140px}.np-form--muted{z-index:53;display:flex;padding:16px 12px;max-width:1200px;border-radius:4px}.np-btn::after{background-color:#5187df;background-color:#0935ee;padding:0px 12px}.np-nav--small{font-weight:500;color:#134425;gap:12px}.np-subtitle--primary{line-height:1.6;display:block}.np-container--large{color:#23d3c8;padding:20px 8px;padding:0px 8px;line-height:1.6;margin:24px auto}
+.np-link__inner{color:#92ff7c;line-height:1.5;line-height:1.3;line-height:1.4;gap:0px}.np-container--active{letter-spacing:.02em;transition:all .5s ease-in-out}.np-card{font-weight:600;display:inline-flex;line-height:1.4}.np-divider--large{gap:12px;line-height:1.6;font-weight:500}.np-modal--muted{display:inline-flex;padding:4px 12px;z-index:53}.np-footer--active{max-width:1200px;line-height:1.2;background-color:#b2745f;transition:all .2s ease-in-out;background-color:#3e208a}
+.np-divider{color:#4da42e;letter-spacing:.04em;transition:all .4s ease-in-out}.np-subtitle::after{display:block;line-height:1.5;line-height:1.3}.np-title--primary{font-size:1.375rem;border-radius:4px;font-size:0.750rem;max-width:1200px}.np-modal:hover{display:grid;font-weight:600;background-color:#2c01da;padding:20px 4px}.np-social:hover{letter-spacing:.04em;display:grid}.np-btn--small{transition:all .3s ease-in-out;z-index:46;font-weight:400}
+.np-modal--large{margin:0px 0;color:#fd6884;display:grid;line-height:1.2;margin:8px auto}.np-btn--primary{margin:0px 0;display:flex;max-width:1140px;font-size:1.375rem;line-height:1.6}.np-card:hover{font-size:1.000rem;letter-spacing:.06em;gap:16px;gap:8px;background-color:#f6a624}.np-link__inner{background-color:#5d30ec;font-size:1.500rem;margin:24px auto;font-weight:600}.np-link::after{margin:0px auto;display:inline-flex;max-width:960px;background-color:#754fed;letter-spacing:.02em}.np-icon--muted{font-size:1.750rem;font-weight:500}
+.np-input__text{color:#09cbb7;background-color:#292bba;background-color:#ce499d;z-index:92}.np-divider--primary{color:#fc7a37;font-size:1.000rem;letter-spacing:.08em;font-weight:500;font-size:1.375rem}.np-input--active{color:#dfd842;border-radius:2px;font-weight:600;padding:16px 4px}.np-link--small{line-height:1.1;border-radius:2px}.np-wrapper--muted{gap:8px;color:#b1a1c0;z-index:79;padding:4px 12px;font-weight:700}.np-card--active{color:#c28527;margin:24px auto;letter-spacing:.03em}
+.np-overlay__inner{max-width:1140px;display:none}.np-icon{display:block;color:#61ab4b;font-size:1.500rem;letter-spacing:.08em}.np-footer--large{line-height:1.1;font-weight:600;letter-spacing:.08em;transition:all .5s ease-in-out;max-width:960px}.np-container--small{margin:24px auto;transition:all .4s ease-in-out;padding:0px 4px;font-weight:400;font-weight:700}.np-form{background-color:#085807;gap:12px;transition:all .2s ease-in-out}.np-col--active{max-width:1140px;font-weight:400;padding:8px 8px;font-weight:300;transition:all .4s ease-in-out}
+.np-banner:hover{z-index:92;line-height:1.4}.np-header--small{background-color:#c1b24f;padding:8px 0px;max-width:1200px}.np-divider--large{margin:16px auto;letter-spacing:.06em}.np-wrapper:hover{color:#28593b;padding:4px 16px}.np-social:hover{z-index:11;padding:8px 16px}.np-btn{letter-spacing:.08em;padding:8px 4px;font-size:1.750rem;transition:all .1s ease-in-out;display:flex}
+.np-wrapper--large{z-index:33;z-index:12}.np-row:hover{letter-spacing:.05em;margin:0px 0}.np-input--muted{display:flex;max-width:720px}.np-hero--small{z-index:55;max-width:720px}.np-nav--large{margin:16px 0;transition:all .1s ease-in-out;display:grid;background-color:#cc71cd;color:#0802ba}.np-hero__inner{font-size:1.500rem;font-size:1.750rem;z-index:98;padding:16px 20px;border-radius:8px}
+.np-footer--primary{background-color:#139aa4;letter-spacing:.00em;z-index:89}.np-row--small{margin:16px 16px;border-radius:0px;line-height:1.5;padding:8px 8px;font-weight:700}.np-input__inner{font-weight:600;color:#844560}.np-footer--muted{font-weight:600;font-weight:500}.np-icon--primary{padding:12px 0px;font-size:1.250rem;letter-spacing:.07em;letter-spacing:.04em;border-radius:6px}.np-form--small{line-height:1.4;transition:all .2s ease-in-out;border-radius:0px}
+.np-link--small{padding:20px 20px;gap:0px;padding:20px 20px;font-weight:500;line-height:1.6}.np-badge--muted{border-radius:0px;letter-spacing:.07em}.np-hero--small{font-weight:400;font-weight:400}.np-title__inner{font-size:0.875rem;gap:4px;font-weight:500}.np-divider--small{display:flex;margin:16px 16px;display:none;color:#8def45;background-color:#93dac5}.np-title__inner{padding:20px 16px;padding:16px 0px}
+.np-card:hover{display:block;margin:24px auto;padding:16px 20px}.np-title__inner{background-color:#cea5e4;display:none;z-index:16;line-height:1.3;font-weight:700}
+@media (max-width:767px){.np-header{padding:12px 16px}.np-nav{display:none}.np-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="np-header"><a href="/" class="np-logo">Nonna Pizza</a><nav><ul class="np-nav-list">
+  <li class="np-nav-item"><a href="https://nonnapizza.example/" class="np-nav-link">Hjem</a></li>
+  <li class="np-nav-item np-nav-item--current"><a href="https://nonnapizza.example/meny" class="np-nav-link">Meny</a></li>
+  <li class="np-nav-item"><a href="https://nonnapizza.example/bestill-bord" class="np-nav-link">Bestill bord</a></li>
+  <li class="np-nav-item"><a href="https://nonnapizza.example/selskap" class="np-nav-link">Selskap</a></li>
+  <li class="np-nav-item"><a href="https://nonnapizza.example/gavekort" class="np-nav-link">Gavekort</a></li>
+  <li class="np-nav-item"><a href="https://nonnapizza.example/om-oss" class="np-nav-link">Om oss</a></li>
+  <li class="np-nav-item"><a href="https://nonnapizza.example/kontakt" class="np-nav-link">Kontakt</a></li>
+</ul></nav><a class="np-btn" href="/bestill">Bestill bord</a></header>
+<main class="np-main">
+<h1>Meny</h1>
+<p class="lead">Deigen hviler i 48 timer og stekes på 450 grader i vedfyrt ovn fra Napoli. Alle pizzaer kan fås glutenfrie (+35,-).</p>
+<div class="columns">
+  <div class="col">
+<h2>Pizza Rosse</h2>
+<ul class="menu-list">
+  <li><span class="name">Margherita (1,7)</span> <span class="desc">San Marzano-tomater, fior di latte og basilikum</span> <span class="price">159,-</span></li>
+  <li><span class="name">Marinara (1)</span> <span class="desc">Tomat, hvitløk, oregano og olivenolje</span> <span class="price">135,-</span></li>
+  <li><span class="name">Diavola (1,7)</span> <span class="desc">Spicy salami, chili og fior di latte</span> <span class="price">189,-</span></li>
+  <li><span class="name">Capricciosa (1,7)</span> <span class="desc">Skinke, artisjokk, sopp og oliven</span> <span class="price">195,-</span></li>
+  <li><span class="name">Napoletana (1,4,7)</span> <span class="desc">Ansjos, kapers og oliven</span> <span class="price">185,-</span></li>
+  <li><span class="name">'Nduja e Miele (1,7)</span> <span class="desc">'Nduja, honning og ricotta</span> <span class="price">199,-</span></li>
+</ul>
+<h2>Pizza Bianche</h2>
+<ul class="menu-list">
+  <li><span class="name">Quattro Formaggi (1,7)</span> <span class="desc">Mozzarella, gorgonzola, parmesan og taleggio</span> <span class="price">199,-</span></li>
+  <li><span class="name">Salsiccia e Friarielli (1,7)</span> <span class="desc">Italiensk pølse, friarielli og provola</span> <span class="price">205,-</span></li>
+  <li><span class="name">Patate e Rosmarino (1,7)</span> <span class="desc">Tynne potetskiver, rosmarin og fior di latte</span> <span class="price">175,-</span></li>
+  <li><span class="name">Mortadella e Pistacchio (1,7,8)</span> <span class="desc">Mortadella, burrata og pistasj</span> <span class="price">215,-</span></li>
+</ul>
+  </div>
+  <div class="col">
+<h2>Insalate</h2>
+<ul class="menu-list">
+  <li><span class="name">Insalata Caprese (7)</span> <span class="desc">Tomat, bøffelmozzarella og basilikum</span> <span class="price">145,-</span></li>
+  <li><span class="name">Rucola e Parmigiano (7)</span> <span class="desc">Ruccola, parmesan, sitron og olivenolje</span> <span class="price">125,-</span></li>
+</ul>
+<h2>Dolci</h2>
+<ul class="menu-list">
+  <li><span class="name">Tiramisù (1,3,7)</span> <span class="desc">Husets klassiker</span> <span class="price">115,-</span></li>
+  <li><span class="name">Pizza alla Nutella (1,7,8)</span> <span class="desc">Til deling, med hasselnøtter</span> <span class="price">129,-</span></li>
+</ul>
+<h2>Drinks</h2>
+<ul class="menu-list">
+  <li><span class="name">San Pellegrino 0,5 l</span> <span class="price">45,-</span></li>
+  <li><span class="name">Chinotto</span> <span class="price">45,-</span></li>
+  <li><span class="name">Peroni 0,33 l (1)</span> <span class="price">89,-</span></li>
+  <li><span class="name">Husets rødvin, glass (12)</span> <span class="desc">Montepulciano d’Abruzzo</span> <span class="price">125,-</span></li>
+</ul>
+  </div>
+</div>
+<p class="allergener"><strong>Allergener:</strong> 1 Gluten · 2 Skalldyr · 3 Egg · 4 Fisk · 5 Peanøtter · 6 Soya · 7 Melk · 8 Nøtter · 9 Selleri · 10 Sennep · 11 Sesam · 12 Sulfitt · 13 Lupin · 14 Bløtdyr</p>
+<p><small>Alle priser er oppgitt i norske kroner inkl. mva.</small></p>
+<section class="np-om"><h2>Nonnas historie</h2>
+<p>Nonna Pizza startet som en liten drøm ved et kjøkkenbord, og har siden vokst til et nabolagssted der stamgjestene kjenner hverandre ved navn. Vi lager det meste fra bunnen av hver dag, og samarbeider med lokale produsenter så langt det lar seg gjøre.</p>
+<p>Råvarene våre kommer fra gårder og leverandører vi kjenner personlig. Menyen endres litt med sesongene, men favorittene blir stående. Spør gjerne betjeningen om dagens anbefalinger og hva som passer til drikken du har valgt.</p>
+<p>Vi har plass til rundt 60 gjester inne og 30 på uteserveringen når været tillater det. Bordbestilling anbefales i helgene, men vi holder alltid av noen bord til gjester som kommer innom.</p>
+</section>
+<section><div class="np-reviews">
+  <blockquote class="np-review"><p>“Fantastisk service og nydelig mat. Kommer garantert tilbake!”</p><cite>— Ingrid, Google</cite></blockquote>
+  <blockquote class="np-review"><p>“Byens beste! Hyggelig personale og god stemning hele kvelden.”</p><cite>— Thomas, Tripadvisor</cite></blockquote>
+  <blockquote class="np-review"><p>“Perfekt sted for en uformell middag med venner.”</p><cite>— Maria, Facebook</cite></blockquote>
+</div></section>
+</main>
+<footer class="np-footer"><address class="np-address">
+  <strong>Nonna Pizza</strong><br>
+  Nonnegata 5<br>
+  7030 Trondheim<br>
+  <a href="tel:+4773005512">+47 73 00 55 12</a><br>
+  <a href="mailto:ciao@nonnapizza.example">ciao@nonnapizza.example</a>
+</address><div class="np-hours">
+  <h4 class="np-hours__title">Åpningstider</h4>
+  <table class="np-hours__table" role="presentation"><tbody>
+    <tr><th scope="row">Mandag–torsdag</th><td>11:00–22:00</td></tr>
+    <tr><th scope="row">Fredag</th><td>11:00–23:00</td></tr>
+    <tr><th scope="row">Lørdag</th><td>12:00–23:00</td></tr>
+    <tr><th scope="row">Søndag</th><td>13:00–21:00</td></tr>
+  </tbody></table>
+  <p class="np-hours__note">Avvikende åpningstider i høytider annonseres på Instagram og Facebook.</p>
+</div><div class="np-newsletter">
+  <h3 class="np-newsletter__title">Meld deg på nyhetsbrevet</h3>
+  <p class="np-newsletter__text">Få tilbud, arrangementer og nye retter rett i innboksen. Vi sender maks to e-poster i måneden, og du kan melde deg av når som helst.</p>
+  <form class="np-newsletter__form" action="/nyhetsbrev" method="post" novalidate>
+    <label for="np-nl-email" class="np-sr-only">Din e-postadresse</label>
+    <input type="email" id="np-nl-email" name="EMAIL" placeholder="Din e-postadresse" autocomplete="email" required>
+    <div style="position:absolute;left:-5000px" aria-hidden="true"><input type="text" name="b_nonnapizza_hp" tabindex="-1" value=""></div>
+    <button type="submit" class="np-btn np-btn--primary">Meld meg på</button>
+  </form>
+</div><ul class="np-social">
+  <li><a href="https://instagram.example/nonna-pizza" aria-label="Instagram"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2z"/></svg></a></li>
+  <li><a href="https://facebook.example/nonna-pizza" aria-label="Facebook"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a></li>
+</ul><p>© 2026 Nonna Pizza. Alle rettigheter reservert.</p></footer>
+<div id="np-cookie-banner" class="np-cookie-banner" role="dialog" aria-live="polite" aria-label="Vi bruker informasjonskapsler">
+  <div class="np-cookie-banner__inner">
+    <p class="np-cookie-banner__title"><strong>Vi bruker informasjonskapsler</strong></p>
+    <p class="np-cookie-banner__text">Vi bruker informasjonskapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikken på nettstedet og tilpasse innhold. Noen er nødvendige for at siden skal fungere, andre hjelper oss å forstå hvordan siden brukes. Du kan når som helst endre eller trekke tilbake samtykket ditt. <a href="https://nonnapizza.example/personvernerkl-ring">Personvernerklæring</a></p>
+    <div class="np-cookie-banner__actions">
+      <button type="button" class="np-btn np-btn--primary" data-consent="all">Godta alle</button>
+      <button type="button" class="np-btn np-btn--secondary" data-consent="necessary">Kun nødvendige</button>
+      <button type="button" class="np-btn np-btn--link" data-consent="settings">Innstillinger</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,288 @@
+{
+  "restaurant": "Blue Oak Bistro",
+  "platform": "webflow",
+  "currency": "USD",
+  "url": "https://blueoakbistro.example/menu",
+  "fictional": true,
+  "notes": "Webflow CMS (w-dyn-list per category), hidden w-condition-invisible tags, wine priced \"Glass $14 / Bottle $52\" (price = glass). Redesign: tabs + dish-card, \"16.00\" and \"14 | 52\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Oysters on the Half Shell",
+      "from": 21,
+      "to": 24
+    },
+    {
+      "type": "price",
+      "name": "Steak Frites",
+      "from": 38,
+      "to": 42
+    },
+    {
+      "type": "added",
+      "section": "Small Plates",
+      "name": "Heirloom Tomato Salad",
+      "price": 15
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Mains",
+        "Small Plates",
+        "Sides",
+        "Dessert",
+        "Wine by the Glass"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Small Plates",
+      "name": "Burrata & Stone Fruit",
+      "description": "Grilled peaches, basil oil, toasted pistachio, grilled sourdough",
+      "price": 17
+    },
+    {
+      "section": "Small Plates",
+      "name": "Crispy Brussels Sprouts",
+      "description": "Calabrian chili honey, pecorino, lemon",
+      "price": 13
+    },
+    {
+      "section": "Small Plates",
+      "name": "Oysters on the Half Shell",
+      "description": "Half dozen, champagne mignonette, fresh horseradish",
+      "price": 21
+    },
+    {
+      "section": "Small Plates",
+      "name": "Beef Tartare",
+      "description": "Hand-cut, cured egg yolk, capers, house potato chips",
+      "price": 19
+    },
+    {
+      "section": "Small Plates",
+      "name": "Charred Octopus",
+      "description": "Romesco, fingerling potatoes, smoked paprika",
+      "price": 22
+    },
+    {
+      "section": "Mains",
+      "name": "Blue Oak Burger",
+      "description": "Dry-aged chuck, white cheddar, bacon jam, fries",
+      "price": 24
+    },
+    {
+      "section": "Mains",
+      "name": "Pan-Roasted Half Chicken",
+      "description": "Salsa verde, charred broccolini, chicken jus",
+      "price": 29
+    },
+    {
+      "section": "Mains",
+      "name": "Wild Mushroom Risotto",
+      "description": "Carnaroli rice, maitake, parmesan, truffle butter",
+      "price": 26
+    },
+    {
+      "section": "Mains",
+      "name": "Seared Scallops",
+      "description": "Sweet corn purée, crispy pancetta, pea shoots",
+      "price": 36
+    },
+    {
+      "section": "Mains",
+      "name": "Steak Frites",
+      "description": "10 oz hanger steak, béarnaise, hand-cut fries",
+      "price": 38
+    },
+    {
+      "section": "Mains",
+      "name": "Miso-Glazed Salmon",
+      "description": "Forbidden rice, baby bok choy, ginger scallion",
+      "price": 32
+    },
+    {
+      "section": "Sides",
+      "name": "Hand-Cut Fries",
+      "description": "Herb salt, garlic aioli",
+      "price": 8
+    },
+    {
+      "section": "Sides",
+      "name": "Grilled Broccolini",
+      "description": "Garlic, chili flake, lemon",
+      "price": 10
+    },
+    {
+      "section": "Sides",
+      "name": "Mac & Cheese",
+      "description": "Three cheeses, toasted breadcrumbs",
+      "price": 12
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Prosecco, Valdobbiadene NV",
+      "description": "Veneto, Italy. Crisp, green apple, fine bubbles",
+      "price": 14
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Sauvignon Blanc, Marlborough 2023",
+      "description": "New Zealand. Grapefruit, passion fruit, bright acidity",
+      "price": 13
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Pinot Noir, Willamette Valley 2021",
+      "description": "Oregon. Red cherry, forest floor, silky tannins",
+      "price": 16
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Cabernet Sauvignon, Paso Robles 2020",
+      "description": "California. Blackcurrant, cedar, full-bodied",
+      "price": 15
+    },
+    {
+      "section": "Dessert",
+      "name": "Olive Oil Cake",
+      "description": "Whipped mascarpone, macerated berries",
+      "price": 11
+    },
+    {
+      "section": "Dessert",
+      "name": "Dark Chocolate Pot de Crème",
+      "description": "Flaky sea salt, chantilly cream",
+      "price": 12
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Mains",
+      "name": "Blue Oak Burger",
+      "description": "Dry-aged chuck, white cheddar, bacon jam, fries",
+      "price": 24
+    },
+    {
+      "section": "Mains",
+      "name": "Pan-Roasted Half Chicken",
+      "description": "Salsa verde, charred broccolini, chicken jus",
+      "price": 29
+    },
+    {
+      "section": "Mains",
+      "name": "Wild Mushroom Risotto",
+      "description": "Carnaroli rice, maitake, parmesan, truffle butter",
+      "price": 26
+    },
+    {
+      "section": "Mains",
+      "name": "Seared Scallops",
+      "description": "Sweet corn purée, crispy pancetta, pea shoots",
+      "price": 36
+    },
+    {
+      "section": "Mains",
+      "name": "Steak Frites",
+      "description": "10 oz hanger steak, béarnaise, hand-cut fries",
+      "price": 42
+    },
+    {
+      "section": "Mains",
+      "name": "Miso-Glazed Salmon",
+      "description": "Forbidden rice, baby bok choy, ginger scallion",
+      "price": 32
+    },
+    {
+      "section": "Small Plates",
+      "name": "Burrata & Stone Fruit",
+      "description": "Grilled peaches, basil oil, toasted pistachio, grilled sourdough",
+      "price": 17
+    },
+    {
+      "section": "Small Plates",
+      "name": "Crispy Brussels Sprouts",
+      "description": "Calabrian chili honey, pecorino, lemon",
+      "price": 13
+    },
+    {
+      "section": "Small Plates",
+      "name": "Heirloom Tomato Salad",
+      "description": "Whipped feta, shallot vinaigrette, opal basil",
+      "price": 15
+    },
+    {
+      "section": "Small Plates",
+      "name": "Oysters on the Half Shell",
+      "description": "Half dozen, champagne mignonette, fresh horseradish",
+      "price": 24
+    },
+    {
+      "section": "Small Plates",
+      "name": "Beef Tartare",
+      "description": "Hand-cut, cured egg yolk, capers, house potato chips",
+      "price": 19
+    },
+    {
+      "section": "Small Plates",
+      "name": "Charred Octopus",
+      "description": "Romesco, fingerling potatoes, smoked paprika",
+      "price": 22
+    },
+    {
+      "section": "Sides",
+      "name": "Hand-Cut Fries",
+      "description": "Herb salt, garlic aioli",
+      "price": 8
+    },
+    {
+      "section": "Sides",
+      "name": "Grilled Broccolini",
+      "description": "Garlic, chili flake, lemon",
+      "price": 10
+    },
+    {
+      "section": "Sides",
+      "name": "Mac & Cheese",
+      "description": "Three cheeses, toasted breadcrumbs",
+      "price": 12
+    },
+    {
+      "section": "Dessert",
+      "name": "Olive Oil Cake",
+      "description": "Whipped mascarpone, macerated berries",
+      "price": 11
+    },
+    {
+      "section": "Dessert",
+      "name": "Dark Chocolate Pot de Crème",
+      "description": "Flaky sea salt, chantilly cream",
+      "price": 12
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Prosecco, Valdobbiadene NV",
+      "description": "Veneto, Italy. Crisp, green apple, fine bubbles",
+      "price": 14
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Sauvignon Blanc, Marlborough 2023",
+      "description": "New Zealand. Grapefruit, passion fruit, bright acidity",
+      "price": 13
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Pinot Noir, Willamette Valley 2021",
+      "description": "Oregon. Red cherry, forest floor, silky tannins",
+      "price": 16
+    },
+    {
+      "section": "Wine by the Glass",
+      "name": "Cabernet Sauvignon, Paso Robles 2020",
+      "description": "California. Blackcurrant, cedar, full-bodied",
+      "price": 15
+    }
+  ]
+}

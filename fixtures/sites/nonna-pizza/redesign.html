@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nonna Pizza · Meny</title>
+<link rel="canonical" href="https://nonnapizza.example/meny">
+<style>
+.nonna-nav--primary{line-height:1.3;font-size:0.750rem;margin:8px auto;border-radius:2px}.nonna-header__inner{max-width:1280px;z-index:49;font-weight:600;max-width:1140px;gap:4px}.nonna-divider:hover{line-height:1.5;display:inline-flex;letter-spacing:.07em;background-color:#0438a0;border-radius:6px}.nonna-header:hover{border-radius:6px;gap:12px;max-width:1140px;color:#d6520f}.nonna-social--active{max-width:1140px;display:block;display:grid;letter-spacing:.07em}.nonna-row:hover{padding:12px 4px;z-index:69;z-index:73;font-weight:500;color:#ffdda1}
+.nonna-row--active{letter-spacing:.08em;z-index:15;z-index:12;background-color:#2a84ea}.nonna-row--large{max-width:960px;font-size:0.750rem;max-width:1280px;border-radius:0px;transition:all .3s ease-in-out}.nonna-title--primary{color:#367583;padding:20px 12px;color:#0eb21c}.nonna-icon--active{transition:all .5s ease-in-out;display:none}.nonna-badge__text{border-radius:4px;background-color:#182438;padding:16px 12px;line-height:1.1}.nonna-link::after{font-size:0.875rem;border-radius:6px;display:none}
+.nonna-logo--active{transition:all .2s ease-in-out;border-radius:8px;padding:4px 20px}.nonna-icon{font-weight:700;max-width:1200px;margin:24px 16px;background-color:#ba3ac1}.nonna-logo{background-color:#77a173;gap:4px;font-size:1.375rem}.nonna-logo{z-index:88;color:#b47c39;letter-spacing:.03em;background-color:#999dd9}.nonna-icon--primary{font-size:1.625rem;font-size:1.875rem;font-weight:600;display:inline-flex}.nonna-logo:hover{line-height:1.1;font-size:0.875rem;display:grid;display:grid}
+.nonna-icon--small{z-index:8;transition:all .5s ease-in-out;background-color:#13b986;margin:24px 0;font-size:1.750rem}.nonna-logo--muted{gap:8px;line-height:1.5;border-radius:2px}.nonna-modal--active{z-index:70;margin:0px auto;border-radius:2px;border-radius:0px;padding:20px 8px}.nonna-modal--small{z-index:77;color:#2ab7ef}.nonna-form:hover{font-size:1.375rem;display:inline-flex;max-width:960px;font-size:0.750rem}.nonna-divider:hover{font-size:1.250rem;background-color:#468824}
+.nonna-overlay__inner{font-weight:600;margin:24px auto;display:block;max-width:720px}.nonna-subtitle--small{border-radius:6px;font-weight:300}.nonna-container--active{gap:12px;gap:4px}.nonna-nav__text{max-width:1200px;transition:all .5s ease-in-out}.nonna-row--small{margin:8px auto;display:inline-flex;max-width:1200px;display:inline-flex}.nonna-hero--large{background-color:#b37f18;color:#bff091;background-color:#61ad19;font-weight:600}
+.nonna-logo{display:grid;line-height:1.6;font-size:1.875rem;font-size:0.750rem;gap:8px}.nonna-grid__text{transition:all .1s ease-in-out;gap:8px;letter-spacing:.01em;background-color:#908ae3;font-weight:400}.nonna-form:hover{font-weight:700;font-weight:600;display:inline-flex;max-width:960px}.nonna-subtitle--large{gap:12px;display:grid;margin:0px 0}.nonna-grid:hover{padding:4px 8px;line-height:1.2;transition:all .2s ease-in-out}.nonna-header--small{max-width:1200px;border-radius:8px}
+.nonna-card--primary{letter-spacing:.03em;margin:8px auto;z-index:43;display:none}.nonna-title--active{transition:all .5s ease-in-out;font-size:1.375rem;font-weight:600;gap:12px;border-radius:8px}.nonna-grid--primary{display:block;border-radius:2px}.nonna-form--active{transition:all .3s ease-in-out;font-weight:400;border-radius:8px;padding:0px 16px;padding:0px 20px}.nonna-form--active{padding:4px 0px;letter-spacing:.02em;transition:all .1s ease-in-out;transition:all .5s ease-in-out}.nonna-btn--muted{margin:16px 16px;font-weight:600;transition:all .5s ease-in-out}
+.nonna-card--primary{background-color:#a6f050;padding:8px 4px;font-size:1.875rem;transition:all .5s ease-in-out;font-weight:700}.nonna-modal__text{letter-spacing:.02em;letter-spacing:.00em;border-radius:2px;font-size:1.250rem;padding:20px 20px}.nonna-overlay--small{z-index:16;margin:24px 0;padding:20px 8px;font-size:0.750rem}.nonna-modal--large{border-radius:2px;font-size:1.750rem;gap:12px;display:flex;color:#8d3cad}.nonna-form--primary{background-color:#1f1691;margin:16px auto;line-height:1.2;display:block;transition:all .5s ease-in-out}.nonna-hero__text{line-height:1.3;display:grid;font-size:1.125rem;color:#d4f494}
+.nonna-divider--large{font-size:1.125rem;color:#3316d4;line-height:1.4}.nonna-nav--large{border-radius:4px;color:#279963;margin:0px 0;line-height:1.5}.nonna-input__inner{transition:all .3s ease-in-out;line-height:1.2;max-width:1200px;font-weight:400;font-size:0.875rem}.nonna-title--muted{gap:12px;padding:8px 12px;display:inline-flex}.nonna-badge{color:#17d751;font-weight:400}.nonna-container{font-weight:700;letter-spacing:.02em}
+.nonna-overlay--primary{display:grid;z-index:27;transition:all .3s ease-in-out;background-color:#b3b237;line-height:1.1}.nonna-card--primary{margin:8px 0;line-height:1.6;border-radius:8px;font-weight:300;gap:16px}.nonna-grid--primary{gap:8px;background-color:#ed08a3}.nonna-wrapper--muted{z-index:6;font-size:1.125rem}.nonna-form--muted{max-width:1280px;letter-spacing:.07em}.nonna-badge__text{z-index:86;background-color:#05b5db;line-height:1.5}
+.nonna-icon:hover{color:#2f00c9;z-index:39}.nonna-social__inner{font-size:1.000rem;margin:0px 0}.nonna-modal::after{font-size:1.250rem;font-size:0.750rem;font-size:1.125rem;padding:4px 4px;letter-spacing:.00em}.nonna-form::after{padding:0px 12px;font-weight:700}.nonna-modal--primary{font-size:1.250rem;color:#1fbc95;border-radius:2px}.nonna-link--active{display:none;font-weight:700;color:#4b6a64;max-width:1140px;line-height:1.4}
+.nonna-hero--small{font-weight:700;padding:8px 20px;padding:0px 8px;background-color:#269dcf;z-index:19}.nonna-hero--muted{transition:all .3s ease-in-out;line-height:1.2;display:flex}.nonna-social--primary{border-radius:2px;font-weight:600;letter-spacing:.07em;transition:all .1s ease-in-out}.nonna-banner::after{font-size:1.625rem;color:#f5c518;border-radius:6px;color:#8b94b9;margin:16px 0}.nonna-header--muted{max-width:1280px;line-height:1.1;color:#e0f636}.nonna-link--active{max-width:720px;color:#73ff8c;font-size:0.875rem;background-color:#b624da}
+.nonna-overlay--large{display:flex;gap:0px;font-weight:500;letter-spacing:.08em;border-radius:8px}.nonna-link::after{max-width:720px;margin:0px 0;display:block}.nonna-wrapper{max-width:720px;z-index:12;z-index:50;display:block;letter-spacing:.05em}.nonna-title--primary{letter-spacing:.03em;color:#f5f531}.nonna-logo--muted{font-size:0.750rem;line-height:1.4;border-radius:6px}.nonna-nav--muted{font-weight:600;gap:4px;color:#073822}
+.nonna-row__inner{gap:8px;transition:all .4s ease-in-out;letter-spacing:.08em;margin:24px 0;color:#f4198e}.nonna-banner__text{padding:4px 0px;letter-spacing:.05em;padding:12px 12px}.nonna-container__inner{letter-spacing:.07em;z-index:65;border-radius:4px;margin:24px auto}.nonna-divider__inner{padding:16px 0px;line-height:1.6;background-color:#0c3495;z-index:38}.nonna-col:hover{display:none;color:#5329f8;border-radius:8px;margin:0px auto;letter-spacing:.01em}.nonna-grid::after{font-size:1.750rem;gap:4px;color:#fcf84a;font-weight:700;max-width:1280px}
+.nonna-input--primary{font-size:0.750rem;color:#20a6c4}.nonna-link:hover{display:grid;border-radius:6px;gap:12px;letter-spacing:.03em;margin:0px 16px}.nonna-social--large{gap:16px;max-width:1280px;display:grid;max-width:1140px}.nonna-divider--muted{font-weight:500;z-index:79;background-color:#174e1a;z-index:60;line-height:1.6}.nonna-header--large{letter-spacing:.08em;max-width:720px}.nonna-overlay::after{max-width:720px;transition:all .3s ease-in-out;line-height:1.4;line-height:1.1}
+.nonna-row--active{display:grid;gap:4px}.nonna-footer--primary{border-radius:8px;background-color:#4084c3;max-width:1200px;letter-spacing:.06em}.nonna-input--small{display:none;font-weight:400;color:#bf45b1}.nonna-title::after{letter-spacing:.05em;gap:0px;transition:all .3s ease-in-out;border-radius:2px}.nonna-nav--primary{transition:all .1s ease-in-out;gap:8px;z-index:68}.nonna-wrapper--large{padding:8px 12px;padding:12px 20px}
+.nonna-subtitle:hover{line-height:1.4;padding:8px 12px;border-radius:6px;padding:12px 16px}.nonna-col--muted{transition:all .2s ease-in-out;display:grid;transition:all .4s ease-in-out;transition:all .5s ease-in-out}.nonna-input::after{display:none;border-radius:6px}.nonna-footer--muted{font-weight:600;letter-spacing:.01em}.nonna-footer__inner{max-width:1280px;color:#3d0c50;border-radius:0px}.nonna-nav__text{border-radius:0px;line-height:1.3;line-height:1.3;z-index:22;font-size:0.750rem}
+.nonna-footer--small{color:#3d2899;padding:20px 4px}.nonna-divider--large{padding:20px 8px;font-size:1.625rem;display:flex;max-width:960px;transition:all .2s ease-in-out}.nonna-footer__text{max-width:720px;gap:4px}.nonna-title::after{max-width:1280px;margin:16px 0;background-color:#2b0eae}.nonna-title{max-width:960px;max-width:1140px}.nonna-divider:hover{border-radius:0px;transition:all .5s ease-in-out;font-weight:500}
+.nonna-header__inner{margin:0px 0;font-size:1.250rem;display:none}.nonna-divider--large{line-height:1.1;padding:0px 8px;z-index:30;margin:24px 0;color:#1b668b}.nonna-social--small{border-radius:8px;margin:0px 16px;padding:20px 12px}.nonna-logo:hover{background-color:#cd7197;max-width:1140px;max-width:960px;gap:8px;z-index:21}.nonna-hero--large{font-size:1.000rem;display:grid;padding:12px 8px;font-size:0.875rem;z-index:58}.nonna-link{gap:12px;padding:16px 12px;max-width:720px;max-width:720px}
+.nonna-form:hover{gap:8px;transition:all .5s ease-in-out;font-weight:600;display:inline-flex}.nonna-logo::after{background-color:#3e9653;line-height:1.1;background-color:#4a056f}.nonna-col--small{font-size:0.750rem;transition:all .3s ease-in-out;font-weight:300;z-index:78;letter-spacing:.05em}.nonna-logo:hover{padding:4px 12px;display:inline-flex;padding:4px 8px;gap:12px;color:#2702ef}.nonna-badge::after{margin:8px 16px;max-width:960px;letter-spacing:.00em;color:#dd7b7f}.nonna-banner--small{border-radius:2px;background-color:#9b9e41;background-color:#07fc83;background-color:#b42c6c;transition:all .1s ease-in-out}
+.nonna-header::after{color:#ddd727;letter-spacing:.07em}.nonna-nav--muted{font-weight:500;letter-spacing:.08em}.nonna-divider--active{font-weight:500;color:#169e31;border-radius:8px;line-height:1.1;max-width:1280px}.nonna-logo::after{margin:0px 0;letter-spacing:.08em}.nonna-overlay--active{margin:0px auto;border-radius:2px;margin:24px 16px;max-width:1140px}.nonna-logo{letter-spacing:.06em;z-index:48}
+.nonna-btn--active{margin:0px 0;font-size:1.000rem;z-index:18}.nonna-wrapper--primary{display:none;padding:8px 0px}.nonna-title:hover{font-weight:700;font-size:1.000rem}.nonna-grid__text{background-color:#100722;color:#4fa9bd;line-height:1.1;margin:16px auto}.nonna-nav--primary{color:#af09ef;transition:all .2s ease-in-out;z-index:56;gap:0px;line-height:1.5}.nonna-subtitle--muted{transition:all .2s ease-in-out;border-radius:8px;font-weight:500}
+.nonna-logo--active{margin:8px auto;border-radius:6px}.nonna-input::after{color:#3cd9c5;padding:16px 12px;line-height:1.2}.nonna-input{max-width:1140px;display:grid;line-height:1.1;background-color:#af77d7}.nonna-link--primary{padding:20px 16px;transition:all .5s ease-in-out}.nonna-form--large{z-index:69;transition:all .2s ease-in-out;color:#0639d5;max-width:1200px}.nonna-row__text{gap:4px;display:flex}
+.nonna-input::after{max-width:1200px;padding:12px 4px;padding:8px 12px;font-weight:700}.nonna-badge{z-index:3;line-height:1.3;color:#c57fd1;z-index:63}
+@media (max-width:767px){.nonna-header{padding:12px 16px}.nonna-nav{display:none}.nonna-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="nonna-header"><a href="/">Nonna Pizza</a><nav><ul class="nonna-nav-list">
+  <li class="nonna-nav-item"><a href="https://nonnapizza.example/" class="nonna-nav-link">Hjem</a></li>
+  <li class="nonna-nav-item nonna-nav-item--current"><a href="https://nonnapizza.example/meny" class="nonna-nav-link">Meny</a></li>
+  <li class="nonna-nav-item"><a href="https://nonnapizza.example/bestill-bord" class="nonna-nav-link">Bestill bord</a></li>
+  <li class="nonna-nav-item"><a href="https://nonnapizza.example/selskap" class="nonna-nav-link">Selskap</a></li>
+  <li class="nonna-nav-item"><a href="https://nonnapizza.example/gavekort" class="nonna-nav-link">Gavekort</a></li>
+  <li class="nonna-nav-item"><a href="https://nonnapizza.example/om-oss" class="nonna-nav-link">Om oss</a></li>
+  <li class="nonna-nav-item"><a href="https://nonnapizza.example/kontakt" class="nonna-nav-link">Kontakt</a></li>
+</ul></nav></header>
+<main>
+<h1>Meny</h1>
+<p>Deigen hviler i 48 timer og stekes i vedfyrt ovn. Glutenfri bunn + kr 35.</p>
+<div class="menu-cards">
+<div class="menu-card">
+  <h3 class="card-title">Pizza Rosse</h3>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Margherita</b><sup class="allergens">1,7</sup><small class="dish-note">San Marzano-tomater, fior di latte og basilikum</small></div><em class="cost">kr 169</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Marinara</b><sup class="allergens">1</sup><small class="dish-note">Tomat, hvitløk, oregano og olivenolje</small></div><em class="cost">kr 135</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Diavola</b><sup class="allergens">1,7</sup><small class="dish-note">Spicy salami, chili og fior di latte</small></div><em class="cost">kr 189</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Capricciosa</b><sup class="allergens">1,7</sup><small class="dish-note">Skinke, artisjokk, sopp og oliven</small></div><em class="cost">kr 195</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Napoletana</b><sup class="allergens">1,4,7</sup><small class="dish-note">Ansjos, kapers og oliven</small></div><em class="cost">kr 185</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">'Nduja e Miele</b><sup class="allergens">1,7</sup><small class="dish-note">'Nduja, honning og ricotta</small></div><em class="cost">kr 199</em></div>
+</div>
+<div class="menu-card">
+  <h3 class="card-title">Pizza Bianche</h3>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Quattro Formaggi</b><sup class="allergens">1,7</sup><small class="dish-note">Mozzarella, gorgonzola, parmesan og taleggio</small></div><em class="cost">kr 199</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Salsiccia e Friarielli</b><sup class="allergens">1,7</sup><small class="dish-note">Italiensk pølse, friarielli og provola</small></div><em class="cost">kr 205</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Patate e Rosmarino</b><sup class="allergens">1,7</sup><small class="dish-note">Tynne potetskiver, rosmarin og fior di latte</small></div><em class="cost">kr 175</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Mortadella e Pistacchio</b><sup class="allergens">1,7,8</sup><small class="dish-note">Mortadella, burrata og pistasj</small></div><em class="cost">kr 215</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Bresaola e Rucola</b><sup class="allergens">1,7</sup><small class="dish-note">Bresaola, ruccola og parmesan</small></div><em class="cost">kr 219</em></div>
+</div>
+<div class="menu-card">
+  <h3 class="card-title">Insalate</h3>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Insalata Caprese</b><sup class="allergens">7</sup><small class="dish-note">Tomat, bøffelmozzarella og basilikum</small></div><em class="cost">kr 145</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Rucola e Parmigiano</b><sup class="allergens">7</sup><small class="dish-note">Ruccola, parmesan, sitron og olivenolje</small></div><em class="cost">kr 125</em></div>
+</div>
+<div class="menu-card">
+  <h3 class="card-title">Dolci</h3>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Tiramisù</b><sup class="allergens">1,3,7</sup><small class="dish-note">Husets klassiker</small></div><em class="cost">kr 115</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Pizza alla Nutella</b><sup class="allergens">1,7,8</sup><small class="dish-note">Til deling, med hasselnøtter</small></div><em class="cost">kr 129</em></div>
+</div>
+<div class="menu-card">
+  <h3 class="card-title">Drinks</h3>
+  <div class="card-line"><div class="card-line__main"><b class="dish">San Pellegrino 0,5 l</b></div><em class="cost">kr 45</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Chinotto</b></div><em class="cost">kr 45</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Peroni 0,33 l</b><sup class="allergens">1</sup></div><em class="cost">kr 95</em></div>
+  <div class="card-line"><div class="card-line__main"><b class="dish">Husets rødvin, glass</b><sup class="allergens">12</sup><small class="dish-note">Montepulciano d’Abruzzo</small></div><em class="cost">kr 125</em></div>
+</div>
+</div>
+<p class="allergener">Allergener: 1 Gluten · 2 Skalldyr · 3 Egg · 4 Fisk · 5 Peanøtter · 6 Soya · 7 Melk · 8 Nøtter · 9 Selleri · 10 Sennep · 11 Sesam · 12 Sulfitt · 13 Lupin · 14 Bløtdyr</p>
+<section><p>Nonna Pizza startet som en liten drøm ved et kjøkkenbord, og har siden vokst til et nabolagssted der stamgjestene kjenner hverandre ved navn. Vi lager det meste fra bunnen av hver dag, og samarbeider med lokale produsenter så langt det lar seg gjøre.</p>
+<p>Råvarene våre kommer fra gårder og leverandører vi kjenner personlig. Menyen endres litt med sesongene, men favorittene blir stående. Spør gjerne betjeningen om dagens anbefalinger og hva som passer til drikken du har valgt.</p>
+<p>Vi har plass til rundt 60 gjester inne og 30 på uteserveringen når været tillater det. Bordbestilling anbefales i helgene, men vi holder alltid av noen bord til gjester som kommer innom.</p><div class="nonna-reviews">
+  <blockquote class="nonna-review"><p>“Fantastisk service og nydelig mat. Kommer garantert tilbake!”</p><cite>— Ingrid, Google</cite></blockquote>
+  <blockquote class="nonna-review"><p>“Byens beste! Hyggelig personale og god stemning hele kvelden.”</p><cite>— Thomas, Tripadvisor</cite></blockquote>
+  <blockquote class="nonna-review"><p>“Perfekt sted for en uformell middag med venner.”</p><cite>— Maria, Facebook</cite></blockquote>
+</div></section>
+</main>
+<footer><address class="nonna-address">
+  <strong>Nonna Pizza</strong><br>
+  Nonnegata 5<br>
+  7030 Trondheim<br>
+  <a href="tel:+4773005512">+47 73 00 55 12</a><br>
+  <a href="mailto:ciao@nonnapizza.example">ciao@nonnapizza.example</a>
+</address><div class="nonna-hours">
+  <h4 class="nonna-hours__title">Åpningstider</h4>
+  <table class="nonna-hours__table" role="presentation"><tbody>
+    <tr><th scope="row">Mandag–torsdag</th><td>11:00–22:00</td></tr>
+    <tr><th scope="row">Fredag</th><td>11:00–23:00</td></tr>
+    <tr><th scope="row">Lørdag</th><td>12:00–23:00</td></tr>
+    <tr><th scope="row">Søndag</th><td>13:00–21:00</td></tr>
+  </tbody></table>
+  <p class="nonna-hours__note">Avvikende åpningstider i høytider annonseres på Instagram og Facebook.</p>
+</div><div class="nonna-newsletter">
+  <h3 class="nonna-newsletter__title">Meld deg på nyhetsbrevet</h3>
+  <p class="nonna-newsletter__text">Få tilbud, arrangementer og nye retter rett i innboksen. Vi sender maks to e-poster i måneden, og du kan melde deg av når som helst.</p>
+  <form class="nonna-newsletter__form" action="/nyhetsbrev" method="post" novalidate>
+    <label for="nonna-nl-email" class="nonna-sr-only">Din e-postadresse</label>
+    <input type="email" id="nonna-nl-email" name="EMAIL" placeholder="Din e-postadresse" autocomplete="email" required>
+    <div style="position:absolute;left:-5000px" aria-hidden="true"><input type="text" name="b_nonnapizza_hp" tabindex="-1" value=""></div>
+    <button type="submit" class="nonna-btn nonna-btn--primary">Meld meg på</button>
+  </form>
+</div><p>© 2026 Nonna Pizza. Alle rettigheter reservert.</p></footer>
+<div id="nonna-cookie-banner" class="nonna-cookie-banner" role="dialog" aria-live="polite" aria-label="Vi bruker informasjonskapsler">
+  <div class="nonna-cookie-banner__inner">
+    <p class="nonna-cookie-banner__title"><strong>Vi bruker informasjonskapsler</strong></p>
+    <p class="nonna-cookie-banner__text">Vi bruker informasjonskapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikken på nettstedet og tilpasse innhold. Noen er nødvendige for at siden skal fungere, andre hjelper oss å forstå hvordan siden brukes. Du kan når som helst endre eller trekke tilbake samtykket ditt. <a href="https://nonnapizza.example/personvernerkl-ring">Personvernerklæring</a></p>
+    <div class="nonna-cookie-banner__actions">
+      <button type="button" class="nonna-btn nonna-btn--primary" data-consent="all">Godta alle</button>
+      <button type="button" class="nonna-btn nonna-btn--secondary" data-consent="necessary">Kun nødvendige</button>
+      <button type="button" class="nonna-btn nonna-btn--link" data-consent="settings">Innstillinger</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

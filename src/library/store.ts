@@ -112,3 +112,15 @@ export function candidatesFor(platform: Platform, excludeId?: string, limit = 8)
     .filter((x) => x.meta.platform === platform && x.meta.id !== excludeId && !x.meta.reusedFrom)
     .slice(0, limit);
 }
+
+/** Latest item list per extractor — the base for computing price changes. */
+export function loadSnapshot(id: string): import('../types.ts').MenuItem[] | null {
+  const f = resolve(config.libraryDir, 'snapshots', `${id}.json`);
+  return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : null;
+}
+
+export function saveSnapshot(id: string, items: import('../types.ts').MenuItem[]): void {
+  const d = resolve(config.libraryDir, 'snapshots');
+  mkdirSync(d, { recursive: true });
+  writeFileSync(resolve(d, `${id}.json`), JSON.stringify(items, null, 1) + '\n');
+}

@@ -1,0 +1,214 @@
+{
+  "restaurant": "Bao Street",
+  "platform": "unknown",
+  "currency": "NOK",
+  "url": "https://baostreet.example/",
+  "fictional": true,
+  "notes": "Flat <p><strong>name</strong> — desc <em>149</em></p> under <h3> sections; bare numeric prices. Redesign: .menu-entry spans, \"kr 149\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Bao Beef",
+      "from": 159,
+      "to": 165
+    },
+    {
+      "type": "price",
+      "name": "Edamame",
+      "from": 59,
+      "to": 65
+    },
+    {
+      "type": "added",
+      "section": "Bao",
+      "name": "Bao Fish",
+      "price": 149
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Small eats",
+        "Bao",
+        "Drikke"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Bao",
+      "name": "Bao Pork",
+      "description": "crispy pork belly, hoisin, pickles, peanøtter",
+      "price": 149
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Chicken",
+      "description": "koreansk fried chicken, gochujang-majo, slaw",
+      "price": 145
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Beef",
+      "description": "braisert short rib, kimchi, vårløk",
+      "price": 159
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Tofu",
+      "description": "sprø tofu, søt soya, agurk, sesam",
+      "price": 135
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Duck",
+      "description": "five-spice and, plommesaus, purre",
+      "price": 159
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Prawn",
+      "description": "tempurareke, sriracha-majo, lime",
+      "price": 155
+    },
+    {
+      "section": "Small eats",
+      "name": "Edamame",
+      "description": "havsalt, chili",
+      "price": 59
+    },
+    {
+      "section": "Small eats",
+      "name": "Dumplings",
+      "description": "svin og gressløk, 6 stk, svart eddik",
+      "price": 119
+    },
+    {
+      "section": "Small eats",
+      "name": "Crispy Cauliflower",
+      "description": "sweet chili glaze, sesam",
+      "price": 95
+    },
+    {
+      "section": "Small eats",
+      "name": "Kimchi Fries",
+      "description": "pommes frites, kimchi, ost, gochujang",
+      "price": 109
+    },
+    {
+      "section": "Small eats",
+      "name": "Smacked Cucumber",
+      "description": "hvitløk, chiliolje",
+      "price": 69
+    },
+    {
+      "section": "Drikke",
+      "name": "Yuzu Lemonade",
+      "description": "hjemmelaget",
+      "price": 65
+    },
+    {
+      "section": "Drikke",
+      "name": "Asahi",
+      "description": "japansk lager, 0,33 l",
+      "price": 89
+    },
+    {
+      "section": "Drikke",
+      "name": "Jasmine Iced Tea",
+      "description": "usøtet",
+      "price": 49
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Small eats",
+      "name": "Edamame",
+      "description": "havsalt, chili",
+      "price": 65
+    },
+    {
+      "section": "Small eats",
+      "name": "Dumplings",
+      "description": "svin og gressløk, 6 stk, svart eddik",
+      "price": 119
+    },
+    {
+      "section": "Small eats",
+      "name": "Crispy Cauliflower",
+      "description": "sweet chili glaze, sesam",
+      "price": 95
+    },
+    {
+      "section": "Small eats",
+      "name": "Kimchi Fries",
+      "description": "pommes frites, kimchi, ost, gochujang",
+      "price": 109
+    },
+    {
+      "section": "Small eats",
+      "name": "Smacked Cucumber",
+      "description": "hvitløk, chiliolje",
+      "price": 69
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Pork",
+      "description": "crispy pork belly, hoisin, pickles, peanøtter",
+      "price": 149
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Chicken",
+      "description": "koreansk fried chicken, gochujang-majo, slaw",
+      "price": 145
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Beef",
+      "description": "braisert short rib, kimchi, vårløk",
+      "price": 165
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Tofu",
+      "description": "sprø tofu, søt soya, agurk, sesam",
+      "price": 135
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Duck",
+      "description": "five-spice and, plommesaus, purre",
+      "price": 159
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Prawn",
+      "description": "tempurareke, sriracha-majo, lime",
+      "price": 155
+    },
+    {
+      "section": "Bao",
+      "name": "Bao Fish",
+      "description": "panert torsk, tartarsaus, syltet rødløk",
+      "price": 149
+    },
+    {
+      "section": "Drikke",
+      "name": "Yuzu Lemonade",
+      "description": "hjemmelaget",
+      "price": 65
+    },
+    {
+      "section": "Drikke",
+      "name": "Asahi",
+      "description": "japansk lager, 0,33 l",
+      "price": 89
+    },
+    {
+      "section": "Drikke",
+      "name": "Jasmine Iced Tea",
+      "description": "usøtet",
+      "price": 49
+    }
+  ]
+}

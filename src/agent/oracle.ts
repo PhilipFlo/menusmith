@@ -40,7 +40,8 @@ Rules:
 - "section" is the heading the item is listed under (e.g. "Pizza", "Drinks"), or null.
 - "description" is the short text describing the dish, or null. Do not invent descriptions.
 - Never invent items. Ignore navigation, opening hours, addresses, newsletter text, cookie banners, events.
-- If the page has no menu, return {"is_menu": false, "currency": null, "items": []}.`;
+- If the page has no menu, return {"is_menu": false, "currency": null, "items": []}.
+- If the input is a list of lines exported from a menu API ("[Category > Sub] Name | price=… | description | flags"), use the category path as section, skip items flagged unavailable/hidden/archived/deleted, skip modifier/option groups (sizes, extras, sauces, add-ons) unless they are standalone dishes, and convert prices given in minor units (e.g. 18900 for a 189 kr dish) to the normal amount.`;
 
 /** Split long page text on line boundaries so each chunk fits comfortably. */
 export function chunkText(text: string, maxChars = 24_000): string[] {

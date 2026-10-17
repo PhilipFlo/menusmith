@@ -1,10 +1,10 @@
-import { config } from '../config.ts';
+import { config, MODELS, modelName } from '../config.ts';
 import { domainOf, fetchPage, type Page } from '../html/fetch.ts';
 import { detectPlatform } from '../html/platform.ts';
 import { skeleton } from '../html/simplify.ts';
-import { jsonMenuView, jsonSkeletonText } from '../html/jsonview.ts';
+import { jsonMenuLines, jsonSkeletonText } from '../html/jsonview.ts';
 import { Ledger, type ChatMessage } from '../llm/client.ts';
-import { candidatesFor, idForUrl, loadExtractor, saveExtractor } from '../library/store.ts';
+import { candidatesFor, idForUrl, loadExtractor, saveExtractor, saveSnapshot } from '../library/store.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import { findOfficialSite, tavilyEnabled } from '../tools/tavily.ts';
 import type { Emit, ExtractorMeta, MenuItem, RunResult, Score } from '../types.ts';
@@ -13,6 +13,7 @@ import { acquire, reacquire, type Acquired } from './acquire.ts';
 import { detectHardcoding, feedbackMessage, initialMessages, initialMessagesJson, writeCode } from './forge.ts';
 import { itemsHash, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
+import { judgeExtras } from './judge.ts';
 
 export interface ForgeInput {
   /** Any page of the restaurant's site (menu page preferred). */
@@ -28,6 +29,8 @@ export interface ForgeInput {
   noDiscover?: boolean;
   /** Allow the headless-browser path for JavaScript-built menus (default true). */
   allowRender?: boolean;
+  /** A fresh oracle reading the caller already has (the fleet's drift check) — saves a call. */
+  oracle?: MenuItem[];
 }
 
 export interface ForgeOutcome {
@@ -128,7 +131,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   let text = acq.text;
   if (acq.kind === 'json' && priceDensity(acq.html) < 5) {
     try {
-      text = jsonMenuView(JSON.parse(acq.payload));
+      text = jsonMenuLines(JSON.parse(acq.payload));
     } catch {
       /* keep page text */
     }
@@ -136,9 +139,13 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   emit({ type: 'log', message: `Source: ${acq.note} · platform ${platform}` });
 
   // 3. Oracle reading (Nemotron Super).
-  emit({ type: 'step', step: 'oracle', status: 'start', detail: 'Nemotron 3 Super is reading the menu' });
   let oracleItems: MenuItem[];
-  try {
+  if (input.oracle?.length) {
+    oracleItems = input.oracle;
+    emit({ type: 'oracle', items: oracleItems });
+    emit({ type: 'step', step: 'oracle', status: 'done', detail: `${oracleItems.length} items (fresh reading from the drift check)` });
+  } else try {
+    emit({ type: 'step', step: 'oracle', status: 'start', detail: `${modelName(MODELS.oracle[0]!)} is reading the menu` });
     const o = await readMenu(text, { url: menuUrl, restaurant: input.restaurant }, ledger, emit);
     if (!o.isMenu) {
       emit({ type: 'step', step: 'oracle', status: 'fail', detail: 'no menu found on this page' });
@@ -194,6 +201,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       code,
       how === 'reused' ? `adopted from ${reusedFrom}` : how === 'healed' ? `self-heal: ${input.repairOf?.reason}` : 'forged',
     );
+    saveSnapshot(id, run.items);
     emit({ type: 'step', step: 'commit', status: 'done', detail: `${id} v${meta.version}` });
     emit({ type: 'result', ok: true, meta, items: run.items });
     return { ok: true, meta, code, items: run.items, oracleCount: oracleItems.length, rounds, bestScore: score, ledger, ms: Date.now() - t0, mode: how } satisfies ForgeOutcome;
@@ -243,8 +251,11 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   let best: { score: Score; code: string; run: RunResult } | null = null;
   const maxRounds = 1 + config.maxRepairs;
   let lastModel = '';
+  let stagnant = 0;
+  let roundsUsed = 0;
   for (let round = 1; round <= maxRounds; round++) {
-    emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1 ? 'Nemotron 3 Ultra is writing the extractor' : `Repair round ${round - 1}` });
+    roundsUsed = round;
+    emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1 ? `${modelName(MODELS.forge[0]!)} is writing the extractor` : `Repair round ${round - 1}: ${modelName(MODELS.forge[0]!)} is fixing its code` });
     let code: string | null;
     try {
       const w = await writeCode(messages, round, ledger, emit);
@@ -261,11 +272,27 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       emit({ type: 'step', step: 'test', status: 'fail', detail: 'no code in reply' });
       continue;
     }
+    emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'done', detail: `${code.split('\n').length} lines of code` });
     emit({ type: 'code', version: round, round, code });
+    emit({ type: 'step', step: 'test', status: 'start', detail: `Running round ${round} in the sandbox` });
 
     const hard = detectHardcoding(code, oracleItems);
     const run = hard.length ? { ok: false, items: [], error: 'hard-coded content', ms: 0 } : await runExtractor(code, acq.payload, menuUrl, mode);
-    const score = run.ok ? scoreAgainstOracle(oracleItems, run.items, text) : null;
+    let score = run.ok ? scoreAgainstOracle(oracleItems, run.items, text) : null;
+    // Items on the page that the oracle didn't list: let Nemotron Nano judge them.
+    if (score?.pass && score.grounded.length) {
+      try {
+        const rejected = await judgeExtras(score.grounded, text, ledger, emit);
+        if (rejected.size) {
+          emit({ type: 'log', message: `Judge rejected ${rejected.size} extra item(s) as not menu dishes: ${[...rejected].slice(0, 5).join(', ')}` });
+          score = scoreAgainstOracle(oracleItems, run.items, text, { rejected });
+        } else {
+          emit({ type: 'log', message: `Judge accepted ${score.grounded.length} item(s) the oracle had missed` });
+        }
+      } catch (e) {
+        emit({ type: 'log', message: `Judge unavailable: ${(e as Error).message}` });
+      }
+    }
     emit({
       type: 'test',
       round,
@@ -282,16 +309,29 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       continue;
     }
     emit({ type: 'step', step: 'test', status: 'fail', detail: hard.length ? 'hard-coded content' : run.ok ? `f1=${score!.f1} — not good enough yet` : run.error });
+    // Stop early when repairs stagnate: two rounds in a row without improving the best F1.
+    stagnant = score && best && score.f1 < best.score.f1 + 0.01 && round > 1 ? stagnant + 1 : 0;
+    if (stagnant >= 2) {
+      emit({ type: 'log', message: 'Repairs have stopped improving — giving up early to save tokens' });
+      break;
+    }
     messages.push({ role: 'user', content: feedbackMessage(round, run, score, hard) });
   }
 
-  return fail(`no passing extractor after ${maxRounds} rounds (best f1 ${best?.score.f1 ?? 0})`, {
+  const reason = `no passing extractor after ${roundsUsed} rounds (best f1 ${best?.score.f1 ?? 0})`;
+  if (best) emit({ type: 'log', message: `Best attempt returned ${best.run.items.length} items (f1 ${best.score.f1})` });
+  emit({ type: 'result', ok: false, reason, items: best?.run.items });
+  return {
+    ok: false,
+    reason,
+    ledger,
+    ms: Date.now() - t0,
     oracleCount: oracleItems.length,
-    rounds: maxRounds,
+    rounds: roundsUsed,
     bestScore: best?.score,
     code: best?.code,
     items: best?.run.items,
-  });
+  };
 }
 
 /** Re-run a stored extractor on the live page — zero tokens. */

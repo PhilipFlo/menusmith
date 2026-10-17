@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meny | Kebab Kongen</title>
+<meta name="description" content="Kebab, pizza og burger i Torggata. Bestill for henting eller levering.">
+<link rel="preconnect" href="https://fonts.googleapis.example">
+<link href="https://fonts.googleapis.example/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--rod:#b3121b;--gul:#ffcc00;--mork:#1b1b1b}
+*{box-sizing:border-box}body{font-family:Inter,sans-serif;margin:0;background:#fffaf0;color:var(--mork)}
+.rett{display:grid;grid-template-columns:2.5rem 1fr auto;gap:.75rem;padding:.75rem 0;border-bottom:1px dashed #ddd}
+.rett__nr{font-family:'Bebas Neue';font-size:1.5rem;color:var(--rod)}
+.rett__pris{font-weight:600;white-space:nowrap}
+.kk-nav__inner{line-height:1.6;border-radius:8px;border-radius:8px;transition:all .2s ease-in-out;gap:4px}.kk-subtitle--primary{font-weight:300;transition:all .1s ease-in-out;font-size:1.375rem}.kk-overlay__text{margin:24px 0;margin:8px 0;background-color:#8f4420;padding:16px 4px}.kk-hero--active{letter-spacing:.08em;gap:12px}.kk-form--active{padding:0px 8px;font-weight:300;z-index:91;gap:0px}.kk-input{font-size:0.875rem;gap:8px;letter-spacing:.07em;max-width:960px}
+.kk-container:hover{color:#e4a4bb;padding:8px 16px;font-size:1.875rem;border-radius:4px;transition:all .1s ease-in-out}.kk-hero--active{line-height:1.5;display:block}.kk-hero--muted{color:#2da5ed;max-width:1200px}.kk-icon::after{font-weight:700;z-index:75;margin:8px 0;background-color:#7fc935}.kk-overlay--primary{transition:all .4s ease-in-out;transition:all .4s ease-in-out;letter-spacing:.04em;margin:8px 16px}.kk-title__text{max-width:1280px;max-width:960px;transition:all .3s ease-in-out}
+.kk-modal--primary{padding:12px 4px;display:none;z-index:14;font-weight:600}.kk-banner--primary{font-weight:400;letter-spacing:.05em;font-weight:300;display:block}.kk-divider{gap:8px;transition:all .4s ease-in-out;background-color:#ecdc41;padding:4px 0px}.kk-input__text{background-color:#d30256;background-color:#9bfead;z-index:92;color:#8c6ff7;gap:8px}.kk-btn--active{color:#0cd3ce;transition:all .3s ease-in-out;letter-spacing:.08em;letter-spacing:.04em}.kk-badge{padding:4px 16px;font-size:0.875rem;z-index:22;color:#06b8e7}
+.kk-divider__inner{gap:4px;display:inline-flex;border-radius:2px;border-radius:8px}.kk-btn--primary{font-size:1.375rem;display:flex;margin:0px auto;gap:4px;font-size:1.625rem}.kk-link--primary{z-index:60;z-index:20}.kk-hero--small{font-weight:400;font-size:1.875rem;line-height:1.2}.kk-container{max-width:1280px;padding:16px 16px}.kk-badge--primary{margin:16px 16px;padding:4px 16px;font-size:0.875rem;margin:16px auto}
+.kk-btn:hover{padding:12px 4px;transition:all .5s ease-in-out;line-height:1.3}.kk-badge--muted{color:#db812d;padding:12px 0px;margin:16px auto;background-color:#b05eea}.kk-subtitle--primary{background-color:#3b0ec1;letter-spacing:.08em;font-weight:300}.kk-link--muted{color:#20b77a;transition:all .3s ease-in-out;max-width:720px}.kk-icon{display:none;letter-spacing:.00em;max-width:1200px;transition:all .3s ease-in-out;padding:20px 0px}.kk-wrapper::after{margin:8px 16px;display:inline-flex}
+.kk-input__text{z-index:17;line-height:1.3;background-color:#53e2fe}.kk-title__inner{z-index:23;transition:all .5s ease-in-out;font-size:1.875rem;transition:all .2s ease-in-out;display:block}.kk-footer__text{display:flex;background-color:#834474;color:#b915ac;max-width:1200px}.kk-overlay--small{background-color:#6ab828;margin:16px 0;background-color:#7a6a59}.kk-nav__inner{color:#904c06;transition:all .3s ease-in-out;max-width:1140px}.kk-card::after{border-radius:0px;letter-spacing:.00em;max-width:1280px;transition:all .4s ease-in-out;max-width:960px}
+.kk-nav__text{line-height:1.3;font-weight:600;letter-spacing:.04em}.kk-container__text{font-size:1.750rem;letter-spacing:.03em;border-radius:2px;max-width:1200px;border-radius:6px}.kk-btn--active{gap:4px;background-color:#75108f;gap:0px}.kk-banner--large{gap:4px;max-width:1280px}.kk-hero::after{margin:24px auto;letter-spacing:.05em;display:grid}.kk-badge--muted{font-weight:600;font-size:1.125rem}
+.kk-footer--large{color:#4bf269;font-weight:400;font-weight:700;font-size:1.125rem;max-width:1200px}.kk-card--large{display:grid;max-width:1280px;color:#39bf9d;display:none;transition:all .3s ease-in-out}.kk-input::after{background-color:#a7d2a4;background-color:#906c97;background-color:#b5e431;color:#bd3310}.kk-icon--small{color:#e59738;padding:16px 4px;z-index:33;border-radius:0px;transition:all .3s ease-in-out}.kk-title{background-color:#5a4154;color:#7f7f5e}.kk-form--muted{display:inline-flex;margin:24px auto;z-index:99;max-width:720px}
+.kk-wrapper:hover{display:grid;max-width:960px;margin:0px 0}.kk-link--small{gap:0px;gap:4px;font-size:1.750rem}.kk-overlay{letter-spacing:.03em;font-size:1.000rem;letter-spacing:.05em}.kk-card--small{z-index:17;background-color:#e7b9ea;color:#7c959b;transition:all .4s ease-in-out;line-height:1.4}.kk-wrapper__inner{font-size:1.875rem;line-height:1.1;transition:all .5s ease-in-out;max-width:960px}.kk-title{background-color:#002df9;z-index:64;padding:0px 8px}
+.kk-divider__text{padding:4px 8px;line-height:1.3;transition:all .4s ease-in-out;gap:16px;z-index:31}.kk-subtitle::after{transition:all .2s ease-in-out;display:grid;display:flex;display:flex}.kk-icon--large{letter-spacing:.08em;max-width:960px;padding:8px 8px}.kk-title--large{gap:0px;font-size:1.750rem;letter-spacing:.00em}.kk-divider:hover{max-width:1200px;display:flex;margin:0px 16px;font-weight:400}.kk-grid--primary{background-color:#c2482e;max-width:1200px}
+.kk-form{font-weight:300;gap:0px;gap:16px}.kk-container:hover{letter-spacing:.03em;line-height:1.3}.kk-link--active{z-index:82;line-height:1.5;letter-spacing:.06em;gap:4px;border-radius:0px}.kk-overlay{margin:0px 0;padding:16px 20px;padding:16px 20px;line-height:1.3}.kk-header--primary{gap:16px;transition:all .1s ease-in-out;letter-spacing:.02em}.kk-subtitle:hover{z-index:98;line-height:1.6;z-index:95}
+.kk-divider--primary{margin:24px auto;font-weight:600;line-height:1.1}.kk-form--large{padding:16px 16px;color:#602587;font-size:1.000rem}.kk-banner:hover{letter-spacing:.02em;font-size:1.250rem;font-size:0.875rem;color:#88a62a}.kk-overlay--large{letter-spacing:.05em;font-weight:600;font-weight:600;line-height:1.5}.kk-overlay__inner{z-index:88;font-weight:500;font-size:1.750rem;z-index:58;background-color:#b7e612}.kk-wrapper--small{line-height:1.4;margin:0px 16px}
+.kk-nav--large{max-width:960px;color:#62233e;font-size:1.250rem}.kk-col:hover{margin:8px 16px;max-width:1280px}.kk-row__inner{border-radius:2px;color:#0a6cc9}.kk-wrapper--large{background-color:#644900;font-size:0.875rem}.kk-overlay__inner{background-color:#52acf6;border-radius:6px;gap:4px;z-index:95;gap:16px}.kk-overlay--muted{background-color:#0121a9;background-color:#dbeabf;background-color:#f36f85}
+.kk-wrapper:hover{background-color:#23d295;display:block;margin:24px 16px}.kk-input__inner{font-weight:700;color:#1f0535;gap:4px}
+@media (max-width:767px){.kk-header{padding:12px 16px}.kk-nav{display:none}.kk-grid{grid-template-columns:1fr}}
+</style>
+<script async src="https://www.googletagmanager.example/gtag/js?id=G-XXXXXXX"></script>
+</head>
+<body>
+<header class="kk-header">
+  <a class="kk-logo" href="/">Kebab Kongen</a>
+  <nav class="kk-nav"><a href="/">Hjem</a><a href="/meny.html" aria-current="page">Meny</a><a href="/tilbud.html">Tilbud</a><a href="/kontakt.html">Kontakt</a></nav>
+  <a class="kk-ring" href="tel:+4740000123">Ring +47 400 00 123</a>
+</header>
+<div class="kk-tilbud">Ukens tilbud: Kebab i pita + 0,5 l brus — kun kr 169!</div>
+<main class="kk-main">
+  <h1>Meny</h1>
+  <p>Alt kan bestilles som take away. Velg hvitløk-, chili- eller mixdressing. Glutenfri pizzabunn + kr 30.</p>
+<section class="meny-kategori" id="pizza">
+  <h2 class="meny-kategori__tittel">Pizza</h2>
+  <div class="meny-kategori__retter">
+    <div class="rett">
+      <span class="rett__nr">1</span>
+      <div class="rett__info"><span class="rett__navn">Margherita</span><p class="rett__info-tekst">Tomatsaus og ost</p></div>
+      <span class="rett__pris">Liten kr 129 / Stor kr 179</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">2</span>
+      <div class="rett__info"><span class="rett__navn">Kebabpizza</span><p class="rett__info-tekst">Kebabkjøtt, løk, jalapeños og dressing</p></div>
+      <span class="rett__pris">Liten kr 149 / Stor kr 209</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">3</span>
+      <div class="rett__info"><span class="rett__navn">Pepperoni</span><p class="rett__info-tekst">Pepperoni og ost</p></div>
+      <span class="rett__pris">Liten kr 139 / Stor kr 189</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">4</span>
+      <div class="rett__info"><span class="rett__navn">Kongens spesial</span><p class="rett__info-tekst">Kebab, kylling, pepperoni, paprika og løk</p></div>
+      <span class="rett__pris">Liten kr 159 / Stor kr 229</span>
+    </div>
+  </div>
+</section>
+<section class="meny-kategori" id="kebab">
+  <h2 class="meny-kategori__tittel">Kebab</h2>
+  <div class="meny-kategori__retter">
+    <div class="rett">
+      <span class="rett__nr">5</span>
+      <div class="rett__info"><span class="rett__navn">Kebab i pita</span><p class="rett__info-tekst">Med salat, tomat, løk og valgfri dressing</p></div>
+      <span class="rett__pris">kr 149</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">6</span>
+      <div class="rett__info"><span class="rett__navn">Kebab i rull</span><p class="rett__info-tekst">Lefserull med salat og dressing</p></div>
+      <span class="rett__pris">kr 149</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">7</span>
+      <div class="rett__info"><span class="rett__navn">Kebab i boks</span><p class="rett__info-tekst">Kebabkjøtt over pommes frites med dressing</p></div>
+      <span class="rett__pris">kr 129</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">8</span>
+      <div class="rett__info"><span class="rett__navn">Kebabtallerken</span><p class="rett__info-tekst">Kebabkjøtt, pommes frites, salat og dressing</p></div>
+      <span class="rett__pris">kr 189</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">9</span>
+      <div class="rett__info"><span class="rett__navn">Kyllingkebab i pita</span><p class="rett__info-tekst">Med salat og hvitløksdressing</p></div>
+      <span class="rett__pris">kr 139</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">10</span>
+      <div class="rett__info"><span class="rett__navn">Kebab mix tallerken</span><p class="rett__info-tekst">Kebab og kylling, ris, salat og to dressinger</p></div>
+      <span class="rett__pris">kr 199</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">11</span>
+      <div class="rett__info"><span class="rett__navn">Iskender kebab</span><p class="rett__info-tekst">Kebab på brød med tomatsaus, yoghurt og smør</p></div>
+      <span class="rett__pris">kr 209</span>
+    </div>
+  </div>
+</section>
+<section class="meny-kategori" id="burger">
+  <h2 class="meny-kategori__tittel">Burger</h2>
+  <div class="meny-kategori__retter">
+    <div class="rett">
+      <span class="rett__nr">12</span>
+      <div class="rett__info"><span class="rett__navn">Hamburger</span><p class="rett__info-tekst">120 g, med salat og dressing</p></div>
+      <span class="rett__pris">kr 99</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">13</span>
+      <div class="rett__info"><span class="rett__navn">Cheeseburger</span><p class="rett__info-tekst">120 g, med ost, salat og dressing</p></div>
+      <span class="rett__pris">kr 109</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">14</span>
+      <div class="rett__info"><span class="rett__navn">Kyllingburger</span><p class="rett__info-tekst">Panert kyllingfilet, salat og majones</p></div>
+      <span class="rett__pris">kr 115</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">15</span>
+      <div class="rett__info"><span class="rett__navn">Hamburgertallerken</span><p class="rett__info-tekst">Burger med pommes frites og salat</p></div>
+      <span class="rett__pris">kr 159</span>
+    </div>
+  </div>
+</section>
+<section class="meny-kategori" id="falafel-og-vegetar">
+  <h2 class="meny-kategori__tittel">Falafel og vegetar</h2>
+  <div class="meny-kategori__retter">
+    <div class="rett">
+      <span class="rett__nr">16</span>
+      <div class="rett__info"><span class="rett__navn">Falafel i pita</span><p class="rett__info-tekst">Med salat og tahinidressing</p></div>
+      <span class="rett__pris">kr 129</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">17</span>
+      <div class="rett__info"><span class="rett__navn">Falafeltallerken</span><p class="rett__info-tekst">Falafel, ris, salat, hummus og dressing</p></div>
+      <span class="rett__pris">kr 179</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">18</span>
+      <div class="rett__info"><span class="rett__navn">Halloumi i pita</span><p class="rett__info-tekst">Grillet halloumi, salat og dressing</p></div>
+      <span class="rett__pris">kr 135</span>
+    </div>
+  </div>
+</section>
+<section class="meny-kategori" id="tilbeh-r">
+  <h2 class="meny-kategori__tittel">Tilbehør</h2>
+  <div class="meny-kategori__retter">
+    <div class="rett">
+      <span class="rett__nr">19</span>
+      <div class="rett__info"><span class="rett__navn">Pommes frites</span></div>
+      <span class="rett__pris">Liten kr 49 / Stor kr 69</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">20</span>
+      <div class="rett__info"><span class="rett__navn">Løkringer 8 stk</span></div>
+      <span class="rett__pris">kr 59</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">21</span>
+      <div class="rett__info"><span class="rett__navn">Ekstra dressing</span><p class="rett__info-tekst">Hvitløk, chili eller mix</p></div>
+      <span class="rett__pris">kr 15</span>
+    </div>
+  </div>
+</section>
+<section class="meny-kategori" id="drikke">
+  <h2 class="meny-kategori__tittel">Drikke</h2>
+  <div class="meny-kategori__retter">
+    <div class="rett">
+      <span class="rett__nr">22</span>
+      <div class="rett__info"><span class="rett__navn">Brus 0,5 l</span><p class="rett__info-tekst">Cola, Fanta, Sprite</p></div>
+      <span class="rett__pris">kr 39</span>
+    </div>
+    <div class="rett">
+      <span class="rett__nr">23</span>
+      <div class="rett__info"><span class="rett__navn">Ayran</span></div>
+      <span class="rett__pris">kr 30</span>
+    </div>
+  </div>
+</section>
+  <p class="kk-merk">Priser inkl. mva. Vi tar forbehold om prisendringer og trykkfeil.</p>
+  <p class="kk-merk">Har du allergier eller intoleranser? Gi beskjed til betjeningen, så hjelper vi deg. Allergenoversikt finnes i restauranten og kan sendes på e-post.</p>
+  <section class="kk-om"><h2>Om oss</h2><p>Kebab Kongen har servert Grünerløkka siden 2004. Kjøttet grilles på ekte spyd hver dag og brødet bakes ferskt hver morgen.</p>
+<p>Kebab Kongen startet som en liten drøm ved et kjøkkenbord, og har siden vokst til et nabolagssted der stamgjestene kjenner hverandre ved navn. Vi lager det meste fra bunnen av hver dag, og samarbeider med lokale produsenter så langt det lar seg gjøre.</p>
+<p>Råvarene våre kommer fra gårder og leverandører vi kjenner personlig. Menyen endres litt med sesongene, men favorittene blir stående. Spør gjerne betjeningen om dagens anbefalinger og hva som passer til drikken du har valgt.</p>
+<p>Vi har plass til rundt 60 gjester inne og 30 på uteserveringen når været tillater det. Bordbestilling anbefales i helgene, men vi holder alltid av noen bord til gjester som kommer innom.</p></section>
+</main>
+<footer class="kk-footer">
+  <address class="kk-address">
+  <strong>Kebab Kongen</strong><br>
+  Torggata 99<br>
+  0181 Oslo<br>
+  <a href="tel:+4740000123">+47 400 00 123</a><br>
+  <a href="mailto:kebabkongen@kebabkongen.example">kebabkongen@kebabkongen.example</a>
+</address>
+  <div class="kk-hours">
+  <h4 class="kk-hours__title">Åpningstider</h4>
+  <table class="kk-hours__table" role="presentation"><tbody>
+    <tr><th scope="row">Mandag–torsdag</th><td>11:00–22:00</td></tr>
+    <tr><th scope="row">Fredag</th><td>11:00–23:00</td></tr>
+    <tr><th scope="row">Lørdag</th><td>12:00–23:00</td></tr>
+    <tr><th scope="row">Søndag</th><td>13:00–21:00</td></tr>
+  </tbody></table>
+  <p class="kk-hours__note">Avvikende åpningstider i høytider annonseres på Instagram og Facebook.</p>
+</div>
+  <div class="kk-newsletter">
+  <h3 class="kk-newsletter__title">Meld deg på nyhetsbrevet</h3>
+  <p class="kk-newsletter__text">Få tilbud, arrangementer og nye retter rett i innboksen. Vi sender maks to e-poster i måneden, og du kan melde deg av når som helst.</p>
+  <form class="kk-newsletter__form" action="/nyhetsbrev" method="post" novalidate>
+    <label for="kk-nl-email" class="kk-sr-only">Din e-postadresse</label>
+    <input type="email" id="kk-nl-email" name="EMAIL" placeholder="Din e-postadresse" autocomplete="email" required>
+    <div style="position:absolute;left:-5000px" aria-hidden="true"><input type="text" name="b_kebabkongen_hp" tabindex="-1" value=""></div>
+    <button type="submit" class="kk-btn kk-btn--primary">Meld meg på</button>
+  </form>
+</div>
+  <p>© 2026 Kebab Kongen. Alle rettigheter reservert.</p>
+</footer>
+<div id="kk-cookie-banner" class="kk-cookie-banner" role="dialog" aria-live="polite" aria-label="Vi bruker informasjonskapsler">
+  <div class="kk-cookie-banner__inner">
+    <p class="kk-cookie-banner__title"><strong>Vi bruker informasjonskapsler</strong></p>
+    <p class="kk-cookie-banner__text">Vi bruker informasjonskapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikken på nettstedet og tilpasse innhold. Noen er nødvendige for at siden skal fungere, andre hjelper oss å forstå hvordan siden brukes. Du kan når som helst endre eller trekke tilbake samtykket ditt. <a href="https://kebabkongen.example/personvernerkl-ring">Personvernerklæring</a></p>
+    <div class="kk-cookie-banner__actions">
+      <button type="button" class="kk-btn kk-btn--primary" data-consent="all">Godta alle</button>
+      <button type="button" class="kk-btn kk-btn--secondary" data-consent="necessary">Kun nødvendige</button>
+      <button type="button" class="kk-btn kk-btn--link" data-consent="settings">Innstillinger</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

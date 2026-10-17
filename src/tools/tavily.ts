@@ -63,12 +63,26 @@ export async function tavilyMap(url: string, limit = 40): Promise<string[]> {
 
 /** Sites that list restaurants but are not the restaurant's own website. */
 export const AGGREGATORS =
-  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter)/i;
+  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews)/i;
 
 /** Find the restaurant's own website from its name (+ city). */
 export async function findOfficialSite(restaurant: string, city?: string): Promise<{ url: string; title: string } | null> {
   const results = await tavilySearch(`${restaurant}${city ? ' ' + city : ''} restaurant official website menu`, 10);
   const own = results.filter((r) => !AGGREGATORS.test(r.url));
-  const best = own[0];
+  // Prefer a domain that contains the restaurant's name ("villaparadiso.no" for "Villa Paradiso").
+  const squash = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g, '');
+  const words = restaurant.toLowerCase().split(/\s+/).map(squash).filter((w) => w.length >= 3);
+  const nameScore = (u: string) => {
+    let host = '';
+    try {
+      host = squash(new URL(u).hostname.replace(/^www\./, '').split('.').slice(0, -1).join(''));
+    } catch {
+      return 0;
+    }
+    const full = squash(restaurant);
+    if (full.length >= 5 && host.includes(full.slice(0, 12))) return 3;
+    return words.filter((w) => host.includes(w)).length;
+  };
+  const best = [...own].sort((a, b) => nameScore(b.url) - nameScore(a.url) || b.score - a.score)[0];
   return best ? { url: best.url, title: best.title } : null;
 }

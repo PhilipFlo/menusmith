@@ -1,0 +1,239 @@
+{
+  "restaurant": "Taqueria Luna",
+  "platform": "shopify",
+  "currency": "USD",
+  "url": "https://taqueria-luna.example/collections/menu",
+  "fictional": true,
+  "notes": "Shopify Dawn collection grid; each name appears twice per card and each price twice (regular + sale block). No descriptions. Redesign: Warehouse theme .product-item, \"$4.95\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Carne Asada Taco",
+      "from": 4.75,
+      "to": 4.95
+    },
+    {
+      "type": "price",
+      "name": "Horchata",
+      "from": 3.75,
+      "to": 3.95
+    },
+    {
+      "type": "added",
+      "section": "Tacos",
+      "name": "Birria Taco",
+      "price": 5.5
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Burritos & Bowls",
+        "Tacos",
+        "Sides",
+        "Drinks"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Tacos",
+      "name": "Al Pastor Taco",
+      "description": null,
+      "price": 4.25
+    },
+    {
+      "section": "Tacos",
+      "name": "Carne Asada Taco",
+      "description": null,
+      "price": 4.75
+    },
+    {
+      "section": "Tacos",
+      "name": "Pollo Asado Taco",
+      "description": null,
+      "price": 4.25
+    },
+    {
+      "section": "Tacos",
+      "name": "Carnitas Taco",
+      "description": null,
+      "price": 4.5
+    },
+    {
+      "section": "Tacos",
+      "name": "Baja Fish Taco",
+      "description": null,
+      "price": 5.25
+    },
+    {
+      "section": "Tacos",
+      "name": "Hongos Taco",
+      "description": null,
+      "price": 4
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Carne Asada Burrito",
+      "description": null,
+      "price": 13.5
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Pollo Burrito",
+      "description": null,
+      "price": 12.75
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Veggie Burrito",
+      "description": null,
+      "price": 11.95
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Burrito Bowl",
+      "description": null,
+      "price": 12.5
+    },
+    {
+      "section": "Sides",
+      "name": "Chips & Guacamole",
+      "description": null,
+      "price": 7.25
+    },
+    {
+      "section": "Sides",
+      "name": "Elote",
+      "description": null,
+      "price": 5.5
+    },
+    {
+      "section": "Sides",
+      "name": "Rice & Beans",
+      "description": null,
+      "price": 4.95
+    },
+    {
+      "section": "Drinks",
+      "name": "Horchata",
+      "description": null,
+      "price": 3.75
+    },
+    {
+      "section": "Drinks",
+      "name": "Agua de Jamaica",
+      "description": null,
+      "price": 3.75
+    },
+    {
+      "section": "Drinks",
+      "name": "Mexican Coke",
+      "description": null,
+      "price": 3.5
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Burritos & Bowls",
+      "name": "Carne Asada Burrito",
+      "description": null,
+      "price": 13.5
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Pollo Burrito",
+      "description": null,
+      "price": 12.75
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Veggie Burrito",
+      "description": null,
+      "price": 11.95
+    },
+    {
+      "section": "Burritos & Bowls",
+      "name": "Burrito Bowl",
+      "description": null,
+      "price": 12.5
+    },
+    {
+      "section": "Tacos",
+      "name": "Al Pastor Taco",
+      "description": null,
+      "price": 4.25
+    },
+    {
+      "section": "Tacos",
+      "name": "Carne Asada Taco",
+      "description": null,
+      "price": 4.95
+    },
+    {
+      "section": "Tacos",
+      "name": "Pollo Asado Taco",
+      "description": null,
+      "price": 4.25
+    },
+    {
+      "section": "Tacos",
+      "name": "Carnitas Taco",
+      "description": null,
+      "price": 4.5
+    },
+    {
+      "section": "Tacos",
+      "name": "Baja Fish Taco",
+      "description": null,
+      "price": 5.25
+    },
+    {
+      "section": "Tacos",
+      "name": "Birria Taco",
+      "description": null,
+      "price": 5.5
+    },
+    {
+      "section": "Tacos",
+      "name": "Hongos Taco",
+      "description": null,
+      "price": 4
+    },
+    {
+      "section": "Sides",
+      "name": "Chips & Guacamole",
+      "description": null,
+      "price": 7.25
+    },
+    {
+      "section": "Sides",
+      "name": "Elote",
+      "description": null,
+      "price": 5.5
+    },
+    {
+      "section": "Sides",
+      "name": "Rice & Beans",
+      "description": null,
+      "price": 4.95
+    },
+    {
+      "section": "Drinks",
+      "name": "Horchata",
+      "description": null,
+      "price": 3.95
+    },
+    {
+      "section": "Drinks",
+      "name": "Agua de Jamaica",
+      "description": null,
+      "price": 3.75
+    },
+    {
+      "section": "Drinks",
+      "name": "Mexican Coke",
+      "description": null,
+      "price": 3.5
+    }
+  ]
+}

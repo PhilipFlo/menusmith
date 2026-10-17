@@ -149,9 +149,14 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
       };
       // chat_template_kwargs is a Token Factory / vLLM extension the SDK types don't know.
       const res = await c.chat.completions.create(body as Parameters<typeof c.chat.completions.create>[0] & { stream?: false });
-      const msg = res.choices[0]?.message as (OpenAI.Chat.Completions.ChatCompletionMessage & { reasoning_content?: string }) | undefined;
+      const choice = res.choices[0];
+      const msg = choice?.message as (OpenAI.Chat.Completions.ChatCompletionMessage & { reasoning?: string; reasoning_content?: string }) | undefined;
       let text = (msg?.content ?? '').toString();
-      let reasoning = msg?.reasoning_content || undefined;
+      // Token Factory returns Nemotron's reasoning in `message.reasoning`.
+      let reasoning = msg?.reasoning || msg?.reasoning_content || undefined;
+      if (!text.trim() && choice?.finish_reason === 'length') {
+        throw new LlmError(`${model}: ran out of output tokens${reasoning ? ' while reasoning' : ''} (max_tokens=${o.maxTokens ?? 4096})`, 413);
+      }
       // Some deployments inline the reasoning as <think>…</think> in content.
       const think = text.match(/<think>([\s\S]*?)<\/think>/i);
       if (think) {

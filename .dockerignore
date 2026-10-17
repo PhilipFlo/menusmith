@@ -1,0 +1,8 @@
+node_modules
+web/dist
+.env
+.env.*
+.cache
+bench/private
+.git
+*.log

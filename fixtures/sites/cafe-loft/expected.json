@@ -1,0 +1,263 @@
+{
+  "restaurant": "Café Loft",
+  "platform": "unknown",
+  "currency": "NOK",
+  "url": "https://cafeloft.example/meny/",
+  "fictional": true,
+  "notes": "<dl> with <dt> name, optional <dd class=beskrivelse>, <dd class=pris>; \"Dagens pris\" = null price; mixed-case names. Redesign: <ul> rows, \"55 kr\", \"dagspris\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Kanelsnurr",
+      "from": 42,
+      "to": 45
+    },
+    {
+      "type": "price",
+      "name": "Cappuccino",
+      "from": 52,
+      "to": 55
+    },
+    {
+      "type": "added",
+      "section": "LUNSJ",
+      "name": "Rekesmørbrød",
+      "price": 179
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "LUNSJ",
+        "FROKOST",
+        "BAKST",
+        "KAFFE & TE"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "FROKOST",
+      "name": "Eggs Benedict",
+      "description": "Pocherte egg, skinke og hollandaise på surdeig",
+      "price": 165
+    },
+    {
+      "section": "FROKOST",
+      "name": "AVOKADOTOAST",
+      "description": "Surdeig, avokado, chili, lime og pochert egg",
+      "price": 149
+    },
+    {
+      "section": "FROKOST",
+      "name": "grøt med bær",
+      "description": "Havregrøt, kanel, bringebær og mandler",
+      "price": 89
+    },
+    {
+      "section": "FROKOST",
+      "name": "Yoghurtbolle",
+      "description": "Gresk yoghurt, granola, honning og frisk frukt",
+      "price": 95
+    },
+    {
+      "section": "FROKOST",
+      "name": "FULL FROKOST",
+      "description": "Egg, bacon, pølse, bønner, sopp og toast",
+      "price": 189
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Dagens suppe",
+      "description": "Med hjemmebakt brød og smør",
+      "price": null
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Kyllingsalat",
+      "description": "Grillet kylling, quinoa, granateple og urtedressing",
+      "price": 175
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Toast Skagen",
+      "description": "Reker, majones, dill og løyrom på briochetoast",
+      "price": 185
+    },
+    {
+      "section": "LUNSJ",
+      "name": "croque monsieur",
+      "description": "Skinke, gruyère og béchamel",
+      "price": 155
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Dagens fisk",
+      "description": "Spør betjeningen",
+      "price": null
+    },
+    {
+      "section": "BAKST",
+      "name": "Kanelsnurr",
+      "description": null,
+      "price": 42
+    },
+    {
+      "section": "BAKST",
+      "name": "Kardemommebolle",
+      "description": null,
+      "price": 42
+    },
+    {
+      "section": "BAKST",
+      "name": "Skolebolle",
+      "description": "Vaniljekrem og kokos",
+      "price": 45
+    },
+    {
+      "section": "BAKST",
+      "name": "Gulrotkake",
+      "description": "Med ostekrem",
+      "price": 65
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Espresso",
+      "description": null,
+      "price": 36
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Cappuccino",
+      "description": null,
+      "price": 52
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Caffè latte",
+      "description": null,
+      "price": 55
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Chai latte",
+      "description": "Med havremelk",
+      "price": 58
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "LUNSJ",
+      "name": "Dagens suppe",
+      "description": "Med hjemmebakt brød og smør",
+      "price": null
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Kyllingsalat",
+      "description": "Grillet kylling, quinoa, granateple og urtedressing",
+      "price": 175
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Toast Skagen",
+      "description": "Reker, majones, dill og løyrom på briochetoast",
+      "price": 185
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Rekesmørbrød",
+      "description": "Håndpillede reker, egg, majones og sitron på grovbrød",
+      "price": 179
+    },
+    {
+      "section": "LUNSJ",
+      "name": "croque monsieur",
+      "description": "Skinke, gruyère og béchamel",
+      "price": 155
+    },
+    {
+      "section": "LUNSJ",
+      "name": "Dagens fisk",
+      "description": "Spør betjeningen",
+      "price": null
+    },
+    {
+      "section": "FROKOST",
+      "name": "Eggs Benedict",
+      "description": "Pocherte egg, skinke og hollandaise på surdeig",
+      "price": 165
+    },
+    {
+      "section": "FROKOST",
+      "name": "AVOKADOTOAST",
+      "description": "Surdeig, avokado, chili, lime og pochert egg",
+      "price": 149
+    },
+    {
+      "section": "FROKOST",
+      "name": "grøt med bær",
+      "description": "Havregrøt, kanel, bringebær og mandler",
+      "price": 89
+    },
+    {
+      "section": "FROKOST",
+      "name": "Yoghurtbolle",
+      "description": "Gresk yoghurt, granola, honning og frisk frukt",
+      "price": 95
+    },
+    {
+      "section": "FROKOST",
+      "name": "FULL FROKOST",
+      "description": "Egg, bacon, pølse, bønner, sopp og toast",
+      "price": 189
+    },
+    {
+      "section": "BAKST",
+      "name": "Kanelsnurr",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "BAKST",
+      "name": "Kardemommebolle",
+      "description": null,
+      "price": 42
+    },
+    {
+      "section": "BAKST",
+      "name": "Skolebolle",
+      "description": "Vaniljekrem og kokos",
+      "price": 45
+    },
+    {
+      "section": "BAKST",
+      "name": "Gulrotkake",
+      "description": "Med ostekrem",
+      "price": 65
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Espresso",
+      "description": null,
+      "price": 36
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Cappuccino",
+      "description": null,
+      "price": 55
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Caffè latte",
+      "description": null,
+      "price": 55
+    },
+    {
+      "section": "KAFFE & TE",
+      "name": "Chai latte",
+      "description": "Med havremelk",
+      "price": 58
+    }
+  ]
+}

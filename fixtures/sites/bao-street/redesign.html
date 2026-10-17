@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bao Street</title>
+<link rel="canonical" href="https://baostreet.example/">
+<style>
+.menu-entry{display:grid;grid-template-columns:1fr auto;gap:.25rem 1rem}.entry-desc{grid-column:1/-1;opacity:.7}
+.bao-subtitle__inner{max-width:1200px;background-color:#a0d190;padding:12px 20px;max-width:1280px;gap:16px}.bao-wrapper{padding:0px 12px;font-size:0.875rem;z-index:50;margin:0px 16px}.bao-grid--large{font-weight:500;color:#c3878c;padding:0px 0px;background-color:#5a4824;display:inline-flex}.bao-badge::after{line-height:1.2;transition:all .2s ease-in-out;color:#114f9c;gap:12px;transition:all .3s ease-in-out}.bao-input__inner{transition:all .4s ease-in-out;font-weight:400}.bao-wrapper:hover{font-size:0.875rem;font-weight:600;z-index:97;gap:8px}
+.bao-col--large{padding:0px 12px;z-index:30;z-index:9}.bao-banner__inner{border-radius:0px;max-width:1200px;display:flex;transition:all .1s ease-in-out}.bao-grid:hover{color:#783c97;font-weight:400;color:#bfe49b}.bao-social--large{line-height:1.2;z-index:63;display:grid;margin:8px 16px;margin:16px 0}.bao-form--muted{color:#2d8df0;padding:12px 12px;transition:all .4s ease-in-out;display:grid;max-width:1280px}.bao-card--muted{max-width:1200px;line-height:1.5;color:#1e769f;display:inline-flex;max-width:960px}
+.bao-row--large{letter-spacing:.02em;transition:all .5s ease-in-out;letter-spacing:.06em;gap:4px;max-width:1280px}.bao-modal--active{margin:8px auto;line-height:1.6;display:inline-flex;font-weight:500}.bao-row__text{border-radius:0px;letter-spacing:.07em}.bao-col:hover{padding:0px 16px;border-radius:6px;padding:4px 4px}.bao-modal__inner{max-width:1140px;padding:8px 12px;color:#f17c9a;background-color:#65a641}.bao-input::after{margin:0px auto;margin:8px 16px;display:flex}
+.bao-title--primary{z-index:41;color:#6c2d7e;transition:all .4s ease-in-out}.bao-header--primary{transition:all .2s ease-in-out;border-radius:6px}.bao-footer--primary{border-radius:4px;font-size:1.125rem;line-height:1.4}.bao-subtitle__text{transition:all .3s ease-in-out;color:#40eee2;display:none;z-index:71;z-index:85}.bao-col{font-size:1.875rem;gap:0px}.bao-icon--small{color:#d68207;background-color:#360ea7;gap:0px;display:none}
+.bao-subtitle:hover{line-height:1.5;font-size:0.750rem;background-color:#33ec52;background-color:#a444f0}.bao-logo--muted{gap:0px;font-size:1.250rem;transition:all .4s ease-in-out;gap:12px;font-size:1.500rem}.bao-title--primary{font-weight:600;border-radius:0px;margin:8px auto}.bao-social__text{font-size:1.000rem;transition:all .1s ease-in-out}.bao-card__inner{margin:0px 16px;border-radius:4px;transition:all .2s ease-in-out;font-weight:300}.bao-overlay--small{gap:4px;z-index:37;letter-spacing:.01em}
+.bao-wrapper--small{font-size:1.750rem;letter-spacing:.00em;max-width:720px}.bao-badge--small{margin:24px 16px;font-size:1.000rem;z-index:10}.bao-badge{display:block;max-width:1280px;line-height:1.1;background-color:#7421c2;margin:0px auto}.bao-btn--muted{max-width:1200px;line-height:1.1;display:flex;letter-spacing:.00em}.bao-nav--primary{font-size:1.375rem;margin:16px auto;padding:20px 8px}.bao-title--active{font-weight:600;color:#78a263;font-weight:500;line-height:1.5;border-radius:8px}
+.bao-header__inner{transition:all .4s ease-in-out;z-index:72;z-index:51}.bao-btn--small{z-index:63;display:block}.bao-footer--primary{font-weight:700;margin:0px 0;max-width:1140px}.bao-logo--active{transition:all .4s ease-in-out;padding:0px 12px;padding:20px 16px;transition:all .1s ease-in-out}.bao-nav--primary{color:#8bd042;color:#ba8e90;border-radius:8px;max-width:960px}.bao-icon--small{margin:24px 16px;background-color:#8e3486}
+.bao-title__text{letter-spacing:.05em;border-radius:2px}.bao-social:hover{display:none;font-size:1.500rem;transition:all .3s ease-in-out;color:#c181ad}.bao-wrapper--muted{transition:all .3s ease-in-out;gap:12px;transition:all .4s ease-in-out;max-width:960px}.bao-banner--active{margin:16px auto;font-weight:600}.bao-wrapper--large{gap:0px;max-width:1280px;line-height:1.2}.bao-nav__inner{gap:0px;font-weight:400;display:grid;border-radius:4px;margin:24px 16px}
+.bao-row__text{transition:all .2s ease-in-out;color:#f76a6a;gap:16px;transition:all .5s ease-in-out;font-size:0.875rem}.bao-overlay__text{background-color:#8cd095;letter-spacing:.03em;font-weight:500}.bao-wrapper--small{display:none;display:flex;display:block;background-color:#8491ae}.bao-divider__text{gap:0px;gap:0px;border-radius:0px}.bao-subtitle--primary{gap:16px;transition:all .2s ease-in-out;line-height:1.4}.bao-logo--large{display:none;gap:16px;padding:16px 12px;line-height:1.3;padding:20px 0px}
+.bao-nav--primary{font-weight:400;border-radius:6px;letter-spacing:.02em;z-index:38}.bao-divider--large{background-color:#424122;font-weight:400;transition:all .3s ease-in-out;display:inline-flex;border-radius:2px}.bao-hero--active{padding:12px 8px;background-color:#2276a6}.bao-logo--small{z-index:83;color:#b2969e;background-color:#b9d4ab;border-radius:6px;background-color:#0f54b6}.bao-hero::after{gap:8px;display:none;display:inline-flex;background-color:#c3fd34;margin:16px 0}.bao-link__text{color:#341194;margin:24px 0;border-radius:2px;transition:all .5s ease-in-out}
+.bao-container--muted{font-size:1.375rem;margin:24px 0;font-weight:500;line-height:1.3;transition:all .5s ease-in-out}.bao-hero::after{padding:0px 12px;background-color:#05d3f2;padding:4px 12px;padding:4px 12px;border-radius:4px}.bao-input::after{margin:8px 0;color:#b7d453;display:inline-flex;line-height:1.2}.bao-hero--active{transition:all .5s ease-in-out;display:inline-flex;font-size:1.750rem;padding:20px 0px;background-color:#5548cb}.bao-modal__text{gap:8px;color:#409069}.bao-row::after{display:block;transition:all .3s ease-in-out;color:#b4310c;transition:all .2s ease-in-out;font-weight:600}
+.bao-btn{background-color:#8bfe09;border-radius:8px;padding:20px 20px;padding:8px 0px}.bao-card--muted{padding:16px 12px;line-height:1.5;font-size:1.250rem;gap:8px;gap:0px}.bao-col--primary{line-height:1.1;background-color:#d29df4}.bao-icon--active{transition:all .5s ease-in-out;line-height:1.5;font-size:1.625rem;display:inline-flex;display:none}.bao-logo--muted{transition:all .1s ease-in-out;border-radius:8px;color:#2f2997}.bao-logo--muted{letter-spacing:.07em;letter-spacing:.07em;margin:16px auto;font-weight:400;line-height:1.4}
+.bao-hero:hover{margin:0px auto;letter-spacing:.06em;line-height:1.1}.bao-container--muted{padding:4px 20px;margin:0px auto;background-color:#4a0b0b;line-height:1.5}.bao-header__text{font-weight:400;border-radius:4px;margin:16px 16px;max-width:1140px}.bao-social__text{border-radius:0px;font-weight:400;font-size:0.750rem}.bao-container--active{margin:24px auto;padding:12px 12px;max-width:1140px}.bao-grid--primary{line-height:1.6;color:#11c0bb;gap:8px}
+.bao-icon--active{padding:12px 0px;padding:12px 8px;background-color:#7a16da;padding:0px 16px;background-color:#64c395}.bao-footer__text{font-size:1.000rem;max-width:1280px;display:inline-flex;line-height:1.6;gap:16px}.bao-row{font-size:0.750rem;z-index:48;font-weight:300;background-color:#8c3561}.bao-header:hover{color:#29b096;transition:all .4s ease-in-out;letter-spacing:.07em;display:grid;line-height:1.5}.bao-form:hover{line-height:1.3;line-height:1.4;font-weight:300}.bao-grid--primary{display:inline-flex;font-weight:600;max-width:960px;background-color:#fe0863}
+.bao-nav:hover{letter-spacing:.04em;font-size:1.625rem;gap:0px;max-width:960px}.bao-btn:hover{line-height:1.1;padding:20px 20px}.bao-container--large{border-radius:8px;display:inline-flex;display:none;transition:all .3s ease-in-out;max-width:1140px}.bao-header:hover{z-index:30;line-height:1.3;font-weight:500;z-index:34}.bao-subtitle:hover{color:#c39b7c;gap:4px;display:none;font-weight:400;z-index:75}.bao-link::after{transition:all .2s ease-in-out;letter-spacing:.04em;margin:16px 0}
+.bao-form{font-weight:600;padding:8px 20px;display:block}.bao-social--muted{font-size:1.500rem;background-color:#3ceb93}.bao-btn--active{letter-spacing:.01em;font-weight:300;color:#f3a895;z-index:11}.bao-social__text{max-width:1280px;margin:8px auto}.bao-logo--muted{letter-spacing:.05em;color:#73590f;margin:16px auto;background-color:#1a7043;padding:12px 0px}.bao-col--active{max-width:720px;margin:16px 0}
+.bao-icon:hover{max-width:960px;display:none;color:#6b3802;z-index:65}.bao-nav::after{padding:4px 8px;color:#1e712b}.bao-row--active{gap:16px;margin:16px 16px;max-width:1200px;padding:20px 20px}.bao-header::after{z-index:5;z-index:61;gap:4px}.bao-header--primary{z-index:57;z-index:27;letter-spacing:.02em}.bao-container:hover{display:grid;border-radius:6px;padding:12px 12px;max-width:960px}
+.bao-input:hover{display:grid;color:#84042d;z-index:40;max-width:720px;display:block}.bao-divider:hover{background-color:#6403e8;margin:8px auto;padding:16px 16px}.bao-badge--primary{color:#8ae738;margin:16px 16px;display:none;font-weight:300;max-width:1200px}.bao-nav::after{border-radius:6px;padding:0px 8px;gap:8px;gap:4px}.bao-btn:hover{font-weight:300;background-color:#e7b83c;z-index:74;background-color:#a827dd}.bao-social--small{color:#543ebe;max-width:720px;margin:16px 16px;letter-spacing:.01em;gap:16px}
+.bao-title__inner{margin:16px 16px;border-radius:6px;line-height:1.5;color:#2e5819;font-weight:400}.bao-badge::after{transition:all .5s ease-in-out;letter-spacing:.01em;border-radius:2px;font-size:1.500rem}.bao-overlay{font-weight:300;font-size:1.125rem;transition:all .4s ease-in-out;margin:0px 0}.bao-divider{padding:8px 8px;background-color:#ae09f4;border-radius:2px}.bao-divider--muted{font-size:1.250rem;display:grid;font-weight:700}.bao-logo__text{margin:24px auto;border-radius:4px;display:grid}
+.bao-wrapper__inner{margin:16px 16px;line-height:1.6}.bao-header__inner{color:#842167;max-width:1280px;padding:4px 8px;background-color:#ed294d}.bao-wrapper--small{margin:8px auto;z-index:54;letter-spacing:.01em;letter-spacing:.00em;color:#32bdb3}.bao-icon::after{display:none;border-radius:2px;gap:4px;z-index:34}.bao-btn--muted{line-height:1.6;border-radius:8px;line-height:1.6;color:#5570f6;border-radius:8px}.bao-grid__text{letter-spacing:.03em;font-size:0.750rem}
+.bao-nav__text{display:block;font-size:1.375rem;letter-spacing:.02em;padding:4px 12px}.bao-divider--large{display:none;background-color:#e96fda;background-color:#60e527}.bao-container:hover{gap:4px;font-size:1.125rem}.bao-icon__text{color:#255b81;background-color:#355c3d;letter-spacing:.02em;letter-spacing:.03em;line-height:1.5}.bao-social__text{letter-spacing:.08em;max-width:720px;gap:8px;padding:0px 16px;gap:12px}.bao-social--primary{gap:16px;border-radius:2px;line-height:1.2;border-radius:0px}
+.bao-badge__inner{background-color:#4f55a0;gap:12px}.bao-btn--large{max-width:1140px;z-index:96;z-index:92;letter-spacing:.06em}.bao-modal{background-color:#a70991;color:#e9cce3}.bao-container--large{line-height:1.1;display:flex;background-color:#16569c;letter-spacing:.07em;gap:12px}.bao-hero--large{transition:all .3s ease-in-out;transition:all .2s ease-in-out}.bao-link::after{transition:all .3s ease-in-out;background-color:#3d67c1}
+.bao-container--small{color:#2a6c81;max-width:1280px;gap:8px}.bao-grid--small{line-height:1.4;z-index:46}.bao-banner--large{letter-spacing:.01em;font-size:0.875rem;color:#fe4b42;font-size:0.875rem;display:inline-flex}.bao-card{z-index:50;display:flex;padding:4px 20px;color:#3cb3c4;border-radius:8px}.bao-nav{transition:all .5s ease-in-out;display:none;background-color:#a804a2}.bao-nav::after{line-height:1.5;margin:0px 16px;border-radius:2px;letter-spacing:.05em}
+.bao-row--small{margin:24px 0;z-index:58;transition:all .5s ease-in-out}.bao-logo__text{line-height:1.2;margin:24px 0}
+@media (max-width:767px){.bao-header{padding:12px 16px}.bao-nav{display:none}.bao-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="bao-header"><a href="/">BAO STREET</a><nav><a href="#meny">Meny</a> <a href="#finn-oss">Finn oss</a> <a href="https://order.example/bao-street">Bestill</a></nav></header>
+<main>
+<p>Myke, dampede bao. Ingen bordbestilling — bare kom innom.</p>
+<section id="meny" class="menu">
+<div class="menu-block">
+  <h2 class="menu-block__title">Small eats</h2>
+  <div class="menu-entry"><span class="entry-name">Edamame</span><span class="entry-price">kr 65</span><span class="entry-desc">havsalt, chili</span></div>
+  <div class="menu-entry"><span class="entry-name">Dumplings</span><span class="entry-price">kr 119</span><span class="entry-desc">svin og gressløk, 6 stk, svart eddik</span></div>
+  <div class="menu-entry"><span class="entry-name">Crispy Cauliflower</span><span class="entry-price">kr 95</span><span class="entry-desc">sweet chili glaze, sesam</span></div>
+  <div class="menu-entry"><span class="entry-name">Kimchi Fries</span><span class="entry-price">kr 109</span><span class="entry-desc">pommes frites, kimchi, ost, gochujang</span></div>
+  <div class="menu-entry"><span class="entry-name">Smacked Cucumber</span><span class="entry-price">kr 69</span><span class="entry-desc">hvitløk, chiliolje</span></div>
+</div>
+<div class="menu-block">
+  <h2 class="menu-block__title">Bao</h2>
+  <div class="menu-entry"><span class="entry-name">Bao Pork</span><span class="entry-price">kr 149</span><span class="entry-desc">crispy pork belly, hoisin, pickles, peanøtter</span></div>
+  <div class="menu-entry"><span class="entry-name">Bao Chicken</span><span class="entry-price">kr 145</span><span class="entry-desc">koreansk fried chicken, gochujang-majo, slaw</span></div>
+  <div class="menu-entry"><span class="entry-name">Bao Beef</span><span class="entry-price">kr 165</span><span class="entry-desc">braisert short rib, kimchi, vårløk</span></div>
+  <div class="menu-entry"><span class="entry-name">Bao Tofu</span><span class="entry-price">kr 135</span><span class="entry-desc">sprø tofu, søt soya, agurk, sesam</span></div>
+  <div class="menu-entry"><span class="entry-name">Bao Duck</span><span class="entry-price">kr 159</span><span class="entry-desc">five-spice and, plommesaus, purre</span></div>
+  <div class="menu-entry"><span class="entry-name">Bao Prawn</span><span class="entry-price">kr 155</span><span class="entry-desc">tempurareke, sriracha-majo, lime</span></div>
+  <div class="menu-entry"><span class="entry-name">Bao Fish</span><span class="entry-price">kr 149</span><span class="entry-desc">panert torsk, tartarsaus, syltet rødløk</span></div>
+</div>
+<div class="menu-block">
+  <h2 class="menu-block__title">Drikke</h2>
+  <div class="menu-entry"><span class="entry-name">Yuzu Lemonade</span><span class="entry-price">kr 65</span><span class="entry-desc">hjemmelaget</span></div>
+  <div class="menu-entry"><span class="entry-name">Asahi</span><span class="entry-price">kr 89</span><span class="entry-desc">japansk lager, 0,33 l</span></div>
+  <div class="menu-entry"><span class="entry-name">Jasmine Iced Tea</span><span class="entry-price">kr 49</span><span class="entry-desc">usøtet</span></div>
+</div>
+</section>
+<p><small>Glutenfrie bao (+15). Har du allergier eller intoleranser? Gi beskjed til betjeningen, så hjelper vi deg. Allergenoversikt finnes i restauranten og kan sendes på e-post.</small></p>
+<section><p>Bao Street startet som en liten drøm ved et kjøkkenbord, og har siden vokst til et nabolagssted der stamgjestene kjenner hverandre ved navn. Vi lager det meste fra bunnen av hver dag, og samarbeider med lokale produsenter så langt det lar seg gjøre.</p>
+<p>Råvarene våre kommer fra gårder og leverandører vi kjenner personlig. Menyen endres litt med sesongene, men favorittene blir stående. Spør gjerne betjeningen om dagens anbefalinger og hva som passer til drikken du har valgt.</p>
+<p>Vi har plass til rundt 60 gjester inne og 30 på uteserveringen når været tillater det. Bordbestilling anbefales i helgene, men vi holder alltid av noen bord til gjester som kommer innom.</p><div class="bao-reviews">
+  <blockquote class="bao-review"><p>“Fantastisk service og nydelig mat. Kommer garantert tilbake!”</p><cite>— Ingrid, Google</cite></blockquote>
+  <blockquote class="bao-review"><p>“Byens beste! Hyggelig personale og god stemning hele kvelden.”</p><cite>— Thomas, Tripadvisor</cite></blockquote>
+  <blockquote class="bao-review"><p>“Perfekt sted for en uformell middag med venner.”</p><cite>— Maria, Facebook</cite></blockquote>
+</div></section>
+<section id="finn-oss"><address class="bao-address">
+  <strong>Bao Street</strong><br>
+  Markveien 41<br>
+  0554 Oslo<br>
+  <a href="tel:+4790000456">+47 900 00 456</a><br>
+  <a href="mailto:hello@baostreet.example">hello@baostreet.example</a>
+</address><div class="bao-hours">
+  <h4 class="bao-hours__title">Åpningstider</h4>
+  <table class="bao-hours__table" role="presentation"><tbody>
+    <tr><th scope="row">Mandag–torsdag</th><td>11:00–22:00</td></tr>
+    <tr><th scope="row">Fredag</th><td>11:00–23:00</td></tr>
+    <tr><th scope="row">Lørdag</th><td>12:00–23:00</td></tr>
+    <tr><th scope="row">Søndag</th><td>13:00–21:00</td></tr>
+  </tbody></table>
+  <p class="bao-hours__note">Avvikende åpningstider i høytider annonseres på Instagram og Facebook.</p>
+</div></section>
+<div class="bao-newsletter">
+  <h3 class="bao-newsletter__title">Meld deg på nyhetsbrevet</h3>
+  <p class="bao-newsletter__text">Få tilbud, arrangementer og nye retter rett i innboksen. Vi sender maks to e-poster i måneden, og du kan melde deg av når som helst.</p>
+  <form class="bao-newsletter__form" action="https://buttondown.example/api/emails/embed-subscribe/baostreet" method="post" novalidate>
+    <label for="bao-nl-email" class="bao-sr-only">Din e-postadresse</label>
+    <input type="email" id="bao-nl-email" name="EMAIL" placeholder="Din e-postadresse" autocomplete="email" required>
+    <div style="position:absolute;left:-5000px" aria-hidden="true"><input type="text" name="b_baostreet_hp" tabindex="-1" value=""></div>
+    <button type="submit" class="bao-btn bao-btn--primary">Meld meg på</button>
+  </form>
+</div>
+</main>
+<footer><p>© 2026 Bao Street. Alle rettigheter reservert.</p></footer>
+<div id="bao-cookie-banner" class="bao-cookie-banner" role="dialog" aria-live="polite" aria-label="Vi bruker informasjonskapsler">
+  <div class="bao-cookie-banner__inner">
+    <p class="bao-cookie-banner__title"><strong>Vi bruker informasjonskapsler</strong></p>
+    <p class="bao-cookie-banner__text">Vi bruker informasjonskapsler (cookies) for å gi deg en bedre opplevelse, analysere trafikken på nettstedet og tilpasse innhold. Noen er nødvendige for at siden skal fungere, andre hjelper oss å forstå hvordan siden brukes. Du kan når som helst endre eller trekke tilbake samtykket ditt. <a href="https://baostreet.example/personvernerkl-ring">Personvernerklæring</a></p>
+    <div class="bao-cookie-banner__actions">
+      <button type="button" class="bao-btn bao-btn--primary" data-consent="all">Godta alle</button>
+      <button type="button" class="bao-btn bao-btn--secondary" data-consent="necessary">Kun nødvendige</button>
+      <button type="button" class="bao-btn bao-btn--link" data-consent="settings">Innstillinger</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,313 @@
+{
+  "restaurant": "Kebab Kongen",
+  "platform": "unknown",
+  "currency": "NOK",
+  "url": "https://kebabkongen.example/meny.html",
+  "fictional": true,
+  "notes": "Hand-made HTML 4 table layout; numbered names (\"12. Kebab i pita\"); price in its own <td>; pizzas \"Liten 129,- / Stor 179,-\" (price = small). Marquee combo offer is NOT a menu item.",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Kebab i pita",
+      "from": 139,
+      "to": 149
+    },
+    {
+      "type": "price",
+      "name": "Brus 0,5 l",
+      "from": 35,
+      "to": 39
+    },
+    {
+      "type": "added",
+      "section": "Kebab",
+      "name": "Kebab i boks",
+      "price": 129
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Pizza",
+        "Kebab",
+        "Burger",
+        "Falafel og vegetar",
+        "Tilbehør",
+        "Drikke"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Kebab",
+      "name": "Kebab i pita",
+      "description": "Med salat, tomat, løk og valgfri dressing",
+      "price": 139
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebab i rull",
+      "description": "Lefserull med salat og dressing",
+      "price": 149
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebabtallerken",
+      "description": "Kebabkjøtt, pommes frites, salat og dressing",
+      "price": 189
+    },
+    {
+      "section": "Kebab",
+      "name": "Kyllingkebab i pita",
+      "description": "Med salat og hvitløksdressing",
+      "price": 139
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebab mix tallerken",
+      "description": "Kebab og kylling, ris, salat og to dressinger",
+      "price": 199
+    },
+    {
+      "section": "Kebab",
+      "name": "Iskender kebab",
+      "description": "Kebab på brød med tomatsaus, yoghurt og smør",
+      "price": 209
+    },
+    {
+      "section": "Pizza",
+      "name": "Margherita",
+      "description": "Tomatsaus og ost",
+      "price": 129
+    },
+    {
+      "section": "Pizza",
+      "name": "Kebabpizza",
+      "description": "Kebabkjøtt, løk, jalapeños og dressing",
+      "price": 149
+    },
+    {
+      "section": "Pizza",
+      "name": "Pepperoni",
+      "description": "Pepperoni og ost",
+      "price": 139
+    },
+    {
+      "section": "Pizza",
+      "name": "Kongens spesial",
+      "description": "Kebab, kylling, pepperoni, paprika og løk",
+      "price": 159
+    },
+    {
+      "section": "Burger",
+      "name": "Hamburger",
+      "description": "120 g, med salat og dressing",
+      "price": 99
+    },
+    {
+      "section": "Burger",
+      "name": "Cheeseburger",
+      "description": "120 g, med ost, salat og dressing",
+      "price": 109
+    },
+    {
+      "section": "Burger",
+      "name": "Kyllingburger",
+      "description": "Panert kyllingfilet, salat og majones",
+      "price": 115
+    },
+    {
+      "section": "Burger",
+      "name": "Hamburgertallerken",
+      "description": "Burger med pommes frites og salat",
+      "price": 159
+    },
+    {
+      "section": "Falafel og vegetar",
+      "name": "Falafel i pita",
+      "description": "Med salat og tahinidressing",
+      "price": 129
+    },
+    {
+      "section": "Falafel og vegetar",
+      "name": "Falafeltallerken",
+      "description": "Falafel, ris, salat, hummus og dressing",
+      "price": 179
+    },
+    {
+      "section": "Falafel og vegetar",
+      "name": "Halloumi i pita",
+      "description": "Grillet halloumi, salat og dressing",
+      "price": 135
+    },
+    {
+      "section": "Tilbehør",
+      "name": "Pommes frites",
+      "description": null,
+      "price": 49
+    },
+    {
+      "section": "Tilbehør",
+      "name": "Løkringer 8 stk",
+      "description": null,
+      "price": 59
+    },
+    {
+      "section": "Tilbehør",
+      "name": "Ekstra dressing",
+      "description": "Hvitløk, chili eller mix",
+      "price": 15
+    },
+    {
+      "section": "Drikke",
+      "name": "Brus 0,5 l",
+      "description": "Cola, Fanta, Sprite",
+      "price": 35
+    },
+    {
+      "section": "Drikke",
+      "name": "Ayran",
+      "description": null,
+      "price": 30
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Pizza",
+      "name": "Margherita",
+      "description": "Tomatsaus og ost",
+      "price": 129
+    },
+    {
+      "section": "Pizza",
+      "name": "Kebabpizza",
+      "description": "Kebabkjøtt, løk, jalapeños og dressing",
+      "price": 149
+    },
+    {
+      "section": "Pizza",
+      "name": "Pepperoni",
+      "description": "Pepperoni og ost",
+      "price": 139
+    },
+    {
+      "section": "Pizza",
+      "name": "Kongens spesial",
+      "description": "Kebab, kylling, pepperoni, paprika og løk",
+      "price": 159
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebab i pita",
+      "description": "Med salat, tomat, løk og valgfri dressing",
+      "price": 149
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebab i rull",
+      "description": "Lefserull med salat og dressing",
+      "price": 149
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebab i boks",
+      "description": "Kebabkjøtt over pommes frites med dressing",
+      "price": 129
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebabtallerken",
+      "description": "Kebabkjøtt, pommes frites, salat og dressing",
+      "price": 189
+    },
+    {
+      "section": "Kebab",
+      "name": "Kyllingkebab i pita",
+      "description": "Med salat og hvitløksdressing",
+      "price": 139
+    },
+    {
+      "section": "Kebab",
+      "name": "Kebab mix tallerken",
+      "description": "Kebab og kylling, ris, salat og to dressinger",
+      "price": 199
+    },
+    {
+      "section": "Kebab",
+      "name": "Iskender kebab",
+      "description": "Kebab på brød med tomatsaus, yoghurt og smør",
+      "price": 209
+    },
+    {
+      "section": "Burger",
+      "name": "Hamburger",
+      "description": "120 g, med salat og dressing",
+      "price": 99
+    },
+    {
+      "section": "Burger",
+      "name": "Cheeseburger",
+      "description": "120 g, med ost, salat og dressing",
+      "price": 109
+    },
+    {
+      "section": "Burger",
+      "name": "Kyllingburger",
+      "description": "Panert kyllingfilet, salat og majones",
+      "price": 115
+    },
+    {
+      "section": "Burger",
+      "name": "Hamburgertallerken",
+      "description": "Burger med pommes frites og salat",
+      "price": 159
+    },
+    {
+      "section": "Falafel og vegetar",
+      "name": "Falafel i pita",
+      "description": "Med salat og tahinidressing",
+      "price": 129
+    },
+    {
+      "section": "Falafel og vegetar",
+      "name": "Falafeltallerken",
+      "description": "Falafel, ris, salat, hummus og dressing",
+      "price": 179
+    },
+    {
+      "section": "Falafel og vegetar",
+      "name": "Halloumi i pita",
+      "description": "Grillet halloumi, salat og dressing",
+      "price": 135
+    },
+    {
+      "section": "Tilbehør",
+      "name": "Pommes frites",
+      "description": null,
+      "price": 49
+    },
+    {
+      "section": "Tilbehør",
+      "name": "Løkringer 8 stk",
+      "description": null,
+      "price": 59
+    },
+    {
+      "section": "Tilbehør",
+      "name": "Ekstra dressing",
+      "description": "Hvitløk, chili eller mix",
+      "price": 15
+    },
+    {
+      "section": "Drikke",
+      "name": "Brus 0,5 l",
+      "description": "Cola, Fanta, Sprite",
+      "price": 39
+    },
+    {
+      "section": "Drikke",
+      "name": "Ayran",
+      "description": null,
+      "price": 30
+    }
+  ]
+}

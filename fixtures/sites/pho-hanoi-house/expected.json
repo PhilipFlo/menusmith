@@ -1,0 +1,408 @@
+{
+  "restaurant": "Pho Hanoi House",
+  "platform": "wix",
+  "currency": "USD",
+  "url": "https://phohanoihouse.example/menu",
+  "fictional": true,
+  "notes": "Wix Restaurants widget with generated class names; stable data-hook attributes. Redesign: repeater of rich-text boxes, no data-hooks, \"US$18.50\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Phở Đặc Biệt",
+      "from": 17.5,
+      "to": 18.5
+    },
+    {
+      "type": "price",
+      "name": "Bánh Mì Chay",
+      "from": 9.5,
+      "to": 9.75
+    },
+    {
+      "type": "added",
+      "section": "Phở",
+      "name": "Phở Bò Tái Lăn",
+      "price": 16.75
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Phở",
+        "Bún & Cơm",
+        "Bánh Mì",
+        "Appetizers",
+        "Drinks"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Appetizers",
+      "name": "Gỏi Cuốn Tôm",
+      "description": "Fresh rice paper rolls with shrimp, vermicelli, herbs and peanut hoisin (2 pcs)",
+      "price": 8.5
+    },
+    {
+      "section": "Appetizers",
+      "name": "Chả Giò",
+      "description": "Crispy pork and taro spring rolls with nước chấm (4 pcs)",
+      "price": 9
+    },
+    {
+      "section": "Appetizers",
+      "name": "Bánh Xèo",
+      "description": "Sizzling turmeric crêpe with shrimp, pork belly and bean sprouts",
+      "price": 14.5
+    },
+    {
+      "section": "Appetizers",
+      "name": "Cánh Gà Chiên Nước Mắm",
+      "description": "Fish sauce caramel chicken wings",
+      "price": 12.75
+    },
+    {
+      "section": "Appetizers",
+      "name": "Đậu Hũ Chiên Sả Ớt",
+      "description": "Lemongrass chili fried tofu",
+      "price": 9.5
+    },
+    {
+      "section": "Appetizers",
+      "name": "Gỏi Đu Đủ",
+      "description": "Green papaya salad with beef jerky, rau răm and peanuts",
+      "price": 11.25
+    },
+    {
+      "section": "Appetizers",
+      "name": "Chạo Tôm",
+      "description": "Shrimp paste grilled on sugarcane",
+      "price": 13
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Đặc Biệt",
+      "description": "House special: rare steak, brisket, tendon, tripe and meatballs",
+      "price": 17.5
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Tái",
+      "description": "Rare eye of round steak",
+      "price": 15.25
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Chín",
+      "description": "Well-done brisket",
+      "price": 15.25
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Bò Viên",
+      "description": "Beef meatballs",
+      "price": 14.75
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Gà",
+      "description": "Poached chicken, ginger and scallion",
+      "price": 14.5
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Chay",
+      "description": "Vegetable broth, tofu, mushrooms and bok choy",
+      "price": 14
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Xào",
+      "description": "Wok-fried rice noodles with beef and greens",
+      "price": 16
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Bò Sốt Vang",
+      "description": "Red-wine braised beef stew with rice noodles",
+      "price": 18.25
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Chả Hà Nội",
+      "description": "Grilled pork patties and belly, vermicelli, herbs and dipping broth",
+      "price": 16.5
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Bò Huế",
+      "description": "Spicy lemongrass beef noodle soup with pork knuckle",
+      "price": 17
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Thịt Nướng Chả Giò",
+      "description": "Grilled pork and spring roll over vermicelli",
+      "price": 15.75
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Riêu Cua",
+      "description": "Crab and tomato noodle soup",
+      "price": 16.25
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Cơm Tấm Sườn Bì Chả",
+      "description": "Broken rice, grilled pork chop, shredded pork skin and egg meatloaf",
+      "price": 17.25
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Cơm Gà Xối Mỡ",
+      "description": "Crispy chicken leg over garlic rice",
+      "price": 15.5
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Cá Kho Tộ",
+      "description": "Caramelized catfish in clay pot with steamed rice",
+      "price": 18.5
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bò Lúc Lắc",
+      "description": "Shaking beef with watercress and tomato rice",
+      "price": 21
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Thịt Nướng",
+      "description": "Grilled lemongrass pork",
+      "price": 10.5
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Đặc Biệt",
+      "description": "Cold cuts, pâté and house mayo",
+      "price": 10.75
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Gà",
+      "description": "Five-spice chicken",
+      "price": 10
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Chay",
+      "description": "Lemongrass tofu with pickled daikon and carrot",
+      "price": 9.5
+    },
+    {
+      "section": "Drinks",
+      "name": "Cà Phê Sữa Đá",
+      "description": "Vietnamese iced coffee with condensed milk",
+      "price": 5.5
+    },
+    {
+      "section": "Drinks",
+      "name": "Trà Đá",
+      "description": "Iced jasmine tea",
+      "price": 2.5
+    },
+    {
+      "section": "Drinks",
+      "name": "Nước Mía",
+      "description": "Fresh-pressed sugarcane juice with kumquat",
+      "price": 6.25
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Phở",
+      "name": "Phở Đặc Biệt",
+      "description": "House special: rare steak, brisket, tendon, tripe and meatballs",
+      "price": 18.5
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Tái",
+      "description": "Rare eye of round steak",
+      "price": 15.25
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Bò Tái Lăn",
+      "description": "Wok-seared beef with garlic and ginger in beef broth",
+      "price": 16.75
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Chín",
+      "description": "Well-done brisket",
+      "price": 15.25
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Bò Viên",
+      "description": "Beef meatballs",
+      "price": 14.75
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Gà",
+      "description": "Poached chicken, ginger and scallion",
+      "price": 14.5
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Chay",
+      "description": "Vegetable broth, tofu, mushrooms and bok choy",
+      "price": 14
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Xào",
+      "description": "Wok-fried rice noodles with beef and greens",
+      "price": 16
+    },
+    {
+      "section": "Phở",
+      "name": "Phở Bò Sốt Vang",
+      "description": "Red-wine braised beef stew with rice noodles",
+      "price": 18.25
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Chả Hà Nội",
+      "description": "Grilled pork patties and belly, vermicelli, herbs and dipping broth",
+      "price": 16.5
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Bò Huế",
+      "description": "Spicy lemongrass beef noodle soup with pork knuckle",
+      "price": 17
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Thịt Nướng Chả Giò",
+      "description": "Grilled pork and spring roll over vermicelli",
+      "price": 15.75
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bún Riêu Cua",
+      "description": "Crab and tomato noodle soup",
+      "price": 16.25
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Cơm Tấm Sườn Bì Chả",
+      "description": "Broken rice, grilled pork chop, shredded pork skin and egg meatloaf",
+      "price": 17.25
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Cơm Gà Xối Mỡ",
+      "description": "Crispy chicken leg over garlic rice",
+      "price": 15.5
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Cá Kho Tộ",
+      "description": "Caramelized catfish in clay pot with steamed rice",
+      "price": 18.5
+    },
+    {
+      "section": "Bún & Cơm",
+      "name": "Bò Lúc Lắc",
+      "description": "Shaking beef with watercress and tomato rice",
+      "price": 21
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Thịt Nướng",
+      "description": "Grilled lemongrass pork",
+      "price": 10.5
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Đặc Biệt",
+      "description": "Cold cuts, pâté and house mayo",
+      "price": 10.75
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Gà",
+      "description": "Five-spice chicken",
+      "price": 10
+    },
+    {
+      "section": "Bánh Mì",
+      "name": "Bánh Mì Chay",
+      "description": "Lemongrass tofu with pickled daikon and carrot",
+      "price": 9.75
+    },
+    {
+      "section": "Appetizers",
+      "name": "Gỏi Cuốn Tôm",
+      "description": "Fresh rice paper rolls with shrimp, vermicelli, herbs and peanut hoisin (2 pcs)",
+      "price": 8.5
+    },
+    {
+      "section": "Appetizers",
+      "name": "Chả Giò",
+      "description": "Crispy pork and taro spring rolls with nước chấm (4 pcs)",
+      "price": 9
+    },
+    {
+      "section": "Appetizers",
+      "name": "Bánh Xèo",
+      "description": "Sizzling turmeric crêpe with shrimp, pork belly and bean sprouts",
+      "price": 14.5
+    },
+    {
+      "section": "Appetizers",
+      "name": "Cánh Gà Chiên Nước Mắm",
+      "description": "Fish sauce caramel chicken wings",
+      "price": 12.75
+    },
+    {
+      "section": "Appetizers",
+      "name": "Đậu Hũ Chiên Sả Ớt",
+      "description": "Lemongrass chili fried tofu",
+      "price": 9.5
+    },
+    {
+      "section": "Appetizers",
+      "name": "Gỏi Đu Đủ",
+      "description": "Green papaya salad with beef jerky, rau răm and peanuts",
+      "price": 11.25
+    },
+    {
+      "section": "Appetizers",
+      "name": "Chạo Tôm",
+      "description": "Shrimp paste grilled on sugarcane",
+      "price": 13
+    },
+    {
+      "section": "Drinks",
+      "name": "Cà Phê Sữa Đá",
+      "description": "Vietnamese iced coffee with condensed milk",
+      "price": 5.5
+    },
+    {
+      "section": "Drinks",
+      "name": "Trà Đá",
+      "description": "Iced jasmine tea",
+      "price": 2.5
+    },
+    {
+      "section": "Drinks",
+      "name": "Nước Mía",
+      "description": "Fresh-pressed sugarcane juice with kumquat",
+      "price": 6.25
+    }
+  ]
+}

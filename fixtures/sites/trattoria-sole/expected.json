@@ -1,0 +1,347 @@
+{
+  "restaurant": "Trattoria Sole",
+  "platform": "wordpress",
+  "currency": "NOK",
+  "url": "https://trattoria-sole.example/meny/",
+  "fictional": true,
+  "notes": "WordPress + Elementor price-list widgets; \"189,-\" prices; section heading is a sibling heading widget. Redesign: block theme, .meny-rad rows, \"kr 189\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Spaghetti alla carbonara",
+      "from": 219,
+      "to": 229
+    },
+    {
+      "type": "price",
+      "name": "Tiramisù della casa",
+      "from": 129,
+      "to": 139
+    },
+    {
+      "type": "added",
+      "section": "Antipasti",
+      "name": "Burrata con pesche",
+      "price": 169
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Primi",
+        "Antipasti",
+        "Secondi",
+        "Dolci"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Antipasti",
+      "name": "Bruschetta al pomodoro",
+      "description": "Grillet surdeigsbrød med tomat, hvitløk og basilikum",
+      "price": 119
+    },
+    {
+      "section": "Antipasti",
+      "name": "Burrata pugliese",
+      "description": "Kremet burrata, cherrytomater, pesto og ristede pinjekjerner",
+      "price": 179
+    },
+    {
+      "section": "Antipasti",
+      "name": "Carpaccio di manzo",
+      "description": "Tynne skiver oksefilet, ruccola, parmesan og trøffelmajones",
+      "price": 189
+    },
+    {
+      "section": "Antipasti",
+      "name": "Vitello tonnato",
+      "description": "Kalvestek med tunfisksaus og kapers",
+      "price": 175
+    },
+    {
+      "section": "Antipasti",
+      "name": "Arancini al ragù",
+      "description": "Friterte risboller med kjøttragù og mozzarella, 3 stk",
+      "price": 139
+    },
+    {
+      "section": "Antipasti",
+      "name": "Tagliere misto",
+      "description": "Spekemat og italienske oster for to, servert med focaccia",
+      "price": 289
+    },
+    {
+      "section": "Primi",
+      "name": "Spaghetti alla carbonara",
+      "description": "Guanciale, eggeplomme, pecorino romano og sort pepper",
+      "price": 219
+    },
+    {
+      "section": "Primi",
+      "name": "Tagliatelle al ragù bolognese",
+      "description": "Hjemmelaget eggepasta med langtidskokt kjøttsaus",
+      "price": 225
+    },
+    {
+      "section": "Primi",
+      "name": "Pappardelle ai funghi porcini",
+      "description": "Steinsopp, timian, fløte og parmesan",
+      "price": 239
+    },
+    {
+      "section": "Primi",
+      "name": "Risotto al limone con gamberi",
+      "description": "Sitronrisotto med scampi og gressløk",
+      "price": 265
+    },
+    {
+      "section": "Primi",
+      "name": "Gnocchi alla sorrentina",
+      "description": "Potetgnocchi i tomatsaus med mozzarella, gratinert i ovn",
+      "price": 209
+    },
+    {
+      "section": "Primi",
+      "name": "Linguine alle vongole",
+      "description": "Hjerteskjell, hvitvin, hvitløk, chili og persille",
+      "price": 249
+    },
+    {
+      "section": "Primi",
+      "name": "Ravioli di ricotta e spinaci",
+      "description": "Salviesmør og ristede hasselnøtter",
+      "price": 229
+    },
+    {
+      "section": "Secondi",
+      "name": "Saltimbocca alla romana",
+      "description": "Kalv med parmaskinke og salvie, ovnsbakte poteter",
+      "price": 335
+    },
+    {
+      "section": "Secondi",
+      "name": "Pollo alla cacciatora",
+      "description": "Langtidsbraisert kylling med oliven, tomat og rosmarin",
+      "price": 289
+    },
+    {
+      "section": "Secondi",
+      "name": "Branzino al forno",
+      "description": "Helstekt havabbor med fennikel og sitron",
+      "price": 349
+    },
+    {
+      "section": "Secondi",
+      "name": "Tagliata di manzo",
+      "description": "Oppskåret entrecôte, ruccola, parmesan og balsamico",
+      "price": 379
+    },
+    {
+      "section": "Secondi",
+      "name": "Ossobuco alla milanese",
+      "description": "Kalveskank med gremolata og safranrisotto",
+      "price": 365
+    },
+    {
+      "section": "Secondi",
+      "name": "Melanzane alla parmigiana",
+      "description": "Aubergine, tomat, mozzarella og parmesan (vegetar)",
+      "price": 245
+    },
+    {
+      "section": "Dolci",
+      "name": "Tiramisù della casa",
+      "description": "Mascarpone, espresso, savoiardi og kakao",
+      "price": 129
+    },
+    {
+      "section": "Dolci",
+      "name": "Panna cotta",
+      "description": "Vaniljepanna cotta med bringebærcoulis",
+      "price": 115
+    },
+    {
+      "section": "Dolci",
+      "name": "Cannoli siciliani",
+      "description": "Sprø kjeks fylt med søt ricotta og pistasj, 2 stk",
+      "price": 119
+    },
+    {
+      "section": "Dolci",
+      "name": "Affogato al caffè",
+      "description": "Vaniljeis druknet i espresso",
+      "price": 89
+    },
+    {
+      "section": "Dolci",
+      "name": "Torta caprese",
+      "description": "Glutenfri sjokolade- og mandelkake med krem",
+      "price": 125
+    },
+    {
+      "section": "Dolci",
+      "name": "Selezione di formaggi",
+      "description": "Tre italienske oster, honning og valnøtter",
+      "price": 165
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Primi",
+      "name": "Spaghetti alla carbonara",
+      "description": "Guanciale, eggeplomme, pecorino romano og sort pepper",
+      "price": 229
+    },
+    {
+      "section": "Primi",
+      "name": "Tagliatelle al ragù bolognese",
+      "description": "Hjemmelaget eggepasta med langtidskokt kjøttsaus",
+      "price": 225
+    },
+    {
+      "section": "Primi",
+      "name": "Pappardelle ai funghi porcini",
+      "description": "Steinsopp, timian, fløte og parmesan",
+      "price": 239
+    },
+    {
+      "section": "Primi",
+      "name": "Risotto al limone con gamberi",
+      "description": "Sitronrisotto med scampi og gressløk",
+      "price": 265
+    },
+    {
+      "section": "Primi",
+      "name": "Gnocchi alla sorrentina",
+      "description": "Potetgnocchi i tomatsaus med mozzarella, gratinert i ovn",
+      "price": 209
+    },
+    {
+      "section": "Primi",
+      "name": "Linguine alle vongole",
+      "description": "Hjerteskjell, hvitvin, hvitløk, chili og persille",
+      "price": 249
+    },
+    {
+      "section": "Primi",
+      "name": "Ravioli di ricotta e spinaci",
+      "description": "Salviesmør og ristede hasselnøtter",
+      "price": 229
+    },
+    {
+      "section": "Antipasti",
+      "name": "Bruschetta al pomodoro",
+      "description": "Grillet surdeigsbrød med tomat, hvitløk og basilikum",
+      "price": 119
+    },
+    {
+      "section": "Antipasti",
+      "name": "Burrata pugliese",
+      "description": "Kremet burrata, cherrytomater, pesto og ristede pinjekjerner",
+      "price": 179
+    },
+    {
+      "section": "Antipasti",
+      "name": "Burrata con pesche",
+      "description": "Burrata med grillet fersken, prosciutto og mynte",
+      "price": 169
+    },
+    {
+      "section": "Antipasti",
+      "name": "Carpaccio di manzo",
+      "description": "Tynne skiver oksefilet, ruccola, parmesan og trøffelmajones",
+      "price": 189
+    },
+    {
+      "section": "Antipasti",
+      "name": "Vitello tonnato",
+      "description": "Kalvestek med tunfisksaus og kapers",
+      "price": 175
+    },
+    {
+      "section": "Antipasti",
+      "name": "Arancini al ragù",
+      "description": "Friterte risboller med kjøttragù og mozzarella, 3 stk",
+      "price": 139
+    },
+    {
+      "section": "Antipasti",
+      "name": "Tagliere misto",
+      "description": "Spekemat og italienske oster for to, servert med focaccia",
+      "price": 289
+    },
+    {
+      "section": "Secondi",
+      "name": "Saltimbocca alla romana",
+      "description": "Kalv med parmaskinke og salvie, ovnsbakte poteter",
+      "price": 335
+    },
+    {
+      "section": "Secondi",
+      "name": "Pollo alla cacciatora",
+      "description": "Langtidsbraisert kylling med oliven, tomat og rosmarin",
+      "price": 289
+    },
+    {
+      "section": "Secondi",
+      "name": "Branzino al forno",
+      "description": "Helstekt havabbor med fennikel og sitron",
+      "price": 349
+    },
+    {
+      "section": "Secondi",
+      "name": "Tagliata di manzo",
+      "description": "Oppskåret entrecôte, ruccola, parmesan og balsamico",
+      "price": 379
+    },
+    {
+      "section": "Secondi",
+      "name": "Ossobuco alla milanese",
+      "description": "Kalveskank med gremolata og safranrisotto",
+      "price": 365
+    },
+    {
+      "section": "Secondi",
+      "name": "Melanzane alla parmigiana",
+      "description": "Aubergine, tomat, mozzarella og parmesan (vegetar)",
+      "price": 245
+    },
+    {
+      "section": "Dolci",
+      "name": "Tiramisù della casa",
+      "description": "Mascarpone, espresso, savoiardi og kakao",
+      "price": 139
+    },
+    {
+      "section": "Dolci",
+      "name": "Panna cotta",
+      "description": "Vaniljepanna cotta med bringebærcoulis",
+      "price": 115
+    },
+    {
+      "section": "Dolci",
+      "name": "Cannoli siciliani",
+      "description": "Sprø kjeks fylt med søt ricotta og pistasj, 2 stk",
+      "price": 119
+    },
+    {
+      "section": "Dolci",
+      "name": "Affogato al caffè",
+      "description": "Vaniljeis druknet i espresso",
+      "price": 89
+    },
+    {
+      "section": "Dolci",
+      "name": "Torta caprese",
+      "description": "Glutenfri sjokolade- og mandelkake med krem",
+      "price": 125
+    },
+    {
+      "section": "Dolci",
+      "name": "Selezione di formaggi",
+      "description": "Tre italienske oster, honning og valnøtter",
+      "price": 165
+    }
+  ]
+}

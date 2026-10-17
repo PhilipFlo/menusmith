@@ -26,8 +26,12 @@ export interface Score {
   extractorCount: number;
   /** Oracle items the extractor missed (name + price), capped for prompts/UI. */
   missing: MenuItem[];
-  /** Extractor items the oracle doesn't recognise. */
+  /** Extractor items the oracle doesn't recognise and that aren't on the page (or were judged not to be dishes). */
   extra: MenuItem[];
+  /** Extractor items not in the reference but present in the page text — the oracle may have missed them. */
+  grounded: MenuItem[];
+  /** Second copies of an already-matched dish. */
+  duplicates: number;
   /** Same name, different price. */
   wrongPrice: { name: string; expected: number | null; got: number | null }[];
   pass: boolean;
@@ -83,4 +87,5 @@ export type AgentEvent =
   | { type: 'result'; ok: boolean; meta?: ExtractorMeta; items?: MenuItem[]; reason?: string }
   | { type: 'error'; message: string };
 
-export type Emit = (e: AgentEvent) => void;
+/** Events may carry `target` (the extractor id) when emitted inside a fleet run. */
+export type Emit = (e: AgentEvent & { target?: string }) => void;

@@ -1,0 +1,263 @@
+{
+  "restaurant": "Fjord Burger",
+  "platform": "squarespace",
+  "currency": "NOK",
+  "url": "https://fjord-burger.example/meny",
+  "fictional": true,
+  "notes": "Squarespace 7.1 menu block; every price appears twice (.menu-item-price-top and -bottom). Redesign: list section (.list-item), \"189,-\" in a <strong>.",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Fjordburger",
+      "from": 179,
+      "to": 189
+    },
+    {
+      "type": "price",
+      "name": "Pommes frites",
+      "from": 59,
+      "to": 65
+    },
+    {
+      "type": "added",
+      "section": "Burgere",
+      "name": "Kimchi Smash",
+      "price": 205
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Plantebasert",
+        "Burgere",
+        "Sides",
+        "Ekstra"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Burgere",
+      "name": "Fjordburger",
+      "description": "180 g norsk storfe, cheddar, sylteløk, salat og husets dressing",
+      "price": 179
+    },
+    {
+      "section": "Burgere",
+      "name": "Bacon Smash",
+      "description": "Dobbel smash patty, sprøstekt bacon, amerikansk ost og røkt aioli",
+      "price": 199
+    },
+    {
+      "section": "Burgere",
+      "name": "Trøffelburger",
+      "description": "Brie, stekt sopp, trøffelmajones og ruccola",
+      "price": 219
+    },
+    {
+      "section": "Burgere",
+      "name": "Hot Honey Chicken",
+      "description": "Sprøstekt kyllinglår, chilihonning, coleslaw og jalapeños",
+      "price": 189
+    },
+    {
+      "section": "Burgere",
+      "name": "Lofotburger",
+      "description": "Fiskeburger av torsk, remulade, sprøstekt løk og sitron",
+      "price": 189
+    },
+    {
+      "section": "Burgere",
+      "name": "Barneburger",
+      "description": "90 g burger med ost og ketchup, servert med pommes frites",
+      "price": 119
+    },
+    {
+      "section": "Plantebasert",
+      "name": "Beyond Fjord",
+      "description": "Plantebasert patty, vegansk cheddar, avokado og chipotle-majo",
+      "price": 195
+    },
+    {
+      "section": "Plantebasert",
+      "name": "Halloumi & Rødbete",
+      "description": "Grillet halloumi, rødbetehummus og syltet rødløk",
+      "price": 185
+    },
+    {
+      "section": "Plantebasert",
+      "name": "Falafelburger",
+      "description": "Hjemmelaget falafel, tahini, agurk og mynte",
+      "price": 175
+    },
+    {
+      "section": "Sides",
+      "name": "Pommes frites",
+      "description": "Med flaksalt og aioli",
+      "price": 59
+    },
+    {
+      "section": "Sides",
+      "name": "Søtpotetfries",
+      "description": "Med chipotle-majones",
+      "price": 69
+    },
+    {
+      "section": "Sides",
+      "name": "Løkringer",
+      "description": "Ølbatter, 8 stk",
+      "price": 65
+    },
+    {
+      "section": "Sides",
+      "name": "Coleslaw",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "Sides",
+      "name": "Chili Cheese Fries",
+      "description": "Pommes frites med cheddarsaus, jalapeños og vårløk",
+      "price": 89
+    },
+    {
+      "section": "Ekstra",
+      "name": "Ekstra ost",
+      "description": null,
+      "price": 25
+    },
+    {
+      "section": "Ekstra",
+      "name": "Bacon",
+      "description": null,
+      "price": 30
+    },
+    {
+      "section": "Ekstra",
+      "name": "Ekstra patty",
+      "description": null,
+      "price": 55
+    },
+    {
+      "section": "Ekstra",
+      "name": "Glutenfritt brød",
+      "description": null,
+      "price": 20
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Plantebasert",
+      "name": "Beyond Fjord",
+      "description": "Plantebasert patty, vegansk cheddar, avokado og chipotle-majo",
+      "price": 195
+    },
+    {
+      "section": "Plantebasert",
+      "name": "Halloumi & Rødbete",
+      "description": "Grillet halloumi, rødbetehummus og syltet rødløk",
+      "price": 185
+    },
+    {
+      "section": "Plantebasert",
+      "name": "Falafelburger",
+      "description": "Hjemmelaget falafel, tahini, agurk og mynte",
+      "price": 175
+    },
+    {
+      "section": "Burgere",
+      "name": "Fjordburger",
+      "description": "180 g norsk storfe, cheddar, sylteløk, salat og husets dressing",
+      "price": 189
+    },
+    {
+      "section": "Burgere",
+      "name": "Bacon Smash",
+      "description": "Dobbel smash patty, sprøstekt bacon, amerikansk ost og røkt aioli",
+      "price": 199
+    },
+    {
+      "section": "Burgere",
+      "name": "Kimchi Smash",
+      "description": "Dobbel smash patty, kimchi, gochujang-majo og sesam",
+      "price": 205
+    },
+    {
+      "section": "Burgere",
+      "name": "Trøffelburger",
+      "description": "Brie, stekt sopp, trøffelmajones og ruccola",
+      "price": 219
+    },
+    {
+      "section": "Burgere",
+      "name": "Hot Honey Chicken",
+      "description": "Sprøstekt kyllinglår, chilihonning, coleslaw og jalapeños",
+      "price": 189
+    },
+    {
+      "section": "Burgere",
+      "name": "Lofotburger",
+      "description": "Fiskeburger av torsk, remulade, sprøstekt løk og sitron",
+      "price": 189
+    },
+    {
+      "section": "Burgere",
+      "name": "Barneburger",
+      "description": "90 g burger med ost og ketchup, servert med pommes frites",
+      "price": 119
+    },
+    {
+      "section": "Sides",
+      "name": "Pommes frites",
+      "description": "Med flaksalt og aioli",
+      "price": 65
+    },
+    {
+      "section": "Sides",
+      "name": "Søtpotetfries",
+      "description": "Med chipotle-majones",
+      "price": 69
+    },
+    {
+      "section": "Sides",
+      "name": "Løkringer",
+      "description": "Ølbatter, 8 stk",
+      "price": 65
+    },
+    {
+      "section": "Sides",
+      "name": "Coleslaw",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "Sides",
+      "name": "Chili Cheese Fries",
+      "description": "Pommes frites med cheddarsaus, jalapeños og vårløk",
+      "price": 89
+    },
+    {
+      "section": "Ekstra",
+      "name": "Ekstra ost",
+      "description": null,
+      "price": 25
+    },
+    {
+      "section": "Ekstra",
+      "name": "Bacon",
+      "description": null,
+      "price": 30
+    },
+    {
+      "section": "Ekstra",
+      "name": "Ekstra patty",
+      "description": null,
+      "price": 55
+    },
+    {
+      "section": "Ekstra",
+      "name": "Glutenfritt brød",
+      "description": null,
+      "price": 20
+    }
+  ]
+}

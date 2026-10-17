@@ -1,0 +1,264 @@
+{
+  "restaurant": "Nonna Pizza",
+  "platform": "unknown",
+  "currency": "NOK",
+  "url": "https://nonnapizza.example/meny",
+  "fictional": true,
+  "notes": "Two columns; allergen numbers in the name \"Margherita (1,7)\" (truth name excludes them). Redesign: <b class=dish> + <sup class=allergens>1,7</sup>, \"kr 169\".",
+  "redesignChanges": [
+    {
+      "type": "price",
+      "name": "Margherita",
+      "from": 159,
+      "to": 169
+    },
+    {
+      "type": "price",
+      "name": "Peroni 0,33 l",
+      "from": 89,
+      "to": 95
+    },
+    {
+      "type": "added",
+      "section": "Pizza Bianche",
+      "name": "Bresaola e Rucola",
+      "price": 219
+    },
+    {
+      "type": "reordered",
+      "order": [
+        "Pizza Rosse",
+        "Pizza Bianche",
+        "Insalate",
+        "Dolci",
+        "Drinks"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "section": "Pizza Rosse",
+      "name": "Margherita",
+      "description": "San Marzano-tomater, fior di latte og basilikum",
+      "price": 159
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Marinara",
+      "description": "Tomat, hvitløk, oregano og olivenolje",
+      "price": 135
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Diavola",
+      "description": "Spicy salami, chili og fior di latte",
+      "price": 189
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Capricciosa",
+      "description": "Skinke, artisjokk, sopp og oliven",
+      "price": 195
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Napoletana",
+      "description": "Ansjos, kapers og oliven",
+      "price": 185
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "'Nduja e Miele",
+      "description": "'Nduja, honning og ricotta",
+      "price": 199
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Quattro Formaggi",
+      "description": "Mozzarella, gorgonzola, parmesan og taleggio",
+      "price": 199
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Salsiccia e Friarielli",
+      "description": "Italiensk pølse, friarielli og provola",
+      "price": 205
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Patate e Rosmarino",
+      "description": "Tynne potetskiver, rosmarin og fior di latte",
+      "price": 175
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Mortadella e Pistacchio",
+      "description": "Mortadella, burrata og pistasj",
+      "price": 215
+    },
+    {
+      "section": "Insalate",
+      "name": "Insalata Caprese",
+      "description": "Tomat, bøffelmozzarella og basilikum",
+      "price": 145
+    },
+    {
+      "section": "Insalate",
+      "name": "Rucola e Parmigiano",
+      "description": "Ruccola, parmesan, sitron og olivenolje",
+      "price": 125
+    },
+    {
+      "section": "Dolci",
+      "name": "Tiramisù",
+      "description": "Husets klassiker",
+      "price": 115
+    },
+    {
+      "section": "Dolci",
+      "name": "Pizza alla Nutella",
+      "description": "Til deling, med hasselnøtter",
+      "price": 129
+    },
+    {
+      "section": "Drinks",
+      "name": "San Pellegrino 0,5 l",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "Drinks",
+      "name": "Chinotto",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "Drinks",
+      "name": "Peroni 0,33 l",
+      "description": null,
+      "price": 89
+    },
+    {
+      "section": "Drinks",
+      "name": "Husets rødvin, glass",
+      "description": "Montepulciano d’Abruzzo",
+      "price": 125
+    }
+  ],
+  "redesignItems": [
+    {
+      "section": "Pizza Rosse",
+      "name": "Margherita",
+      "description": "San Marzano-tomater, fior di latte og basilikum",
+      "price": 169
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Marinara",
+      "description": "Tomat, hvitløk, oregano og olivenolje",
+      "price": 135
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Diavola",
+      "description": "Spicy salami, chili og fior di latte",
+      "price": 189
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Capricciosa",
+      "description": "Skinke, artisjokk, sopp og oliven",
+      "price": 195
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "Napoletana",
+      "description": "Ansjos, kapers og oliven",
+      "price": 185
+    },
+    {
+      "section": "Pizza Rosse",
+      "name": "'Nduja e Miele",
+      "description": "'Nduja, honning og ricotta",
+      "price": 199
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Quattro Formaggi",
+      "description": "Mozzarella, gorgonzola, parmesan og taleggio",
+      "price": 199
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Salsiccia e Friarielli",
+      "description": "Italiensk pølse, friarielli og provola",
+      "price": 205
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Patate e Rosmarino",
+      "description": "Tynne potetskiver, rosmarin og fior di latte",
+      "price": 175
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Mortadella e Pistacchio",
+      "description": "Mortadella, burrata og pistasj",
+      "price": 215
+    },
+    {
+      "section": "Pizza Bianche",
+      "name": "Bresaola e Rucola",
+      "description": "Bresaola, ruccola og parmesan",
+      "price": 219
+    },
+    {
+      "section": "Insalate",
+      "name": "Insalata Caprese",
+      "description": "Tomat, bøffelmozzarella og basilikum",
+      "price": 145
+    },
+    {
+      "section": "Insalate",
+      "name": "Rucola e Parmigiano",
+      "description": "Ruccola, parmesan, sitron og olivenolje",
+      "price": 125
+    },
+    {
+      "section": "Dolci",
+      "name": "Tiramisù",
+      "description": "Husets klassiker",
+      "price": 115
+    },
+    {
+      "section": "Dolci",
+      "name": "Pizza alla Nutella",
+      "description": "Til deling, med hasselnøtter",
+      "price": 129
+    },
+    {
+      "section": "Drinks",
+      "name": "San Pellegrino 0,5 l",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "Drinks",
+      "name": "Chinotto",
+      "description": null,
+      "price": 45
+    },
+    {
+      "section": "Drinks",
+      "name": "Peroni 0,33 l",
+      "description": null,
+      "price": 95
+    },
+    {
+      "section": "Drinks",
+      "name": "Husets rødvin, glass",
+      "description": "Montepulciano d’Abruzzo",
+      "price": 125
+    }
+  ]
+}

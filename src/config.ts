@@ -57,3 +57,12 @@ export function costUsd(model: string, promptTokens: number, completionTokens: n
   const p = PRICES[model] || [1, 3];
   return (promptTokens * p[0] + completionTokens * p[1]) / 1_000_000;
 }
+
+/** "nvidia/Nemotron-3-Ultra-550b-a55b" → "Nemotron 3 Ultra". */
+export function modelName(id: string): string {
+  const m = id.match(/nemotron[-_ ]?(\d(?:[._]\d)?)[-_ ]?(nano|super|ultra|lightning)?(?:[-_ ]?(vl))?/i);
+  if (!m) return id.split('/').pop() || id;
+  const ver = m[1]!.replace('_', '.');
+  const size = m[2] ? ' ' + m[2][0]!.toUpperCase() + m[2].slice(1).toLowerCase() : '';
+  return `Nemotron ${ver}${size}${m[3] ? ' VL' : ''}`;
+}
