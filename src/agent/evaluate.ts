@@ -116,12 +116,15 @@ export function scoreAgainstOracle(
 
   const missing = o.filter((x) => !x.used).map((x) => x.it).slice(0, MAX_LISTED);
 
-  const pass =
-    extracted.length > 0 &&
-    f1 >= PASS.minF1 &&
-    recall >= PASS.minRecall &&
-    (oraclePriced < 0.5 || pricedRatio >= PASS.minPricedRatio) &&
-    ungrounded <= Math.max(2, Math.floor(e.length * 0.05));
+  const maxUngrounded = Math.max(2, Math.floor(e.length * 0.05));
+  const failures: string[] = [];
+  if (!extracted.length) failures.push('returned no items');
+  if (f1 < PASS.minF1) failures.push(`F1 ${round(f1)} is below ${PASS.minF1}`);
+  if (recall < PASS.minRecall) failures.push(`recall ${round(recall)} is below ${PASS.minRecall} — dishes are missing`);
+  if (oraclePriced >= 0.5 && pricedRatio < PASS.minPricedRatio)
+    failures.push(`only ${Math.round(pricedRatio * 100)}% of your items have a price, but the menu shows prices for ${Math.round(oraclePriced * 100)}%`);
+  if (ungrounded > maxUngrounded) failures.push(`${ungrounded} returned items are not dishes on this menu (allowed: ${maxUngrounded})`);
+  const pass = failures.length === 0;
 
   return {
     precision: round(precision),
@@ -136,6 +139,7 @@ export function scoreAgainstOracle(
     grounded,
     duplicates,
     wrongPrice,
+    failures,
     pass,
   };
 }

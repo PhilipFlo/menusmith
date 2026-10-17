@@ -306,7 +306,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       type: 'test',
       round,
       score: score ?? scoreAgainstOracle(oracleItems, [], text),
-      run: { ok: run.ok, error: run.error, ms: run.ms, count: run.items.length },
+      run: { ok: run.ok, error: run.error, ms: run.ms, count: run.items.length, trace: run.trace },
     });
     if (score && (!best || score.f1 > best.score.f1)) best = { score, code, run };
 
@@ -317,10 +317,11 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       messages.push({ role: 'user', content: 'Running your function twice on the same HTML gave different results. Make it fully deterministic (no Math.random, Date, or object-order dependence). Return the complete function.' });
       continue;
     }
-    emit({ type: 'step', step: 'test', status: 'fail', detail: hard.length ? 'hard-coded content' : run.ok ? `f1=${score!.f1} — not good enough yet` : run.error });
+    emit({ type: 'step', step: 'test', status: 'fail', detail: hard.length ? 'hard-coded content' : run.ok ? `f1=${score!.f1} — ${score!.failures[0] ?? 'not good enough yet'}` : run.error });
     // Stop early when repairs stagnate: two rounds in a row without improving the best F1.
     stagnant = score && best && score.f1 < best.score.f1 + 0.01 && round > 1 ? stagnant + 1 : 0;
-    if (stagnant >= 2) {
+    // …but keep going when we're close: near-misses usually converge with one more round.
+    if (stagnant >= 2 && (best?.score.f1 ?? 0) < 0.8) {
       emit({ type: 'log', message: 'Repairs have stopped improving — giving up early to save tokens' });
       break;
     }

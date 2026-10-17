@@ -65,6 +65,13 @@ async function one(site: Site) {
     oracleCount: out.oracleCount,
     extracted: out.items?.length ?? 0,
     f1Oracle: out.bestScore?.f1 ?? null,
+    precisionOracle: out.bestScore?.precision ?? null,
+    recallOracle: out.bestScore?.recall ?? null,
+    pricedRatio: out.bestScore?.pricedRatio ?? null,
+    bestExtractorCount: out.bestScore?.extractorCount ?? null,
+    ungroundedExtras: out.bestScore?.extra.length ?? null,
+    duplicates: out.bestScore?.duplicates ?? null,
+    sourceKind: out.meta?.source.kind ?? null,
     platform: out.meta?.platform ?? null,
     id: out.meta?.id ?? null,
   };
@@ -92,6 +99,13 @@ async function one(site: Site) {
       row.recallReference = s.recall;
       row.referenceCount = site.reference.length;
     }
+  }
+  if (!out.ok && out.code) {
+    mkdirSync(resolve(ROOT, '.cache/bench-failures'), { recursive: true });
+    writeFileSync(
+      resolve(ROOT, '.cache/bench-failures', `${String(site.name).replace(/[^a-z0-9]+/gi, '-').slice(0, 40)}.json`),
+      JSON.stringify({ url: site.url, reason: out.reason, score: out.bestScore, code: out.code }, null, 2),
+    );
   }
   const mark = out.ok ? `OK  ${out.mode} r${out.rounds} f1=${out.bestScore?.f1}` : `FAIL ${row.category}: ${out.reason}`;
   console.log(`${String(site.name).slice(0, 34).padEnd(34)} ${mark}  $${(row.costUsd as number).toFixed(4)} ${((row.ms as number) / 1000).toFixed(0)}s`);

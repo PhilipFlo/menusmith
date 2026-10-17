@@ -122,7 +122,8 @@ export function feedbackMessage(round: number, run: RunResult, score: Score | nu
   const s = score!;
   const sample = run.items.slice(0, 8).map((i) => JSON.stringify({ section: i.section, name: i.name, price: i.price }));
   const parts = [
-    `Round ${round} test result: ${s.extractorCount} items returned, ${s.oracleCount} expected. precision=${s.precision} recall=${s.recall} f1=${s.f1} priced=${Math.round(s.pricedRatio * 100)}%.`,
+    `Round ${round} test result: ${s.extractorCount} items returned, ${s.oracleCount} expected. precision=${s.precision} recall=${s.recall} f1=${s.f1} priced=${Math.round(s.pricedRatio * 100)}%.` +
+      (s.failures.length ? `\nNOT ACCEPTED because: ${s.failures.join('; ')}.` : ''),
     `First items you returned:\n${sample.join('\n') || '(none)'}`,
   ];
   if (s.missing.length)

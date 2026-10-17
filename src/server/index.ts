@@ -16,9 +16,24 @@ const app = new Hono();
 // ---- light abuse protection for the public demo -------------------------------
 const MAX_CONCURRENT_FORGES = Number(process.env.MENUSMITH_MAX_CONCURRENT || 2);
 const FORGES_PER_HOUR = Number(process.env.MENUSMITH_FORGES_PER_HOUR || 12);
+// Daily model-spend cap so a public demo can't drain the Token Factory credit.
+const DAILY_BUDGET_USD = Number(process.env.MENUSMITH_DAILY_BUDGET_USD || 3);
+const spend = { day: new Date().toISOString().slice(0, 10), usd: 0 };
+function addSpend(usd: number) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (spend.day !== today) Object.assign(spend, { day: today, usd: 0 });
+  spend.usd += usd;
+}
+function budgetLeft(): number {
+  const today = new Date().toISOString().slice(0, 10);
+  if (spend.day !== today) Object.assign(spend, { day: today, usd: 0 });
+  return DAILY_BUDGET_USD - spend.usd;
+}
+
 let running = 0;
 const hits = new Map<string, number[]>();
 function allow(ip: string): string | null {
+  if (budgetLeft() <= 0) return `Today's model budget for this public demo ($${DAILY_BUDGET_USD}) is used up — browse the Library and Fleet, or run Menusmith locally with your own key.`;
   if (running >= MAX_CONCURRENT_FORGES) return 'The agent is busy with other runs — try again in a minute.';
   const now = Date.now();
   const recent = (hits.get(ip) || []).filter((t) => now - t < 3_600_000);
@@ -37,6 +52,7 @@ app.get('/api/health', (c) =>
     llmMode: config.llmMode,
     nebius: !!config.nebiusApiKey,
     tavily: !!config.tavilyApiKey,
+    budget: { dailyUsd: DAILY_BUDGET_USD, leftUsd: Math.max(0, Math.round(budgetLeft() * 100) / 100) },
     models: Object.fromEntries(Object.entries(MODELS).map(([k, v]) => [k, v[0]])),
   }),
 );
@@ -52,6 +68,7 @@ app.post('/api/forge', async (c) => {
     const send = (e: AgentEvent) => stream.writeSSE({ event: e.type, data: JSON.stringify(e) }).catch(() => {});
     try {
       const out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse }, send);
+      addSpend(out.ledger.costUsd);
       await stream.writeSSE({
         event: 'summary',
         data: JSON.stringify({
@@ -95,7 +112,8 @@ app.post('/api/fleet/run', async (c) => {
   return streamSSE(c, async (stream) => {
     const send = (e: AgentEvent) => stream.writeSSE({ event: e.type, data: JSON.stringify(e) }).catch(() => {});
     try {
-      const report = await runFleet({ heal: body.heal !== false, only: body.only }, send);
+      const report = await runFleet({ heal: body.heal !== false && budgetLeft() > 0, only: body.only }, send);
+      addSpend(report.totals.costUsd);
       await stream.writeSSE({ event: 'report', data: JSON.stringify(report) });
     } catch (e) {
       await send({ type: 'error', message: (e as Error).message });

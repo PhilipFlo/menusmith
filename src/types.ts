@@ -36,6 +36,8 @@ export interface Score {
   duplicates: number;
   /** Same name, different price. */
   wrongPrice: { name: string; expected: number | null; got: number | null }[];
+  /** Which pass conditions failed, in words — fed back to the model. */
+  failures: string[];
   pass: boolean;
 }
 

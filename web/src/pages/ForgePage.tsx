@@ -16,8 +16,8 @@ import { href } from '../router.ts';
  * TODO: replace these placeholders with the two real menus used in the demo.
  */
 const EXAMPLE_SITES: { label: string; url: string }[] = [
-  { label: 'Real site · example 1', url: 'https://www.example.com/menu' },
-  { label: 'Real site · example 2', url: 'https://www.example.org/meny' },
+  { label: 'Damaskus Huset · Oslo', url: 'https://semeny.no/sted/634damaskushusetrestaurant' },
+  { label: 'Pizzabakeren · Oslo', url: 'https://www.pizzabakeren.no/glutenfri' },
 ];
 
 function toRequest(raw: string, city: string) {
@@ -455,6 +455,12 @@ function Rounds({ state }: { state: ForgeState }) {
               </div>
               <ScoreBars score={test.score} />
               <ScoreDetails score={test.score} />
+              {test.run.trace && test.run.trace.length > 0 && !test.score.pass && (
+                <details className="trace">
+                  <summary>Debugger — what each selector matched on the real page</summary>
+                  <pre className="trace-lines">{test.run.trace.join('\n')}</pre>
+                </details>
+              )}
             </>
           ) : (
             <p className="small muted">
