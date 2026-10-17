@@ -90,9 +90,19 @@ export function scoreAgainstOracle(
       if (samePrice(ex.it.price, cand.it.price)) correct++;
       else if (wrongPrice.length < MAX_LISTED)
         wrongPrice.push({ name: cand.it.name, expected: cand.it.price, got: ex.it.price });
-    } else if (o.some((c) => c.used && nameSimilarity(ex.n, c.n) >= 0.9)) {
-      // A second copy of a dish we already matched (mobile + desktop copies, or a
-      // container matched as if it were an item) — always an error.
+    } else if (
+      o.some(
+        (c) =>
+          c.used &&
+          nameSimilarity(ex.n, c.n) >= 0.9 &&
+          normName(c.it.section ?? '') === normName(ex.it.section ?? '') &&
+          samePrice(c.it.price, ex.it.price),
+      )
+    ) {
+      // A second copy of a dish we already matched, in the same section at the same
+      // price (mobile + desktop copies, or a container matched as an item) — an error.
+      // The same dish listed under two different sections is legitimate and goes to
+      // the grounded/arbitration path instead.
       duplicates++;
       if (extra.length < MAX_LISTED) extra.push({ ...ex.it, name: `${ex.it.name} (duplicate)` });
     } else if (ex.n && page.includes(ex.n) && !opts.rejected?.has(ex.n)) {

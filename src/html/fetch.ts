@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config, ROOT } from '../config.ts';
+import { assertPublicUrl } from './netguard.ts';
 
 export interface Page {
   url: string;
@@ -81,6 +82,7 @@ export async function fetchPage(url: string, opts: { maxAgeMs?: number } = {}): 
   const fixture = readFixture(url);
   if (fixture) return fixture;
   if (!/^https?:\/\//i.test(url)) throw new Error(`unsupported URL: ${url}`);
+  await assertPublicUrl(url);
 
   const maxAge = opts.maxAgeMs ?? 6 * 60 * 60 * 1000;
   const key = createHash('sha256').update(url).digest('hex').slice(0, 20);
@@ -94,22 +96,33 @@ export async function fetchPage(url: string, opts: { maxAgeMs?: number } = {}): 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
-      redirect: 'follow',
-      signal: ctrl.signal,
-      headers: {
-        'user-agent': UA,
-        accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-        'accept-language': 'en,nb;q=0.9,no;q=0.8',
-      },
-    });
+    // Follow redirects one hop at a time so every hop passes the SSRF guard.
+    let current = url;
+    let res: Response | null = null;
+    for (let hop = 0; hop < 6; hop++) {
+      res = await fetch(current, {
+        redirect: 'manual',
+        signal: ctrl.signal,
+        headers: {
+          'user-agent': UA,
+          accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+          'accept-language': 'en,nb;q=0.9,no;q=0.8',
+        },
+      });
+      const loc = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
+      if (!loc) break;
+      current = new URL(loc, current).toString();
+      await assertPublicUrl(current);
+      if (hop === 5) throw new Error('too many redirects');
+    }
+    if (!res) throw new Error('no response');
     const len = Number(res.headers.get('content-length') || 0);
     if (len > MAX_BYTES) throw new Error(`page too large (${len} bytes)`);
     const buf = await res.arrayBuffer();
     if (buf.byteLength > MAX_BYTES) throw new Error(`page too large (${buf.byteLength} bytes)`);
     const page: Page = {
       url,
-      finalUrl: res.url || url,
+      finalUrl: current,
       status: res.status,
       html: decode(buf, res.headers.get('content-type')),
       fetchedAt: new Date().toISOString(),

@@ -32,6 +32,8 @@ export interface ForgeInput {
   allowRender?: boolean;
   /** A fresh oracle reading the caller already has (the fleet's drift check) — saves a call. */
   oracle?: MenuItem[];
+  /** Caller-owned ledger (budget cap + cancellation); spend survives exceptions. */
+  ledger?: Ledger;
 }
 
 export interface ForgeOutcome {
@@ -68,7 +70,7 @@ export function groundOracle(items: MenuItem[], text: string): { kept: MenuItem[
 
 export async function forge(input: ForgeInput, emit: Emit = noop): Promise<ForgeOutcome> {
   const t0 = Date.now();
-  const ledger = new Ledger();
+  const ledger = input.ledger ?? new Ledger();
   const fail = (reason: string, extra: Partial<ForgeOutcome> = {}): ForgeOutcome => {
     emit({ type: 'result', ok: false, reason });
     return { ok: false, reason, oracleCount: 0, rounds: 0, ledger, ms: Date.now() - t0, ...extra };
@@ -194,7 +196,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
           extractorCount: score.extractorCount,
         },
         tokens: { prompt: ledger.promptTokens, completion: ledger.completionTokens },
-        costUsd: Math.round(ledger.costUsd * 1e6) / 1e6,
+        costUsd: Math.round(ledger.listCostUsd * 1e6) / 1e6,
+        baselinePriced: run.items.length ? Math.round((run.items.filter((i) => i.price != null).length / run.items.length) * 1000) / 1000 : 0,
         baselineHash: itemsHash(run.items),
         baselineCount: run.items.length,
         reusedFrom: reusedFrom ?? null,

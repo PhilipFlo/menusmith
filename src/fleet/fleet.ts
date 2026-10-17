@@ -20,7 +20,8 @@ import { forge, groundOracle } from '../agent/pipeline.ts';
  * then to heal the code.
  */
 
-export type FleetStatus = 'stable' | 'changed' | 'healed' | 'broken' | 'error';
+/** review = output looks off but a fresh reading didn't confirm a break — left for a human. */
+export type FleetStatus = 'stable' | 'changed' | 'healed' | 'review' | 'broken' | 'error';
 
 export interface PriceChange {
   name: string;
@@ -49,22 +50,39 @@ export interface FleetReport {
   startedAt: string;
   finishedAt: string;
   entries: FleetEntry[];
-  totals: { extractors: number; stable: number; changed: number; healed: number; broken: number; error: number; tokens: number; costUsd: number; ms: number };
+  totals: { extractors: number; stable: number; changed: number; healed: number; review: number; broken: number; error: number; tokens: number; costUsd: number; ms: number };
 }
 
 const reportDir = () => resolve(config.libraryDir, 'fleet');
 
 export function diffItems(prev: MenuItem[], next: MenuItem[]): PriceChange[] {
+  // Group by section+name; a group can hold several items (sizes listed separately),
+  // which are paired by equal price first, then in order — never collapsed.
   const key = (i: MenuItem) => `${normName(i.section ?? '')}|${normName(i.name)}`;
-  const a = new Map(prev.map((i) => [key(i), i]));
-  const b = new Map(next.map((i) => [key(i), i]));
+  const group = (xs: MenuItem[]) => {
+    const m = new Map<string, MenuItem[]>();
+    for (const i of xs) m.set(key(i), [...(m.get(key(i)) || []), i]);
+    return m;
+  };
+  const a = group(prev);
+  const b = group(next);
   const out: PriceChange[] = [];
-  for (const [k, n] of b) {
-    const o = a.get(k);
-    if (!o) out.push({ name: n.name, section: n.section, kind: 'added', newPrice: n.price });
-    else if (!samePrice(o.price, n.price)) out.push({ name: n.name, section: n.section, kind: 'price', oldPrice: o.price, newPrice: n.price });
+  for (const k of new Set([...a.keys(), ...b.keys()])) {
+    const olds = [...(a.get(k) || [])];
+    const news = [...(b.get(k) || [])];
+    for (let i = news.length - 1; i >= 0; i--) {
+      const j = olds.findIndex((o) => samePrice(o.price, news[i]!.price));
+      if (j >= 0) {
+        olds.splice(j, 1);
+        news.splice(i, 1);
+      }
+    }
+    const pairs = Math.min(olds.length, news.length);
+    for (let i = 0; i < pairs; i++)
+      out.push({ name: news[i]!.name, section: news[i]!.section, kind: 'price', oldPrice: olds[i]!.price, newPrice: news[i]!.price });
+    for (const n of news.slice(pairs)) out.push({ name: n.name, section: n.section, kind: 'added', newPrice: n.price });
+    for (const o of olds.slice(pairs)) out.push({ name: o.name, section: o.section, kind: 'removed', oldPrice: o.price });
   }
-  for (const [k, o] of a) if (!b.has(k)) out.push({ name: o.name, section: o.section, kind: 'removed', oldPrice: o.price });
   return out;
 }
 
@@ -72,18 +90,39 @@ export function diffItems(prev: MenuItem[], next: MenuItem[]): PriceChange[] {
  * Structural health check: does this output look like the same extractor working?
  * Broken extractors typically return nothing, a fraction of the menu, or lose prices.
  */
-export function looksBroken(items: MenuItem[], baselineCount: number): string | null {
+export function looksBroken(items: MenuItem[], baselineCount: number, baselinePriced = 1): string | null {
   if (!items.length) return 'returned no items';
   if (baselineCount >= 5 && items.length < baselineCount * 0.6)
     return `returned ${items.length} items, down from ${baselineCount}`;
   const priced = items.filter((i) => i.price != null).length / items.length;
-  if (priced < 0.4) return `only ${Math.round(priced * 100)}% of items have a price`;
+  // Only a DROP in priced share is suspicious — some menus never show prices.
+  if (baselinePriced >= 0.5 && priced < Math.min(0.4, baselinePriced * 0.6)) return `only ${Math.round(priced * 100)}% of items have a price`;
   return null;
 }
 
-async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean }): Promise<FleetEntry> {
+/**
+ * Not clearly broken, but different enough that we shouldn't silently accept it as
+ * a menu change (a slowly degrading extractor would otherwise ratchet its baseline
+ * down week by week): count fell by >15%, or most dish names are new.
+ */
+export function looksSuspicious(items: MenuItem[], prev: MenuItem[], baselineCount: number): string | null {
+  if (baselineCount >= 8 && items.length < baselineCount * 0.85) return `item count fell from ${baselineCount} to ${items.length}`;
+  if (prev.length >= 8) {
+    const before = new Set(prev.map((i) => normName(i.name)));
+    const overlap = items.filter((i) => before.has(normName(i.name))).length / Math.max(1, items.length);
+    if (overlap < 0.6) return `only ${Math.round(overlap * 100)}% of dish names match last run`;
+  }
+  return null;
+}
+
+interface Budget {
+  left(): number;
+  spend(usd: number): void;
+}
+
+async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; budget?: Budget }): Promise<FleetEntry> {
   const t0 = Date.now();
-  const ledger = new Ledger();
+  const ledger = new Ledger(opts.budget ? Math.max(0, opts.budget.left()) : undefined);
   const base: Omit<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> = {
     id: x.meta.id,
     domain: x.meta.domain,
@@ -95,12 +134,13 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
     version: x.meta.version,
   };
   const done = (e: Pick<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> & { version?: number }): FleetEntry => {
+    opts.budget?.spend(ledger.costUsd);
     const entry: FleetEntry = {
       ...base,
       ...e,
       ms: Date.now() - t0,
       tokens: ledger.promptTokens + ledger.completionTokens,
-      costUsd: Math.round(ledger.costUsd * 1e6) / 1e6,
+      costUsd: Math.round(ledger.listCostUsd * 1e6) / 1e6,
     };
     emit({ type: 'log', message: `[fleet] ${entry.id}: ${entry.status} — ${entry.detail}` });
     return entry;
@@ -122,8 +162,9 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
     return done({ status: 'stable', detail: `${run.items.length} items, unchanged`, items: run.items.length, changes: [] });
   }
 
-  const broken = run.ok ? looksBroken(run.items, x.meta.baselineCount) : `crashed: ${run.error}`;
-  if (!broken) {
+  const broken = run.ok ? looksBroken(run.items, x.meta.baselineCount, x.meta.baselinePriced ?? 1) : `crashed: ${run.error}`;
+  const suspicious = !broken && run.ok ? looksSuspicious(run.items, prev, x.meta.baselineCount) : null;
+  if (!broken && !suspicious) {
     // Plausible output that differs from last time → the menu itself changed.
     const changes = diffItems(prev, run.items);
     saveSnapshot(x.meta.id, run.items);
@@ -131,7 +172,9 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
     return done({ status: 'changed', detail: `menu updated: ${summarise(changes)}`, items: run.items.length, changes });
   }
 
-  if (!opts.heal) return done({ status: 'broken', detail: broken, items: run.items.length, changes: [] });
+  const problem = (broken || suspicious)!;
+  if (!opts.heal || (opts.budget && opts.budget.left() <= 0))
+    return done({ status: broken ? 'broken' : 'review', detail: `${problem}${opts.heal ? ' (fleet budget used up — not healed)' : ''}`, items: run.items.length, changes: [] });
 
   // Suspected breakage. Ask the oracle what the page says now.
   let freshOracle: MenuItem[] | undefined;
@@ -158,15 +201,19 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean })
     emit({ type: 'log', message: `[fleet] oracle check failed for ${x.meta.id}: ${(e as Error).message}` });
   }
 
+  if (!broken) {
+    // Suspicious but not broken, and the oracle did not confirm it: don't rewrite working code
+    // on a hunch — flag it for review instead.
+    return done({ status: 'review', detail: `${suspicious}; a fresh reading did not confirm it — flagged for review`, items: run.items.length, changes: [] });
+  }
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: ${broken} — healing` });
   const tagged: Emit = (e) => emit({ ...e, target: x.meta.id } as typeof e);
-  const healed = await forge({ url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason: broken }, oracle: freshOracle }, tagged);
-  for (const [m, v] of Object.entries(healed.ledger.byModel)) {
-    ledger.byModel[m] = v;
-  }
-  ledger.promptTokens += healed.ledger.promptTokens;
-  ledger.completionTokens += healed.ledger.completionTokens;
-  ledger.costUsd += healed.ledger.costUsd;
+  const healLedger = new Ledger(opts.budget ? Math.max(0, opts.budget.left() - ledger.costUsd) : undefined);
+  const healed = await forge(
+    { url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason: broken }, oracle: freshOracle, ledger: healLedger },
+    tagged,
+  );
+  ledger.merge(healed.ledger);
   if (healed.ok && healed.items) {
     const changes = diffItems(prev, healed.items);
     saveSnapshot(x.meta.id, healed.items);
@@ -189,7 +236,12 @@ function summarise(changes: PriceChange[]): string {
   return [p && `${p} price change(s)`, a && `${a} added`, r && `${r} removed`].filter(Boolean).join(', ');
 }
 
-export async function runFleet(opts: { heal?: boolean; only?: string[]; concurrency?: number } = {}, emit: Emit = () => {}): Promise<FleetReport> {
+export async function runFleet(
+  opts: { heal?: boolean; only?: string[]; concurrency?: number; maxUsd?: number } = {},
+  emit: Emit = () => {},
+): Promise<FleetReport> {
+  let spent = 0;
+  const budget: Budget | undefined = opts.maxUsd == null ? undefined : { left: () => opts.maxUsd! - spent, spend: (u) => (spent += u) };
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
   let xs = listExtractors();
@@ -199,7 +251,7 @@ export async function runFleet(opts: { heal?: boolean; only?: string[]; concurre
   const workers = Array.from({ length: Math.max(1, opts.concurrency ?? 4) }, async () => {
     while (queue.length) {
       const x = queue.shift()!;
-      entries.push(await checkOne(x, emit, { heal: opts.heal !== false }));
+      entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget }));
     }
   });
   await Promise.all(workers);
@@ -214,6 +266,7 @@ export async function runFleet(opts: { heal?: boolean; only?: string[]; concurre
       stable: count('stable'),
       changed: count('changed'),
       healed: count('healed'),
+      review: count('review'),
       broken: count('broken'),
       error: count('error'),
       tokens: entries.reduce((s, e) => s + e.tokens, 0),

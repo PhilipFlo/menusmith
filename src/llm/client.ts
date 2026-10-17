@@ -44,19 +44,48 @@ export interface ChatResult {
 export class Ledger {
   promptTokens = 0;
   completionTokens = 0;
+  /** Money actually spent (replayed recordings cost nothing). */
   costUsd = 0;
+  /** What the work costs at list price, including replayed calls — used for reporting. */
+  listCostUsd = 0;
   calls = 0;
   byModel: Record<string, { calls: number; promptTokens: number; completionTokens: number; costUsd: number }> = {};
+  constructor(
+    /** Hard cap: no new model call starts once real spend reaches this. */
+    readonly limitUsd = Number(process.env.MENUSMITH_MAX_JOB_USD || 1),
+    /** Abort (e.g. the visitor closed the page) — no new model call starts. */
+    readonly signal?: AbortSignal,
+  ) {}
   add(r: ChatResult) {
     this.calls++;
     this.promptTokens += r.promptTokens;
     this.completionTokens += r.completionTokens;
-    this.costUsd += r.costUsd;
+    this.listCostUsd += r.costUsd;
+    if (!r.cached) this.costUsd += r.costUsd;
     const m = (this.byModel[r.model] ||= { calls: 0, promptTokens: 0, completionTokens: 0, costUsd: 0 });
     m.calls++;
     m.promptTokens += r.promptTokens;
     m.completionTokens += r.completionTokens;
     m.costUsd += r.costUsd;
+  }
+  /** Fold another job's ledger into this one (fleet heals). */
+  merge(o: Ledger) {
+    this.calls += o.calls;
+    this.promptTokens += o.promptTokens;
+    this.completionTokens += o.completionTokens;
+    this.costUsd += o.costUsd;
+    this.listCostUsd += o.listCostUsd;
+    for (const [k, v] of Object.entries(o.byModel)) {
+      const m = (this.byModel[k] ||= { calls: 0, promptTokens: 0, completionTokens: 0, costUsd: 0 });
+      m.calls += v.calls;
+      m.promptTokens += v.promptTokens;
+      m.completionTokens += v.completionTokens;
+      m.costUsd += v.costUsd;
+    }
+  }
+  check() {
+    if (this.signal?.aborted) throw new LlmError('cancelled', 499);
+    if (this.costUsd >= this.limitUsd) throw new LlmError(`budget for this job ($${this.limitUsd}) reached`, 402);
   }
 }
 
@@ -73,7 +102,7 @@ function getClient(): OpenAI {
       'NEBIUS_API_KEY is not set. Add it to .env (see .env.example), or run with MENUSMITH_LLM=replay for the recorded demo.',
     );
   }
-  client ||= new OpenAI({ baseURL: config.nebiusBaseUrl, apiKey: config.nebiusApiKey, maxRetries: 0, timeout: 180_000 });
+  client ||= new OpenAI({ baseURL: config.nebiusBaseUrl, apiKey: config.nebiusApiKey, maxRetries: 0, timeout: 150_000 });
   return client;
 }
 
@@ -185,6 +214,10 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
         useJsonMode = false;
         continue;
       }
+      // A timed-out call already waited minutes — don't multiply that by retrying.
+      if (/timeout|timed out/i.test(String((e as Error).name) + ' ' + (e as Error).message)) {
+        throw new LlmError(`${model}: request timed out`, 504);
+      }
       if (status === 429 || (status && status >= 500) || status === undefined) {
         await sleep(1500 * 2 ** attempt + Math.random() * 500);
         continue;
@@ -200,6 +233,7 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
  * accounting, and record/replay cassettes.
  */
 export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promise<ChatResult> {
+  ledger?.check();
   const chain = MODELS[o.role];
   let lastErr: unknown;
   for (const model of chain) {
@@ -223,7 +257,7 @@ export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promis
         lastErr = e;
         const status = (e as LlmError).status;
         // A missing / unauthorised model → try the next one in the chain.
-        if (status === 404 || status === 400 || status === 403 || status === 429 || status === undefined) continue;
+        if (status === 404 || status === 400 || status === 403 || status === 429 || status === 504 || status === undefined) continue;
         throw e;
       }
       if (config.llmMode === 'record') {

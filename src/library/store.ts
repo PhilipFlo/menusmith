@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config } from '../config.ts';
 import type { ExtractorMeta, Platform } from '../types.ts';
@@ -84,15 +84,29 @@ export function saveExtractor(meta: Omit<ExtractorMeta, 'version' | 'history'>, 
   const folder = resolve(dir(), meta.id);
   mkdirSync(folder, { recursive: true });
   const prev = loadExtractor(meta.id);
-  const version = (prev?.meta.version ?? 0) + 1;
-  const full: ExtractorMeta = {
-    ...meta,
-    version,
-    history: [...(prev?.meta.history ?? []), { version, reason, at: meta.createdAt }],
-  };
-  writeFileSync(resolve(folder, `v${version}.js`), header(full) + code.trim() + '\n');
-  writeFileSync(resolve(folder, 'meta.json'), JSON.stringify(full, null, 2) + '\n');
-  return full;
+  let version = (prev?.meta.version ?? 0) + 1;
+  // Claim the version file atomically ('wx' fails if it exists): two concurrent
+  // writers (a fleet heal and a forge) can never overwrite each other's version.
+  for (;;) {
+    const full: ExtractorMeta = {
+      ...meta,
+      version,
+      history: [...(prev?.meta.history ?? []), { version, reason, at: meta.createdAt }],
+    };
+    try {
+      writeFileSync(resolve(folder, `v${version}.js`), header(full) + code.trim() + '\n', { flag: 'wx' });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'EEXIST') {
+        version++;
+        continue;
+      }
+      throw e;
+    }
+    const tmp = resolve(folder, `.meta.${process.pid}.${version}.tmp`);
+    writeFileSync(tmp, JSON.stringify(full, null, 2) + '\n');
+    renameSync(tmp, resolve(folder, 'meta.json'));
+    return full;
+  }
 }
 
 /** Update only the drift baseline (after a legitimate menu change). */

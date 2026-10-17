@@ -1,4 +1,5 @@
 import type { Browser } from 'playwright';
+import { assertPublicUrl, isBlockedUrlSync } from './netguard.ts';
 
 /**
  * Headless-browser rendering for JavaScript-built menus.
@@ -34,10 +35,24 @@ export interface Rendered {
 let browserPromise: Promise<Browser> | null = null;
 async function browser(): Promise<Browser> {
   if (!browserPromise) {
-    browserPromise = import('playwright').then(({ chromium }) => chromium.launch({ headless: true }));
-    browserPromise.catch(() => (browserPromise = null));
+    const p = import('playwright').then(async ({ chromium }) => {
+      const b = await chromium.launch({ headless: true });
+      // A crashed or closed browser must not poison every later render.
+      b.on('disconnected', () => {
+        if (browserPromise === p) browserPromise = null;
+      });
+      return b;
+    });
+    browserPromise = p;
+    p.catch(() => {
+      if (browserPromise === p) browserPromise = null;
+    });
   }
   return browserPromise;
+}
+
+function emitBlocked(u: string) {
+  console.warn(`[render] blocked a request to a private address: ${u.slice(0, 120)}`);
 }
 
 export async function closeBrowser() {
@@ -68,9 +83,11 @@ export function countMenuObjects(value: unknown, depth = 0): number {
 }
 
 const MAX_JSON = 4 * 1024 * 1024;
+const MAX_HTML = 6 * 1024 * 1024;
 
 export async function renderPage(url: string, opts: { timeoutMs?: number } = {}): Promise<Rendered> {
   const t0 = Date.now();
+  await assertPublicUrl(url);
   const b = await browser();
   const ctx = await b.newContext({
     userAgent:
@@ -78,39 +95,48 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
     locale: 'nb-NO',
     viewport: { width: 1280, height: 900 },
   });
-  const page = await ctx.newPage();
-  await page.route('**/*', (route) => {
-    const t = route.request().resourceType();
-    return t === 'image' || t === 'media' || t === 'font' ? route.abort() : route.continue();
-  });
-  const json: CapturedJson[] = [];
-  const pending: Promise<void>[] = [];
-  page.on('response', (res) => {
-    const req = res.request();
-    const type = req.resourceType();
-    if (type !== 'xhr' && type !== 'fetch') return;
-    pending.push(
-      (async () => {
-        try {
-          const ct = res.headers()['content-type'] || '';
-          if (!/json/i.test(ct) && !/\.json(\?|$)/i.test(res.url())) return;
-          const body = await res.text();
-          if (body.length > MAX_JSON || body.length < 20) return;
-          const parsed = JSON.parse(body);
-          const menuObjects = countMenuObjects(parsed);
-          if (menuObjects < 3) return;
-          const h = req.headers();
-          const keep: Record<string, string> = {};
-          for (const k of ['accept', 'content-type', 'x-requested-with', 'accept-language']) if (h[k]) keep[k] = h[k]!;
-          json.push({ url: res.url(), method: req.method(), postData: req.postData(), requestHeaders: keep, status: res.status(), body, menuObjects });
-        } catch {
-          /* not JSON / body unavailable */
-        }
-      })(),
-    );
-  });
   try {
+    const page = await ctx.newPage();
+    let blocked: string | null = null;
+    // Redirects are followed by the browser itself; catch any hop that lands somewhere private.
+    page.on('request', (req) => {
+      if (!blocked && isBlockedUrlSync(req.url())) blocked = req.url();
+    });
+    await page.route('**/*', (route) => {
+      const req = route.request();
+      const t = req.resourceType();
+      // Never let the page reach private/internal addresses (SSRF), nor download heavy media.
+      if (isBlockedUrlSync(req.url())) return route.abort('blockedbyclient');
+      return t === 'image' || t === 'media' || t === 'font' ? route.abort() : route.continue();
+    });
+    const json: CapturedJson[] = [];
+    const pending: Promise<void>[] = [];
+    page.on('response', (res) => {
+      const req = res.request();
+      const type = req.resourceType();
+      if (type !== 'xhr' && type !== 'fetch') return;
+      pending.push(
+        (async () => {
+          try {
+            const ct = res.headers()['content-type'] || '';
+            if (!/json/i.test(ct) && !/\.json(\?|$)/i.test(res.url())) return;
+            const body = await res.text();
+            if (body.length > MAX_JSON || body.length < 20) return;
+            const parsed = JSON.parse(body);
+            const menuObjects = countMenuObjects(parsed);
+            if (menuObjects < 3) return;
+            const h = req.headers();
+            const keep: Record<string, string> = {};
+            for (const k of ['accept', 'content-type', 'x-requested-with', 'accept-language']) if (h[k]) keep[k] = h[k]!;
+            json.push({ url: res.url(), method: req.method(), postData: req.postData(), requestHeaders: keep, status: res.status(), body, menuObjects });
+          } catch {
+            /* not JSON / body unavailable */
+          }
+        })(),
+      );
+    });
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: opts.timeoutMs ?? 30_000 });
+    if (isBlockedUrlSync(page.url())) throw new Error(`refusing to render a private address (${page.url()})`);
     await page.waitForLoadState('networkidle', { timeout: 12_000 }).catch(() => {});
     // Trigger lazy-loaded sections.
     await page
@@ -123,9 +149,11 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
       .catch(() => {});
     await page.waitForLoadState('networkidle', { timeout: 6_000 }).catch(() => {});
     await Promise.allSettled(pending);
-    const html = await page.content();
+    let html = await page.content();
+    if (html.length > MAX_HTML) html = html.slice(0, MAX_HTML);
     json.sort((a, b) => b.menuObjects - a.menuObjects);
-    return { url, finalUrl: page.url(), html, json, ms: Date.now() - t0 };
+    if (blocked) emitBlocked(blocked);
+    return { url, finalUrl: page.url(), html, json: json.filter((j) => !isBlockedUrlSync(j.url)), ms: Date.now() - t0 };
   } finally {
     await ctx.close().catch(() => {});
   }

@@ -111,3 +111,29 @@ describe('sandbox: failures and isolation', () => {
     });
   });
 });
+
+describe('sandbox hardening (review findings)', () => {
+  it('a getter/toJSON on the result cannot run on the host or bypass validation', async () => {
+    const { runExtractor } = await import('../src/sandbox/runner.ts');
+    const code = `function extract() {
+      const arr = [{ name: { toString() { return 'x' } }, price: '12' }];
+      arr.toJSON = () => Array.from({ length: 50000 }, () => ({ name: { a: 1 }, price: 'kr 1' }));
+      Object.defineProperty(arr, 'length', { get() { while (true) {} } });
+      return arr;
+    }`;
+    const r = await runExtractor(code, '<p></p>', '');
+    expect(r.items.length).toBeLessThanOrEqual(3000);
+    for (const it of r.items) expect(typeof it.name).toBe('string');
+  });
+  it('caps flooding output at 3000 items', async () => {
+    const { runExtractor } = await import('../src/sandbox/runner.ts');
+    const r = await runExtractor('function extract(){ return Array.from({length: 50000}, (_, i) => ({ name: "Dish " + i, price: i })) }', '<p></p>', '');
+    expect(r.ok).toBe(true);
+    expect(r.items.length).toBe(3000);
+  });
+  it('removes binary buffers (off-heap memory) from the context', async () => {
+    const { runExtractor } = await import('../src/sandbox/runner.ts');
+    const r = await runExtractor('function extract(){ return [{ name: typeof ArrayBuffer + "/" + typeof Uint8Array, price: 1 }] }', '<p></p>', '');
+    expect(r.items[0]?.name).toBe('undefined/undefined');
+  });
+});

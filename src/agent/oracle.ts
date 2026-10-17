@@ -40,6 +40,7 @@ Rules:
 - "section" is the heading the item is listed under (e.g. "Pizza", "Drinks"), or null.
 - "description" is the short text describing the dish, or null. Do not invent descriptions.
 - Never invent items. Ignore navigation, opening hours, addresses, newsletter text, cookie banners, events.
+- Allergen labels and badges (e.g. "Hvete", "Egg", "Melk", "Gluten", "Nøtter", "Soya", "Sesam", "Vegan", "Spicy") are NOT dishes.
 - If the page has no menu, return {"is_menu": false, "currency": null, "items": []}.
 - If the input is a list of lines exported from a menu API ("[Category > Sub] Name | price=… | description | flags"), use the category path as section, skip items flagged unavailable/hidden/archived/deleted, skip modifier/option groups (sizes, extras, sauces, add-ons) unless they are standalone dishes, and convert prices given in minor units (e.g. 18900 for a 189 kr dish) to the normal amount.`;
 
@@ -60,11 +61,18 @@ export function chunkText(text: string, maxChars = 24_000): string[] {
   return chunks;
 }
 
+const MAX_ORACLE_CHARS = 120_000;
+const MAX_CHUNKS = 5;
+
 export interface OracleResult {
   isMenu: boolean;
   currency: string | null;
   items: MenuItem[];
 }
+
+/** The 14 EU allergens (+ common label words) in Norwegian and English — never dish names on their own. */
+const ALLERGEN_LABEL =
+  /^(gluten|hvete|wheat|rug|rye|bygg|barley|havre|oats?|egg|eggs|melk|milk|laktose|lactose|fisk|fish|skalldyr|crustaceans?|shellfish|bløtdyr|molluscs?|nøtter|nuts?|valnøtter|walnuts?|mandler|almonds?|hasselnøtter|hazelnuts?|cashew|pistasj|pistachios?|pekannøtter|pecans?|peanøtter|peanuts?|soya|soy|selleri|celery|sennep|mustard|sesam|sesame|lupin|sulfitt|sulphites?|sulfites?|svoveldioksid|vegan|vegetar|vegetarian|spicy|sterk|glutenfri|gluten[- ]free|laktosefri|lactose[- ]free)$/i;
 
 function normalise(raw: z.infer<typeof ItemSchema>[], currency: string | null): MenuItem[] {
   const out: MenuItem[] = [];
@@ -75,6 +83,8 @@ function normalise(raw: z.infer<typeof ItemSchema>[], currency: string | null): 
       .trim();
     if (!name) continue;
     const price = typeof it.price === 'number' ? it.price : parsePrice(it.price ?? null);
+    // An allergen badge read as if it were a dish (no price, name is just the allergen).
+    if (price == null && ALLERGEN_LABEL.test(name)) continue;
     out.push({
       section: it.section ? cleanText(it.section) : null,
       name,
@@ -92,7 +102,9 @@ export async function readMenu(
   ledger: Ledger,
   emit?: Emit,
 ): Promise<OracleResult> {
-  const chunks = chunkText(pageText);
+  // Hard cap on how much text one reading may cost: 5 chunks (~120k chars) is a very
+  // large menu; anything beyond is page noise or an attempt to burn credits.
+  const chunks = chunkText(pageText.slice(0, MAX_ORACLE_CHARS)).slice(0, MAX_CHUNKS);
   const results = await Promise.all(
     chunks.map((chunk, i) =>
       chat(

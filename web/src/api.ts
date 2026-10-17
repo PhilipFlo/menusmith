@@ -34,7 +34,7 @@ export interface Fixture {
   redesigned: boolean;
 }
 
-export type FleetStatus = 'stable' | 'changed' | 'healed' | 'broken' | 'error';
+export type FleetStatus = 'stable' | 'changed' | 'healed' | 'review' | 'broken' | 'error';
 
 export interface PriceChange {
   name: string;
@@ -63,7 +63,7 @@ export interface FleetReport {
   startedAt: string;
   finishedAt: string;
   entries: FleetEntry[];
-  totals: { extractors: number; stable: number; changed: number; healed: number; broken: number; error: number; tokens: number; costUsd: number; ms: number };
+  totals: { extractors: number; stable: number; changed: number; healed: number; review?: number; broken: number; error: number; tokens: number; costUsd: number; ms: number };
 }
 
 export interface LibraryDetail {

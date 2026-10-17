@@ -75,6 +75,8 @@ export interface ExtractorMeta {
   /** Hash of the item list the extractor produced when committed — the drift baseline. */
   baselineHash: string;
   baselineCount: number;
+  /** Share of items with a price at commit time — so unpriced menus aren't flagged as broken. */
+  baselinePriced?: number;
   /** If this extractor was adopted from the library instead of forged. */
   reusedFrom?: string | null;
   history?: { version: number; reason: string; at: string }[];

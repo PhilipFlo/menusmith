@@ -143,3 +143,30 @@ describe('itemsHash', () => {
     expect(normName('Margherita (1,7)')).toBe('margherita');
   });
 });
+
+describe('duplicates vs legitimately repeated dishes', () => {
+  it('treats a repeat in a DIFFERENT section as a candidate, not a duplicate', async () => {
+    const { scoreAgainstOracle } = await import('../src/agent/evaluate.ts');
+    const oracle = [
+      { section: 'Grill', name: 'Aioli', price: 25 },
+      { section: 'Mains', name: 'Choripán', price: 189 },
+    ];
+    const got = [
+      { section: 'Grill', name: 'Aioli', price: 25 },
+      { section: 'Tilbehør', name: 'Aioli', price: 25 },
+      { section: 'Mains', name: 'Choripán', price: 189 },
+    ];
+    const s = scoreAgainstOracle(oracle, got, 'Grill Aioli 25 Mains Choripán 189 Tilbehør Aioli 25');
+    expect(s.duplicates).toBe(0);
+    expect(s.grounded.length).toBe(1);
+  });
+  it('counts a same-section same-price repeat as a duplicate', async () => {
+    const { scoreAgainstOracle } = await import('../src/agent/evaluate.ts');
+    const oracle = [{ section: 'Pizza', name: 'Margherita', price: 159 }];
+    const got = [
+      { section: 'Pizza', name: 'Margherita', price: 159 },
+      { section: 'Pizza', name: 'Margherita', price: 159 },
+    ];
+    expect(scoreAgainstOracle(oracle, got, 'Pizza Margherita 159').duplicates).toBe(1);
+  });
+});

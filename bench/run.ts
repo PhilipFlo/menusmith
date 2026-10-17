@@ -60,7 +60,7 @@ async function one(site: Site) {
     category: out.ok ? null : category(out.reason),
     rounds: out.rounds,
     ms: Date.now() - t0,
-    costUsd: Math.round(out.ledger.costUsd * 1e5) / 1e5,
+    costUsd: Math.round(out.ledger.listCostUsd * 1e5) / 1e5,
     tokens: out.ledger.promptTokens + out.ledger.completionTokens,
     oracleCount: out.oracleCount,
     extracted: out.items?.length ?? 0,

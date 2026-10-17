@@ -67,8 +67,8 @@ function describe(e: AgentEvent): Omit<FleetLogLine, 'id' | 'at'> | null {
   switch (e.type) {
     case 'log': {
       if (e.message.startsWith('Reasoning:')) return { tone: 'muted', text: `  thinking: ${e.message.slice(10).trim().slice(0, 220)}${e.message.length > 230 ? '…' : ''}` };
-      const m = /\]\s*[^:]+:\s*(stable|changed|healed|broken|error)\b/.exec(e.message);
-      const tone = m ? ({ stable: 'pass', changed: 'info', healed: 'accent', broken: 'fail', error: 'fail' } as const)[m[1] as 'stable'] : 'info';
+      const m = /\]\s*[^:]+:\s*(stable|changed|healed|review|broken|error)\b/.exec(e.message);
+      const tone = m ? ({ stable: 'pass', changed: 'info', healed: 'accent', review: 'info', broken: 'fail', error: 'fail' } as const)[m[1] as 'stable'] : 'info';
       return { tone, text: e.message };
     }
     case 'step': {

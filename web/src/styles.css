@@ -2740,3 +2740,11 @@ select.input {
   white-space: pre-wrap;
   overflow-x: auto;
 }
+
+.pill-review {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.mini-review .mini-dot {
+  background: var(--info);
+}

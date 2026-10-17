@@ -33,26 +33,27 @@ function readStdin() {
   });
 }
 
-function sanitize(raw) {
+/**
+ * Validation of the extractor's return value. Kept as SOURCE and evaluated inside
+ * the vm context (see main) so it runs under the CPU timeout and on the context's
+ * own intrinsics. Returns a JSON string of plain {section,name,description,price}.
+ */
+const SANITIZE_SRC = `function (raw, max) {
   if (!Array.isArray(raw)) throw new Error('extract() must return an array, got ' + typeof raw);
-  const out = [];
-  for (const it of raw.slice(0, MAX_ITEMS)) {
+  var clean = function (v, n) { return typeof v === 'string' ? v.replace(/\\s+/g, ' ').trim().slice(0, n) : (typeof v === 'number' && isFinite(v) ? String(v).slice(0, n) : ''); };
+  var out = [];
+  for (var i = 0; i < raw.length && out.length < max; i++) {
+    var it = raw[i];
     if (!it || typeof it !== 'object') continue;
-    const name = cleanText(it.name);
+    var name = clean(it.name, 200);
     if (!name) continue;
-    let price = it.price;
+    var price = it.price;
     if (typeof price === 'string') price = parsePrice(price);
-    if (typeof price !== 'number' || !Number.isFinite(price)) price = null;
-    out.push({
-      section: it.section ? cleanText(it.section).slice(0, 120) : null,
-      name: name.slice(0, 200),
-      description: it.description ? cleanText(it.description).slice(0, 500) : null,
-      price,
-      currency: it.currency ? cleanText(it.currency).slice(0, 8) : null,
-    });
+    if (typeof price !== 'number' || !isFinite(price)) price = null;
+    out.push({ section: clean(it.section, 120) || null, name: name, description: clean(it.description, 500) || null, price: price, currency: clean(it.currency, 8) || null });
   }
-  return out;
-}
+  return JSON.stringify(out);
+}`;
 
 /**
  * "TypeError: Cannot read properties of undefined (reading 'text') at extractor.js:14:22"
@@ -138,12 +139,23 @@ async function main() {
       sandbox.$ = $;
     }
     vm.createContext(sandbox, { codeGeneration: { strings: false, wasm: false } });
+    // Remove binary buffers from the context: they allocate off-heap memory that
+    // --max-old-space-size does not cap. Menu extraction never needs them.
+    new vm.Script(
+      ['ArrayBuffer', 'SharedArrayBuffer', 'Atomics', 'WebAssembly', 'DataView', 'Int8Array', 'Uint8Array', 'Uint8ClampedArray', 'Int16Array', 'Uint16Array', 'Int32Array', 'Uint32Array', 'Float32Array', 'Float64Array', 'BigInt64Array', 'BigUint64Array']
+        .map((n) => `try { delete globalThis.${n}; } catch (e) {}`)
+        .join('\n'),
+    ).runInContext(sandbox);
+    // The model's code AND the sanitising/serialising of its result run inside the
+    // context under the CPU timeout, so getters, Proxies or toJSON hooks it defines
+    // can never run on the host side. The host only ever receives a string.
     const script = new vm.Script(
-      `"use strict";\n${input.code}\n;__result = extract(${isJson ? 'data' : '$'}, ctx);`,
+      `"use strict";\n${input.code}\n;__result = (${SANITIZE_SRC})(extract(${isJson ? 'data' : '$'}, ctx), ${MAX_ITEMS});`,
       { filename: 'extractor.js' },
     );
     script.runInContext(sandbox, { timeout: CPU_TIMEOUT_MS });
-    const items = sanitize(sandbox.__result);
+    if (typeof sandbox.__result !== 'string') throw new Error('extractor result could not be serialised');
+    const items = JSON.parse(sandbox.__result);
     process.stdout.write(JSON.stringify({ ok: true, items, ms: Date.now() - t0, trace: summarizeTrace(trace) }) + '\n');
   } catch (e) {
     process.stdout.write(JSON.stringify({ ok: false, error: describeError(e), ms: Date.now() - t0, trace: summarizeTrace(lastTrace) }) + '\n');

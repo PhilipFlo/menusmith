@@ -10,6 +10,7 @@ import { listExtractors, loadExtractor, loadVersion } from '../library/store.ts'
 import { forge } from '../agent/pipeline.ts';
 import { fleetHistory, runFleet } from '../fleet/fleet.ts';
 import type { AgentEvent } from '../types.ts';
+import { Ledger } from '../llm/client.ts';
 
 const app = new Hono();
 
@@ -18,6 +19,8 @@ const MAX_CONCURRENT_FORGES = Number(process.env.MENUSMITH_MAX_CONCURRENT || 2);
 const FORGES_PER_HOUR = Number(process.env.MENUSMITH_FORGES_PER_HOUR || 12);
 // Daily model-spend cap so a public demo can't drain the Token Factory credit.
 const DAILY_BUDGET_USD = Number(process.env.MENUSMITH_DAILY_BUDGET_USD || 3);
+/** Ceiling for a single forge — a normal one costs cents. */
+const PER_FORGE_USD = Number(process.env.MENUSMITH_MAX_JOB_USD || 0.5);
 const spend = { day: new Date().toISOString().slice(0, 10), usd: 0 };
 function addSpend(usd: number) {
   const today = new Date().toISOString().slice(0, 10);
@@ -42,8 +45,22 @@ function allow(ip: string): string | null {
   hits.set(ip, recent);
   return null;
 }
-const clientIp = (c: { req: { header: (n: string) => string | undefined } }) =>
-  c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || 'local';
+/**
+ * The client address. Behind a reverse proxy the RIGHTMOST X-Forwarded-For entry is
+ * the one the proxy appended (earlier entries are client-controlled and spoofable).
+ */
+const TRUST_PROXY = process.env.MENUSMITH_TRUST_PROXY !== '0';
+function clientIp(c: { req: { header: (n: string) => string | undefined }; env: unknown }): string {
+  const xff = c.req.header('x-forwarded-for');
+  if (TRUST_PROXY && xff) return xff.split(',').pop()!.trim();
+  const sock = (c.env as { incoming?: { socket?: { remoteAddress?: string } } })?.incoming?.socket?.remoteAddress;
+  return sock || 'local';
+}
+// Forget idle clients so the limiter's memory stays bounded.
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, ts] of hits) if (!ts.some((t) => now - t < 3_600_000)) hits.delete(ip);
+}, 600_000).unref();
 
 // ---- API ------------------------------------------------------------------------
 app.get('/api/health', (c) =>
@@ -66,9 +83,13 @@ app.post('/api/forge', async (c) => {
   running++;
   return streamSSE(c, async (stream) => {
     const send = (e: AgentEvent) => stream.writeSSE({ event: e.type, data: JSON.stringify(e) }).catch(() => {});
+    // The ledger is owned here so spend is recorded even if the run throws, and the
+    // run stops making model calls if the visitor closes the page.
+    const abort = new AbortController();
+    stream.onAbort(() => abort.abort());
+    const ledger = new Ledger(Math.min(PER_FORGE_USD, Math.max(0, budgetLeft())), abort.signal);
     try {
-      const out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse }, send);
-      addSpend(out.ledger.costUsd);
+      const out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse, ledger }, send);
       await stream.writeSSE({
         event: 'summary',
         data: JSON.stringify({
@@ -88,6 +109,7 @@ app.post('/api/forge', async (c) => {
     } catch (e) {
       await send({ type: 'error', message: (e as Error).message });
     } finally {
+      addSpend(ledger.costUsd);
       running--;
     }
   });
@@ -95,7 +117,9 @@ app.post('/api/forge', async (c) => {
 
 app.get('/api/library', (c) => c.json(listExtractors().map((x) => x.meta)));
 
+const ID_RE = /^[a-z0-9-]{1,80}$/;
 app.get('/api/library/:id', (c) => {
+  if (!ID_RE.test(c.req.param('id'))) return c.json({ error: 'bad id' }, 400);
   const x = loadExtractor(c.req.param('id'));
   if (!x) return c.json({ error: 'not found' }, 404);
   const versions = Array.from({ length: x.meta.version }, (_, i) => ({ version: i + 1, code: loadVersion(x.meta.id, i + 1) }));
@@ -105,14 +129,31 @@ app.get('/api/library/:id', (c) => {
 });
 
 let fleetRunning = false;
+let lastPublicFleet = 0;
+const ADMIN_TOKEN = process.env.MENUSMITH_ADMIN_TOKEN || '';
+const isAdmin = (c: { req: { header: (n: string) => string | undefined } }) =>
+  !!ADMIN_TOKEN && c.req.header('authorization') === `Bearer ${ADMIN_TOKEN}`;
+
 app.post('/api/fleet/run', async (c) => {
   if (fleetRunning) return c.json({ error: 'a fleet run is already in progress' }, 409);
   const body = (await c.req.json().catch(() => ({}))) as { heal?: boolean; only?: string[] };
+  const ip = clientIp(c);
+  const local = ip === 'local' || ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+  const admin = isAdmin(c) || (!ADMIN_TOKEN && local);
+  // Public visitors may run the fleet over the demo (fixture) extractors only, at most
+  // once every 3 minutes; healing is paid from the daily budget like any forge.
+  let only = Array.isArray(body.only) ? body.only.filter((x) => typeof x === 'string' && ID_RE.test(x)) : undefined;
+  if (!admin) {
+    if (Date.now() - lastPublicFleet < 180_000) return c.json({ error: 'The demo fleet ran less than 3 minutes ago — try again shortly.' }, 429);
+    const demo = listExtractors().filter((x) => x.meta.url.startsWith('fixture://')).map((x) => x.meta.id);
+    only = only?.length ? only.filter((x) => demo.includes(x)) : demo;
+    lastPublicFleet = Date.now();
+  }
   fleetRunning = true;
   return streamSSE(c, async (stream) => {
     const send = (e: AgentEvent) => stream.writeSSE({ event: e.type, data: JSON.stringify(e) }).catch(() => {});
     try {
-      const report = await runFleet({ heal: body.heal !== false && budgetLeft() > 0, only: body.only }, send);
+      const report = await runFleet({ heal: body.heal !== false && budgetLeft() > 0, only, maxUsd: Math.max(0, budgetLeft()) }, send);
       addSpend(report.totals.costUsd);
       await stream.writeSSE({ event: 'report', data: JSON.stringify(report) });
     } catch (e) {
@@ -145,8 +186,11 @@ app.get('/api/fixtures', (c) => {
 });
 
 app.post('/api/fixtures/:slug/redesign', async (c) => {
+  const slug = c.req.param('slug');
+  if (!/^[a-z0-9-]{1,60}$/.test(slug) || !existsSync(resolve(ROOT, 'fixtures/sites', slug, 'redesign.html')))
+    return c.json({ error: 'unknown demo site' }, 404);
   const body = (await c.req.json().catch(() => ({}))) as { on?: boolean };
-  return c.json({ redesigned: setFixtureRedesigned(c.req.param('slug'), body.on !== false) });
+  return c.json({ redesigned: setFixtureRedesigned(slug, body.on !== false) });
 });
 
 app.get('/api/bench', (c) => {
