@@ -203,10 +203,21 @@ export function skeleton(html: string, budget = 28_000): Skeleton {
   const root = (found?.root || $('body')[0] || $.root()[0]) as Element;
   const rootPath = found ? cssPath($, found.root) : 'body';
 
+  // Show the ancestors of the menu region as open tags, so selectors anchored above it are grounded.
+  const ancestors: string[] = [];
+  for (let p = root.parent; p && p.type === 'tag' && (p as Element).tagName !== 'html'; p = p.parent) {
+    const el = p as Element;
+    const attrs = ['id', 'class', 'role', 'data-section-type']
+      .filter((k) => el.attribs?.[k])
+      .map((k) => `${k}="${String(el.attribs[k]).slice(0, 80)}"`);
+    ancestors.unshift(`<${el.tagName}${attrs.length ? ' ' + attrs.join(' ') : ''}>`);
+  }
+  const wrap = (inner: string) =>
+    ancestors.length ? `<!-- ancestors of the menu region (siblings omitted) -->\n${ancestors.join('\n')}\n<!-- menu region: -->\n${inner}` : inner;
   for (const [keep, maxText] of [[6, 120], [4, 80], [3, 60], [2, 40], [1, 30]] as const) {
-    const out = render($, root, { keepRepeated: keep, maxText }, '');
+    const out = wrap(render($, root, { keepRepeated: keep, maxText }, ''));
     if (out.length <= budget) return { rootPath, html: out, priceNodes: found?.priceNodes ?? 0, jsonLd, truncated: false };
   }
-  const out = render($, root, { keepRepeated: 1, maxText: 30 }, '');
+  const out = wrap(render($, root, { keepRepeated: 1, maxText: 30 }, ''));
   return { rootPath, html: out.slice(0, budget) + '\n<!-- … skeleton truncated … -->', priceNodes: found?.priceNodes ?? 0, jsonLd, truncated: true };
 }

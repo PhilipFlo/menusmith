@@ -46,7 +46,7 @@ export const config = {
   tavilyApiKey: process.env.TAVILY_API_KEY || '',
   llmMode: (process.env.MENUSMITH_LLM as LlmMode) || 'live',
   port: Number(process.env.PORT || 8790),
-  cassetteDir: resolve(ROOT, 'cassettes'),
+  cassetteDir: resolve(process.env.MENUSMITH_CASSETTES || resolve(ROOT, 'cassettes')),
   libraryDir: resolve(process.env.MENUSMITH_LIBRARY || resolve(ROOT, 'library')),
   cacheDir: resolve(ROOT, '.cache'),
   /** Max repair rounds after the first attempt. */

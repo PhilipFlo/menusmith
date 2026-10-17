@@ -14,7 +14,8 @@ export const PASS = {
   minPricedRatio: 0.6,
 };
 
-const MAX_LISTED = 25;
+/** Lists are kept long enough for arbitration; prompts and the UI slice them further. */
+const MAX_LISTED = 150;
 
 function tokens(s: string): Set<string> {
   return new Set(s.split(' ').filter((t) => t.length > 1));

@@ -13,6 +13,8 @@ export interface RunResult {
   items: MenuItem[];
   error?: string;
   ms: number;
+  /** Selector-call trace from the sandbox (HTML mode) — the agent's debugger view. */
+  trace?: string[];
 }
 
 /** How well an extractor's output agrees with the oracle (the model's own reading of the page). */

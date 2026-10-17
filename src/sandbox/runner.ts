@@ -65,7 +65,7 @@ export function runExtractor(code: string, payload: string, url: string, mode: '
       const line = out.trim().split('\n').pop() || '';
       try {
         const parsed = JSON.parse(line) as RunResult;
-        finish({ ok: !!parsed.ok, items: parsed.items || [], error: parsed.error, ms: Date.now() - t0 });
+        finish({ ok: !!parsed.ok, items: parsed.items || [], error: parsed.error, ms: Date.now() - t0, trace: parsed.trace });
       } catch {
         const why = err.trim().split('\n').slice(-3).join(' ') || `exit code ${codeExit}`;
         finish({ ok: false, items: [], error: `sandbox crashed: ${why}`, ms: Date.now() - t0 });

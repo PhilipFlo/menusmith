@@ -13,7 +13,8 @@ import { acquire, reacquire, type Acquired } from './acquire.ts';
 import { detectHardcoding, feedbackMessage, initialMessages, initialMessagesJson, writeCode } from './forge.ts';
 import { itemsHash, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
-import { judgeExtras } from './judge.ts';
+import { arbitrate } from './judge.ts';
+import { jsonShapeReport, selectorReport } from './debugger.ts';
 
 export interface ForgeInput {
   /** Any page of the restaurant's site (menu page preferred). */
@@ -252,6 +253,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   const maxRounds = 1 + config.maxRepairs;
   let lastModel = '';
   let stagnant = 0;
+  let arbitrations = 0;
   let roundsUsed = 0;
   for (let round = 1; round <= maxRounds; round++) {
     roundsUsed = round;
@@ -279,18 +281,25 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     const hard = detectHardcoding(code, oracleItems);
     const run = hard.length ? { ok: false, items: [], error: 'hard-coded content', ms: 0 } : await runExtractor(code, acq.payload, menuUrl, mode);
     let score = run.ok ? scoreAgainstOracle(oracleItems, run.items, text) : null;
-    // Items on the page that the oracle didn't list: let Nemotron Nano judge them.
-    if (score?.pass && score.grounded.length) {
+    // Disagreement between the reading and the code on specific items → Nemotron Nano arbitrates.
+    if (score && score.f1 >= 0.75 && (score.grounded.length || score.extra.length || score.missing.length) && arbitrations < 3) {
+      const disputedExtractor = [...score.grounded, ...score.extra];
+      const disputedOracle = score.pass ? [] : score.missing;
       try {
-        const rejected = await judgeExtras(score.grounded, text, ledger, emit);
-        if (rejected.size) {
-          emit({ type: 'log', message: `Judge rejected ${rejected.size} extra item(s) as not menu dishes: ${[...rejected].slice(0, 5).join(', ')}` });
-          score = scoreAgainstOracle(oracleItems, run.items, text, { rejected });
-        } else {
-          emit({ type: 'log', message: `Judge accepted ${score.grounded.length} item(s) the oracle had missed` });
+        arbitrations++;
+        const a = await arbitrate(disputedExtractor, disputedOracle, text, ledger, emit);
+        if (a.disputed) {
+          const before = oracleItems.length;
+          oracleItems = [...oracleItems.filter((i) => !a.rejected.has(normName(i.name))), ...a.accepted];
+          score = scoreAgainstOracle(oracleItems, run.items, text, { rejected: a.rejected });
+          emit({
+            type: 'log',
+            message: `Nemotron Nano arbitrated ${a.disputed} disputed item(s): ${a.rejected.size} not dishes, ${a.accepted.length} dish(es) the reading missed · reference ${before} → ${oracleItems.length} items`,
+          });
+          if (a.accepted.length || before !== oracleItems.length) emit({ type: 'oracle', items: oracleItems });
         }
       } catch (e) {
-        emit({ type: 'log', message: `Judge unavailable: ${(e as Error).message}` });
+        emit({ type: 'log', message: `Arbitration unavailable: ${(e as Error).message}` });
       }
     }
     emit({
@@ -315,7 +324,18 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       emit({ type: 'log', message: 'Repairs have stopped improving — giving up early to save tokens' });
       break;
     }
-    messages.push({ role: 'user', content: feedbackMessage(round, run, score, hard) });
+    // Too few items → give the agent a debugger view: which of its selectors / paths actually match.
+    const tooFew = !run.ok || (score && score.extractorCount < score.oracleCount * 0.5);
+    const diagnostics =
+      tooFew && !hard.length
+        ? mode === 'json'
+          ? jsonShapeReport(acq.payload)
+          : run.trace?.length
+            ? `Execution trace of your code on the real page (selector → elements):\n${run.trace.map((t) => '  ' + t).join('\n')}`
+            : selectorReport(code, acq.payload)
+        : null;
+    if (diagnostics) emit({ type: 'log', message: `Debugger: ${diagnostics.split('\n').slice(1, 6).join(' ').trim()}` });
+    messages.push({ role: 'user', content: feedbackMessage(round, run, score, hard, diagnostics) });
   }
 
   const reason = `no passing extractor after ${roundsUsed} rounds (best f1 ${best?.score.f1 ?? 0})`;

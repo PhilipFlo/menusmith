@@ -112,12 +112,12 @@ Write extract($, ctx).`;
   ];
 }
 
-export function feedbackMessage(round: number, run: RunResult, score: Score | null, hardcoded: string[]): string {
+export function feedbackMessage(round: number, run: RunResult, score: Score | null, hardcoded: string[], diagnostics?: string | null): string {
   if (hardcoded.length) {
     return `Round ${round} REJECTED: your code hard-codes menu content (${hardcoded.slice(0, 5).map((s) => JSON.stringify(s)).join(', ')}). Extract from the HTML structure instead. Rewrite the complete function.`;
   }
   if (!run.ok) {
-    return `Round ${round} FAILED TO RUN in the sandbox:\n${run.error}\nFix it and return the complete function.`;
+    return `Round ${round} FAILED TO RUN in the sandbox:\n${run.error}${diagnostics ? '\n\n' + diagnostics : ''}\nFix it and return the complete function.`;
   }
   const s = score!;
   const sample = run.items.slice(0, 8).map((i) => JSON.stringify({ section: i.section, name: i.name, price: i.price }));
@@ -133,6 +133,7 @@ export function feedbackMessage(round: number, run: RunResult, score: Score | nu
   if (s.extra.length)
     parts.push(`NOT ON THE MENU (your output, not found in the reference or the page text):\n` +
       s.extra.slice(0, 10).map((i) => `- [${i.section ?? ''}] ${i.name} — ${i.price ?? ''}`).join('\n'));
+  if (diagnostics) parts.push(diagnostics);
   parts.push('Diagnose the cause from the HTML/JSON structure (wrong container or array? missed a section variant? price in a sibling element or in minor units? duplicate copies? hidden items?) and return the complete corrected function.');
   return parts.join('\n\n');
 }

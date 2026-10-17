@@ -208,7 +208,8 @@ export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promis
     let raw: Omit<ChatResult, 'json' | 'cached' | 'costUsd'> | null = null;
     let cached = false;
 
-    if (config.llmMode === 'replay') {
+    // replay: recorded responses only · record: reuse a recording when one exists, else call live and save.
+    if (config.llmMode === 'replay' || (config.llmMode === 'record' && existsSync(file))) {
       if (!existsSync(file)) {
         lastErr = new LlmError(`no recorded response for this request (cassette ${key}); run with MENUSMITH_LLM=record first`);
         continue; // maybe the fallback model was recorded
@@ -227,7 +228,9 @@ export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promis
       }
       if (config.llmMode === 'record') {
         mkdirSync(config.cassetteDir, { recursive: true });
-        writeFileSync(file, JSON.stringify(raw, null, 2));
+        // A short preview of the request, so recordings can be audited/filtered before committing.
+        const preview = (o.messages.find((m) => m.role === 'user')?.content || '').slice(0, 160);
+        writeFileSync(file, JSON.stringify({ ...raw, label: o.label || o.role, preview }, null, 2));
       }
     }
 

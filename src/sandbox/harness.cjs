@@ -71,6 +71,48 @@ function describeError(e) {
   return head;
 }
 
+/**
+ * Execution trace for the agent's debugger: every selector call the extractor makes,
+ * with how many elements went in and came out. "find('> li.item') 0 of 12 calls
+ * returned anything" pinpoints a wrong nesting assumption immediately.
+ */
+let lastTrace = null;
+const TRACED = ['find', 'children', 'filter', 'closest', 'parents', 'parent', 'siblings', 'next', 'prev', 'nextAll', 'prevAll', 'nextUntil', 'prevUntil', 'not', 'has'];
+function instrument($) {
+  const stats = new Map();
+  lastTrace = stats;
+  for (const m of TRACED) {
+    const orig = $.fn[m];
+    if (typeof orig !== 'function') continue;
+    $.fn[m] = function (sel, ...rest) {
+      const out = orig.call(this, sel, ...rest);
+      if (typeof sel === 'string') {
+        const isRoot = this.length === 1 && this[0] && this[0].type === 'root';
+        const key = isRoot && m === 'find' ? `$(${JSON.stringify(sel)})` : `.${m}(${JSON.stringify(sel)})`;
+        const st = stats.get(key) || { calls: 0, empty: 0, inEls: 0, outEls: 0 };
+        st.calls++;
+        st.inEls += this.length;
+        st.outEls += out.length;
+        if (out.length === 0) st.empty++;
+        stats.set(key, st);
+      }
+      return out;
+    };
+  }
+  return stats;
+}
+
+function summarizeTrace(stats) {
+  if (!stats || !stats.size) return undefined;
+  return [...stats.entries()]
+    .slice(0, 40)
+    .map(([k, st]) =>
+      st.calls === 1
+        ? `${k} → ${st.outEls} element(s)`
+        : `${k} called ${st.calls}× on ${st.inEls} element(s) → ${st.outEls} total${st.empty ? `, ${st.empty} call(s) returned nothing` : ''}`,
+    );
+}
+
 async function main() {
   const t0 = Date.now();
   let input;
@@ -88,8 +130,13 @@ async function main() {
       cleanText,
       __result: undefined,
     };
+    let trace = null;
     if (isJson) sandbox.data = JSON.parse(input.json || 'null');
-    else sandbox.$ = cheerio.load(input.html || '');
+    else {
+      const $ = cheerio.load(input.html || '');
+      trace = instrument($);
+      sandbox.$ = $;
+    }
     vm.createContext(sandbox, { codeGeneration: { strings: false, wasm: false } });
     const script = new vm.Script(
       `"use strict";\n${input.code}\n;__result = extract(${isJson ? 'data' : '$'}, ctx);`,
@@ -97,9 +144,9 @@ async function main() {
     );
     script.runInContext(sandbox, { timeout: CPU_TIMEOUT_MS });
     const items = sanitize(sandbox.__result);
-    process.stdout.write(JSON.stringify({ ok: true, items, ms: Date.now() - t0 }) + '\n');
+    process.stdout.write(JSON.stringify({ ok: true, items, ms: Date.now() - t0, trace: summarizeTrace(trace) }) + '\n');
   } catch (e) {
-    process.stdout.write(JSON.stringify({ ok: false, error: describeError(e), ms: Date.now() - t0 }) + '\n');
+    process.stdout.write(JSON.stringify({ ok: false, error: describeError(e), ms: Date.now() - t0, trace: summarizeTrace(lastTrace) }) + '\n');
   }
 }
 
