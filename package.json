@@ -1,7 +1,7 @@
 {
   "name": "menusmith",
   "version": "0.1.0",
-  "description": "Agents that write the menu scraper once, test it, and heal it — so a restaurant price index runs forever. Built on NVIDIA Nemotron via Nebius Token Factory.",
+  "description": "Agents that write the menu scraper once, test it, and heal it \u2014 so a restaurant price index runs forever. Built on NVIDIA Nemotron via Nebius Token Factory.",
   "license": "MIT",
   "type": "module",
   "private": true,
@@ -17,7 +17,7 @@
     "forge": "tsx src/cli.ts forge",
     "fleet": "tsx src/cli.ts fleet",
     "bench": "tsx bench/run.ts",
-    "demo": "tsx src/cli.ts demo",
+    "demo": "MENUSMITH_LLM=replay MENUSMITH_LIBRARY=.cache/demo-library tsx src/cli.ts demo",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { chat, type Ledger } from '../llm/client.ts';
 import type { Emit, MenuItem } from '../types.ts';
+import { normName } from './evaluate.ts';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -61,6 +62,10 @@ export function chunkText(text: string, maxChars = 24_000): string[] {
   return chunks;
 }
 
+const SECOND_READ = `
+
+This is a second, independent check of the page. Go through it line by line and make sure NO orderable item is skipped — including sides, add-ons sold as separate items, drinks, desserts and items listed in small print.`;
+
 const MAX_ORACLE_CHARS = 120_000;
 const MAX_CHUNKS = 5;
 
@@ -96,11 +101,12 @@ function normalise(raw: z.infer<typeof ItemSchema>[], currency: string | null): 
   return out;
 }
 
-export async function readMenu(
+async function readOnce(
   pageText: string,
   ctx: { url: string; restaurant?: string | null },
   ledger: Ledger,
-  emit?: Emit,
+  emit: Emit | undefined,
+  second: boolean,
 ): Promise<OracleResult> {
   // Hard cap on how much text one reading may cost: 5 chunks (~120k chars) is a very
   // large menu; anything beyond is page noise or an attempt to burn credits.
@@ -110,12 +116,12 @@ export async function readMenu(
       chat(
         {
           role: 'oracle',
-          label: chunks.length > 1 ? `oracle ${i + 1}/${chunks.length}` : 'oracle',
+          label: (second ? 'oracle (2nd read)' : 'oracle') + (chunks.length > 1 ? ` ${i + 1}/${chunks.length}` : ''),
           json: true,
           thinking: false,
           maxTokens: 16_000,
           messages: [
-            { role: 'system', content: SYSTEM },
+            { role: 'system', content: second ? SYSTEM + SECOND_READ : SYSTEM },
             {
               role: 'user',
               content:
@@ -150,4 +156,34 @@ export async function readMenu(
     }
   }
   return { isMenu: isMenu && items.length > 0, currency, items };
+}
+
+/**
+ * Read the menu. For normal-sized menus the page is read TWICE in parallel (the second
+ * pass told to hunt for skipped items) and the readings are merged: a single LLM
+ * reading sometimes skims past add-ons or a whole section, and the extractor is graded
+ * against this reference. The second reading only ADDS dishes the first one missed.
+ */
+export async function readMenu(
+  pageText: string,
+  ctx: { url: string; restaurant?: string | null },
+  ledger: Ledger,
+  emit?: Emit,
+): Promise<OracleResult> {
+  const chunkCount = chunkText(pageText.slice(0, MAX_ORACLE_CHARS)).slice(0, MAX_CHUNKS).length;
+  if (chunkCount > 2) return readOnce(pageText, ctx, ledger, emit, false);
+  const [a, b] = await Promise.all([
+    readOnce(pageText, ctx, ledger, emit, false),
+    readOnce(pageText, ctx, ledger, emit, true).catch(() => null),
+  ]);
+  if (!b || !b.items.length) return a;
+  const key = (i: MenuItem) => `${normName(i.name)}|${i.price ?? ''}`;
+  const seen = new Set(a.items.map(key));
+  const added = b.items.filter((i) => !seen.has(key(i)));
+  if (added.length) emit?.({ type: 'log', message: `Second reading found ${added.length} dish(es) the first one missed` });
+  return {
+    isMenu: a.isMenu || b.isMenu,
+    currency: a.currency ?? b.currency,
+    items: [...a.items, ...added],
+  };
 }

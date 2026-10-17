@@ -1,3 +1,4 @@
+import { config } from './config.ts';
 import { setFixtureRedesigned } from './html/fetch.ts';
 import { listExtractors } from './library/store.ts';
 import { forge } from './agent/pipeline.ts';
@@ -64,11 +65,30 @@ async function main() {
     const [slug, state] = args;
     if (!slug) throw new Error('usage: npm run redesign -- <fixture-slug> [on|off]');
     console.log('redesigned fixtures:', setFixtureRedesigned(slug, state !== 'off'));
+  } else if (cmd === 'demo') {
+    // The full loop on our fictional demo sites, served from recorded model responses
+    // (cassettes/) — no API key, no network, same agent code path.
+    if (config.llmMode !== 'replay') console.log(`${c.dim}(tip: MENUSMITH_LLM=replay runs this offline from recordings)${c.reset}`);
+    const sites = args.length ? args : ['fjord-burger', 'trattoria-sole', 'sushi-koi'];
+    for (const slug of sites) {
+      console.log(`\n${c.bold}▶ ${slug}${c.reset}`);
+      const out = await forge({ url: `fixture://${slug}/`, noReuse: true }, printer(verbose));
+      console.log(out.ok ? `${c.green}✓ ${out.items!.length} dishes · ${out.rounds} round(s)${c.reset}` : `${c.red}✗ ${out.reason}${c.reset}`);
+    }
+    console.log(`\n${c.bold}▶ self-heal: fjord-burger redesigns its website${c.reset}`);
+    setFixtureRedesigned('fjord-burger', true);
+    try {
+      const r = await runFleet({ heal: true, only: ['fjord-burger-fixture'] }, printer(verbose));
+      const e = r.entries[0];
+      console.log(e ? `${e.status === 'healed' ? c.green : c.yellow}${e.status}: ${e.detail}${c.reset}` : 'no fleet entry');
+    } finally {
+      setFixtureRedesigned('fjord-burger', false);
+    }
   } else if (cmd === 'list') {
     for (const x of listExtractors())
       console.log(`${x.meta.id.padEnd(32)} v${x.meta.version}  ${x.meta.platform.padEnd(11)} f1=${x.meta.score.f1}  ${x.meta.baselineCount} items  $${x.meta.costUsd.toFixed(4)}`);
   } else {
-    console.log('commands: forge <url|name> | fleet [ids…] | redesign <slug> [on|off] | list');
+    console.log('commands: forge <url|name> | fleet [ids…] | redesign <slug> [on|off] | list | demo [slugs…]');
   }
 }
 
