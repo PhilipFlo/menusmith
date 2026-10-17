@@ -1,4 +1,6 @@
-import { config } from './config.ts';
+import { cpSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { config, ROOT } from './config.ts';
 import { setFixtureRedesigned } from './html/fetch.ts';
 import { listExtractors } from './library/store.ts';
 import { forge } from './agent/pipeline.ts';
@@ -43,6 +45,10 @@ function printer(verbose: boolean) {
 }
 
 async function main() {
+  // A Serverless Job may start on an empty shared volume — seed it from the image.
+  const shipped = resolve(ROOT, 'library');
+  if (config.libraryDir !== shipped && existsSync(shipped) && !existsSync(resolve(config.libraryDir, 'extractors')))
+    cpSync(shipped, config.libraryDir, { recursive: true });
   const verbose = flags.has('--verbose') || flags.has('-v');
   if (cmd === 'forge') {
     const target = args[0];

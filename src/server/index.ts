@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -207,6 +207,13 @@ app.get('*', (c) =>
     ? c.html(readFileSync(resolve(dist, 'index.html'), 'utf8'))
     : c.text('Web app not built yet — run `npm run build`, or use `npm run dev` for the dev server.', 404),
 );
+
+// On a fresh shared volume (Nebius deployment), seed the library from the image.
+const shippedLibrary = resolve(ROOT, 'library');
+if (config.libraryDir !== shippedLibrary && existsSync(shippedLibrary) && !existsSync(resolve(config.libraryDir, 'extractors'))) {
+  cpSync(shippedLibrary, config.libraryDir, { recursive: true });
+  console.log(`Seeded library at ${config.libraryDir} from the image`);
+}
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`Menusmith API on http://localhost:${info.port}  (LLM mode: ${config.llmMode}, Nebius key: ${config.nebiusApiKey ? 'yes' : 'NO'}, Tavily key: ${config.tavilyApiKey ? 'yes' : 'NO'})`);

@@ -48,7 +48,7 @@ export const config = {
   port: Number(process.env.PORT || 8790),
   cassetteDir: resolve(process.env.MENUSMITH_CASSETTES || resolve(ROOT, 'cassettes')),
   libraryDir: resolve(process.env.MENUSMITH_LIBRARY || resolve(ROOT, 'library')),
-  cacheDir: resolve(ROOT, '.cache'),
+  cacheDir: resolve(process.env.MENUSMITH_CACHE || resolve(ROOT, '.cache')),
   /** Max repair rounds after the first attempt. */
   maxRepairs: Number(process.env.MENUSMITH_MAX_REPAIRS || 4),
 };

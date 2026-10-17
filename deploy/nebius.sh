@@ -10,6 +10,8 @@
 #   export IMAGE=cr.<region>.nebius.cloud/<registry-id>/menusmith:latest
 #   export SUBNET_ID=<subnet id from `nebius vpc subnet list`>
 #
+#   export VOLUME=<filesystem id>   (shared by the endpoint and the fleet job, mounted at /data)
+#
 # Usage: deploy/nebius.sh build | endpoint | fleet-job | url
 set -euo pipefail
 cmd="${1:-}"
@@ -26,10 +28,14 @@ case "$cmd" in
       --name menusmith \
       --image "$IMAGE" \
       --container-port 8790 \
-      --platform cpu-d3 --preset 4vcpu-16gb \
+      --platform cpu-d3 --preset 4vcpu-16gb --disk-size 30Gi \
+      --volume "${VOLUME:?set VOLUME}:/data" \
+      --env "MENUSMITH_LIBRARY=/data/library" --env "MENUSMITH_CACHE=/data/cache" \
       --env "NEBIUS_API_KEY=${NEBIUS_API_KEY}" \
       --env "TAVILY_API_KEY=${TAVILY_API_KEY:-}" \
       --env "MENUSMITH_FORGES_PER_HOUR=12" \
+      --env "MENUSMITH_DAILY_BUDGET_USD=${MENUSMITH_DAILY_BUDGET_USD:-3}" \
+      --env "MENUSMITH_ADMIN_TOKEN=${MENUSMITH_ADMIN_TOKEN:-}" \
       --public \
       --subnet-id "$SUBNET_ID"
     ;;
@@ -41,7 +47,9 @@ case "$cmd" in
       --name "menusmith-fleet-$(date +%Y%m%d-%H%M)" \
       --image "$IMAGE" \
       --container-command npx --args "tsx src/cli.ts fleet" \
-      --platform cpu-d3 --preset 4vcpu-16gb \
+      --platform cpu-d3 --preset 4vcpu-16gb --disk-size 30Gi \
+      --volume "${VOLUME:?set VOLUME}:/data" \
+      --env "MENUSMITH_LIBRARY=/data/library" --env "MENUSMITH_CACHE=/data/cache" \
       --env "NEBIUS_API_KEY=${NEBIUS_API_KEY}" \
       --env "TAVILY_API_KEY=${TAVILY_API_KEY:-}" \
       --timeout 2h --restart-policy never \
