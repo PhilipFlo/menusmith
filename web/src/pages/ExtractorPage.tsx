@@ -100,8 +100,8 @@ export function ExtractorPage({ id }: { id: string }) {
               <dd className="num">{pct(meta.score.pricedRatio)}</dd>
             </div>
             <div>
-              <dt>Rounds to pass</dt>
-              <dd className="num">{meta.rounds}</dd>
+              <dt>{meta.source?.kind === 'image' ? 'Menu images' : 'Rounds to pass'}</dt>
+              <dd className="num">{meta.source?.kind === 'image' ? meta.source.request?.images?.length ?? 0 : meta.rounds}</dd>
             </div>
             <div>
               <dt>Tokens</dt>
@@ -141,7 +141,11 @@ export function ExtractorPage({ id }: { id: string }) {
 
       <Panel
         title="Code"
-        subtitle="Plain, deterministic JavaScript — runs in a sandbox with no secrets, no file access beyond its libraries, and no model."
+        subtitle={
+          meta.source?.kind === 'image'
+            ? 'No code for this one: the menu is a picture. What is stored is the image fingerprints; this note explains the method.'
+            : 'Plain, deterministic JavaScript — runs in a sandbox with no secrets, no file access beyond its libraries, and no model.'
+        }
         actions={
           <div className="seg" role="group" aria-label="View">
             <button type="button" className={`seg-btn ${view === 'code' ? 'is-active' : ''}`} aria-pressed={view === 'code'} onClick={() => setView('code')}>
