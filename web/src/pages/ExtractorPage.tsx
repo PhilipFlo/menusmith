@@ -81,8 +81,15 @@ export function ExtractorPage({ id }: { id: string }) {
       </header>
 
       <div className="detail-grid">
-        <Panel title="Quality at commit" subtitle={`Scored against Nemotron's own reading of ${int(meta.score.oracleCount)} dishes`}>
-          <ScoreBars score={{ ...meta.score, pass: true }} />
+        <Panel
+          title={meta.source?.kind === 'image' ? 'Read from menu images' : 'Quality at commit'}
+          subtitle={
+            meta.source?.kind === 'image'
+              ? `Nemotron 3.5 Super VL read ${int(meta.score.oracleCount)} dishes from ${meta.source.request?.images?.length ?? 0} picture(s). The fleet compares image fingerprints and only re-reads a picture that changed.`
+              : `Scored against Nemotron's own reading of ${int(meta.score.oracleCount)} dishes`
+          }
+        >
+          {meta.source?.kind !== 'image' && <ScoreBars score={{ ...meta.score, pass: true }} />}
           <dl className="facts facts-grid">
             <div>
               <dt>Dishes extracted</dt>

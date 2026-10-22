@@ -89,6 +89,26 @@ export class Ledger {
   }
 }
 
+/**
+ * Project-wide spend meter, persisted on disk across every run (CLI, benchmark,
+ * server). Live calls add their cost; once MENUSMITH_TOTAL_BUDGET_USD is reached no
+ * new model call starts until the owner raises it. Separate from per-job ledgers.
+ */
+const spendFile = () => resolve(config.cacheDir, 'spend.json');
+export function totalSpend(): { usd: number; calls: number; since: string } {
+  try {
+    return JSON.parse(readFileSync(spendFile(), 'utf8'));
+  } catch {
+    return { usd: 0, calls: 0, since: new Date().toISOString() };
+  }
+}
+function addTotalSpend(usd: number) {
+  const t = totalSpend();
+  mkdirSync(config.cacheDir, { recursive: true });
+  writeFileSync(spendFile(), JSON.stringify({ usd: Math.round((t.usd + usd) * 1e6) / 1e6, calls: t.calls + 1, since: t.since }));
+}
+const TOTAL_BUDGET_USD = Number(process.env.MENUSMITH_TOTAL_BUDGET_USD || 0);
+
 export class LlmError extends Error {
   constructor(message: string, readonly status?: number) {
     super(message);
@@ -234,6 +254,9 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
  */
 export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promise<ChatResult> {
   ledger?.check();
+  if (TOTAL_BUDGET_USD > 0 && config.llmMode !== 'replay' && totalSpend().usd >= TOTAL_BUDGET_USD) {
+    throw new LlmError(`project budget of $${TOTAL_BUDGET_USD} reached ($${totalSpend().usd.toFixed(2)} spent) — ask the owner before spending more`, 402);
+  }
   const chain = MODELS[o.role];
   let lastErr: unknown;
   for (const model of chain) {
@@ -257,6 +280,7 @@ export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promis
         lastErr = e;
         const status = (e as LlmError).status;
         // A missing / unauthorised model → try the next one in the chain.
+        if (status === 402) throw e; // out of credit — no point trying another model
         if (status === 404 || status === 400 || status === 403 || status === 429 || status === 504 || status === undefined) continue;
         throw e;
       }
@@ -273,6 +297,7 @@ export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promis
       costUsd: costUsd(raw!.model, raw!.promptTokens, raw!.completionTokens),
       cached,
     };
+    if (!cached) addTotalSpend(result.costUsd);
     if (o.json) {
       try {
         result.json = extractJson(result.text);

@@ -4,6 +4,7 @@ import { assertPublicUrl } from '../html/netguard.ts';
 import { pageText } from '../html/simplify.ts';
 import type { Emit, SourceKind, SourceRequest } from '../types.ts';
 import { menuLinks, priceDensity } from './discover.ts';
+import { findMenuImages } from './vision.ts';
 
 /**
  * ACQUIRE: get the menu in the most stable form the site offers.
@@ -76,6 +77,22 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
       request: { url: j.url, method: j.method, body: j.postData, headers: j.requestHeaders },
       note: `menu API ${j.method} ${new URL(j.url).hostname}${new URL(j.url).pathname} (${j.menuObjects} objects)`,
     };
+  }
+  // No text menu and no menu API — maybe the menu is published as pictures.
+  if (domPrices < 5) {
+    const imgs = findMenuImages(r.html, r.finalUrl);
+    if (imgs.length) {
+      emit({ type: 'step', step: 'render', status: 'done', detail: `The menu is published as ${imgs.length} image(s)` });
+      return {
+        kind: 'image',
+        url: r.finalUrl,
+        payload: JSON.stringify(imgs),
+        html: r.html,
+        text,
+        request: { url: r.finalUrl, method: 'GET', images: imgs.map((u) => ({ url: u, sha256: '' })) },
+        note: `menu images: ${imgs.map((u) => u.split('/').pop()).join(', ')}`,
+      };
+    }
   }
   emit({ type: 'step', step: 'render', status: domPrices ? 'done' : 'fail', detail: `Rendered page: ${domPrices} prices, ${r.json.length} JSON responses` });
   return { kind: 'rendered', url: r.finalUrl, payload: r.html, html: r.html, text, note: `browser-rendered DOM (${domPrices} prices)` };

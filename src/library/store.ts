@@ -138,3 +138,14 @@ export function saveSnapshot(id: string, items: import('../types.ts').MenuItem[]
   mkdirSync(d, { recursive: true });
   writeFileSync(resolve(d, `${id}.json`), JSON.stringify(items, null, 1) + '\n');
 }
+
+/** Image menus: record the fingerprints of the pictures just read, and the new baseline. */
+export function updateImageSource(id: string, images: { url: string; sha256: string }[], baselineHash: string, baselineCount: number): void {
+  const metaFile = resolve(dir(), id, 'meta.json');
+  if (!existsSync(metaFile)) return;
+  const meta = JSON.parse(readFileSync(metaFile, 'utf8')) as ExtractorMeta;
+  meta.source = { kind: 'image', request: { ...(meta.source?.request ?? { url: meta.url, method: 'GET' }), images } };
+  meta.baselineHash = baselineHash;
+  meta.baselineCount = baselineCount;
+  writeFileSync(metaFile, JSON.stringify(meta, null, 2) + '\n');
+}

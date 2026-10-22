@@ -14,6 +14,7 @@ import { detectHardcoding, ESCALATE_AFTER, feedbackMessage, initialMessages, ini
 import { itemsHash, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
 import { arbitrate } from './judge.ts';
+import { readMenuImages } from './vision.ts';
 import { jsonShapeReport, selectorReport } from './debugger.ts';
 
 export interface ForgeInput {
@@ -47,13 +48,19 @@ export interface ForgeOutcome {
   bestScore?: Score;
   ledger: Ledger;
   ms: number;
-  /** "forged" | "reused" | "healed" */
-  mode?: 'forged' | 'reused' | 'healed';
+  /** "forged" | "reused" | "healed" | "vision" (image menu, fingerprinted) */
+  mode?: 'forged' | 'reused' | 'healed' | 'vision';
   /** The reference reading the extractor was graded against (after arbitration). */
   oracle?: MenuItem[];
 }
 
 const noop: Emit = () => {};
+
+/** Stored in place of code for image menus (never executed). */
+export const IMAGE_EXTRACTOR = `// This restaurant publishes its menu as image(s), so there is no page structure to
+// write code against. Menusmith fingerprints each image (sha256 of the bytes) and the
+// fleet re-reads a picture with Nemotron 3.5 Super VL only when its fingerprint changes.
+function extract() { return []; }`;
 
 /** Keep only oracle items whose name actually occurs on the page (drops hallucinations). */
 export function groundOracle(items: MenuItem[], text: string): { kept: MenuItem[]; dropped: MenuItem[] } {
@@ -142,6 +149,53 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     }
   }
   emit({ type: 'log', message: `Source: ${acq.note} · platform ${platform}` });
+
+  // Image menus: no structure to write code against. Read the pictures with Nemotron
+  // 3.5 Super VL and store their fingerprints — re-runs only re-read a changed image.
+  if (acq.kind === 'image') {
+    emit({ type: 'step', step: 'vision', status: 'start', detail: `${modelName(MODELS.vision[0]!)} is reading the menu images` });
+    let v: Awaited<ReturnType<typeof readMenuImages>>;
+    try {
+      v = await readMenuImages(JSON.parse(acq.payload) as string[], ledger, emit);
+    } catch (e) {
+      emit({ type: 'step', step: 'vision', status: 'fail', detail: (e as Error).message });
+      return fail(`could not read the menu images: ${(e as Error).message}`);
+    }
+    if (v.items.length < 3) {
+      emit({ type: 'step', step: 'vision', status: 'fail', detail: 'no readable menu in the images' });
+      return fail('the menu images could not be read');
+    }
+    emit({ type: 'oracle', items: v.items });
+    emit({ type: 'step', step: 'vision', status: 'done', detail: `${v.items.length} dishes from ${v.images.length} image(s)` });
+    const priced = v.items.filter((i) => i.price != null).length / v.items.length;
+    const meta = saveExtractor(
+      {
+        id,
+        url: menuUrl,
+        domain,
+        restaurant: input.restaurant ?? null,
+        platform,
+        source: { kind: 'image', request: { url: menuUrl, method: 'GET', images: v.images } },
+        createdAt: new Date().toISOString(),
+        model: MODELS.vision[0]!,
+        rounds: 0,
+        // No code is tested on this path — the reading itself is the result.
+        score: { precision: 1, recall: 1, f1: 1, pricedRatio: Math.round(priced * 1000) / 1000, oracleCount: v.items.length, extractorCount: v.items.length },
+        tokens: { prompt: ledger.promptTokens, completion: ledger.completionTokens },
+        costUsd: Math.round(ledger.listCostUsd * 1e6) / 1e6,
+        baselineHash: itemsHash(v.items),
+        baselineCount: v.items.length,
+        baselinePriced: Math.round(priced * 1000) / 1000,
+        reusedFrom: null,
+      },
+      IMAGE_EXTRACTOR,
+      `vision: read ${v.images.length} menu image(s)`,
+    );
+    saveSnapshot(id, v.items);
+    emit({ type: 'step', step: 'commit', status: 'done', detail: `${id} v${meta.version} (image fingerprints)` });
+    emit({ type: 'result', ok: true, meta, items: v.items });
+    return { ok: true, meta, code: IMAGE_EXTRACTOR, items: v.items, oracleCount: v.items.length, rounds: 0, ledger, ms: Date.now() - t0, mode: 'vision' };
+  }
 
   // 3. Oracle reading (Nemotron Super).
   let oracleItems: MenuItem[];
@@ -370,6 +424,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
 export async function rerun(id: string, opts: { fresh?: boolean } = {}) {
   const stored = loadExtractor(id);
   if (!stored) throw new Error(`no extractor ${id}`);
+  if (stored.meta.source?.kind === 'image') throw new Error('image menus are re-checked by the fleet (fingerprints), not re-run as code');
   const src = await reacquire({ kind: stored.meta.source?.kind ?? 'html', url: stored.meta.url, request: stored.meta.source?.request });
   const run = await runExtractor(stored.code, src.payload, stored.meta.url, stored.meta.source?.kind === 'json' ? 'json' : 'html');
   return { stored, src, run, fresh: opts.fresh };

@@ -6,7 +6,9 @@ import { reacquire } from '../agent/acquire.ts';
 import { priceDensity } from '../agent/discover.ts';
 import { pageText } from '../html/simplify.ts';
 import { Ledger } from '../llm/client.ts';
-import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, type StoredExtractor } from '../library/store.ts';
+import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateImageSource, type StoredExtractor } from '../library/store.ts';
+import { fetchImage, findMenuImages, readMenuImages } from '../agent/vision.ts';
+import { renderPage } from '../html/render.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import type { Emit, MenuItem } from '../types.ts';
 import { itemsHash, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
@@ -147,6 +149,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
   };
 
   const kind = x.meta.source?.kind ?? 'html';
+  if (kind === 'image') return checkImages(x, ledger, done, emit, opts);
   const mode = kind === 'json' ? 'json' : 'html';
   let src: { payload: string; html: string; via: string };
   try {
@@ -226,6 +229,54 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
     });
   }
   return done({ status: 'broken', detail: `${broken}; heal failed: ${healed.reason}`, items: run.items.length, changes: [] });
+}
+
+/**
+ * Image menus: compare each picture's fingerprint. Unchanged → stable at zero tokens.
+ * Changed (or moved) → re-read just those pictures with Nemotron 3.5 Super VL and diff.
+ */
+async function checkImages(
+  x: StoredExtractor,
+  ledger: Ledger,
+  done: (e: Pick<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> & { version?: number }) => FleetEntry,
+  emit: Emit,
+  opts: { heal: boolean; budget?: Budget },
+): Promise<FleetEntry> {
+  const stored = x.meta.source?.request?.images ?? [];
+  const prev = loadSnapshot(x.meta.id) || [];
+  const now: { url: string; sha256: string | null }[] = [];
+  for (const im of stored) {
+    try {
+      now.push({ url: im.url, sha256: (await fetchImage(im.url)).sha256 });
+    } catch {
+      now.push({ url: im.url, sha256: null });
+    }
+  }
+  if (stored.length && now.every((n, i) => n.sha256 === stored[i]!.sha256))
+    return done({ status: 'stable', detail: `${stored.length} menu image(s) unchanged (fingerprints match)`, items: prev.length, changes: [] });
+
+  if (!opts.heal || (opts.budget && opts.budget.left() <= 0))
+    return done({ status: 'review', detail: 'menu image(s) changed — not re-read (healing off or budget used up)', items: prev.length, changes: [] });
+
+  // Some picture changed or disappeared: look for the menu images on the page again.
+  let urls = now.filter((n) => n.sha256).map((n) => n.url);
+  if (now.some((n) => !n.sha256)) {
+    try {
+      const r = await renderPage(x.meta.url);
+      const found = findMenuImages(r.html, r.finalUrl);
+      if (found.length) urls = found;
+    } catch {
+      /* keep what still loads */
+    }
+  }
+  if (!urls.length) return done({ status: 'broken', detail: 'menu images are gone from the page', items: 0, changes: [] });
+  emit({ type: 'log', message: `[fleet] ${x.meta.id}: menu image changed — re-reading with Nemotron 3.5 Super VL` });
+  const v = await readMenuImages(urls, ledger, emit);
+  if (v.items.length < 3) return done({ status: 'broken', detail: 'changed menu images could not be read', items: 0, changes: [] });
+  const changes = diffItems(prev, v.items);
+  saveSnapshot(x.meta.id, v.items);
+  updateImageSource(x.meta.id, v.images, itemsHash(v.items), v.items.length);
+  return done({ status: 'changed', detail: `menu image changed: ${summarise(changes)}`, items: v.items.length, changes });
 }
 
 function summarise(changes: PriceChange[]): string {
