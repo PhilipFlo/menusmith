@@ -59,10 +59,38 @@ Menusmith's code was written during the submission period. It uses data from our
 nearBite (restaurant URLs and previously scraped menus) as a benchmark reference only.
 
 ## Feedback on Nebius Token Factory / NVIDIA models
-_(fill in honestly — the Most Valuable Feedback prize rewards specific, actionable notes)_
-- `message.reasoning` holds Nemotron's reasoning, but the API reference documents
-  `reasoning_content` — worth aligning the docs.
-- `chat_template_kwargs.enable_thinking` works well; documenting it on the Token Factory model pages
-  (not only the Hugging Face cards) would save time.
-- The default rate limits for new accounts aren't published.
-- A balance/usage endpoint in the API would let apps enforce budgets.
+
+Specific notes from building Menusmith (several hundred recorded Token Factory calls across five NVIDIA models — the final count is in bench/results):
+
+**What worked really well**
+- One OpenAI-compatible endpoint for Nano, Super, Ultra, Lightning and Super-VL made
+  model routing a config change. Our Super → Ultra escalation and Nano arbitration were a
+  few lines each.
+- `chat_template_kwargs.enable_thinking` let us run the same model fast (thinking off) for
+  extraction and smart (thinking on) for code writing.
+- `nvidia/Nemotron-3.5-Super-VL` read real restaurant menu images (16–31 dishes per
+  picture) for about $0.002 each — it turned a whole failure class into successes.
+
+**Friction we hit (actionable)**
+1. **402 "You have exhausted your budget" with funds available.** Our key stopped working
+   after ~$1.60 of spend; the cause was a budget setting, not the balance. The error should
+   say *which* limit was hit (account balance vs. project/key budget) and link to it.
+2. **Reasoning field name.** Non-streaming responses put Nemotron's reasoning in
+   `message.reasoning`, while the API reference documents `reasoning_content`. We had to
+   inspect raw JSON to find it. Please align the docs (or return both).
+3. **Thinking toggle is only documented on Hugging Face.** `enable_thinking` and the
+   per-model sampling advice (temperature 1.0 / top_p 0.95 for Super/Ultra) belong on the
+   Token Factory model pages.
+4. **`response_format` docs contradict themselves.** The spec lists `json_schema` but a
+   field note says only `json_object`/`text` are supported; the cookbook uses `guided_json`.
+   A single tested example per model family would remove the guesswork.
+5. **Inconsistent model IDs.** `nvidia/Nemotron-3_5-Lightning` vs `nvidia/Nemotron-3.5-Super-VL`,
+   and mixed casing (`nemotron-3-super-…` vs `Nemotron-3-Ultra-…`) — easy to typo; a stable
+   alias scheme would help.
+6. **Default rate limits aren't published**, only an example table. We built conservative
+   retries blind.
+7. **No balance/usage endpoint in the API.** Apps that let the public trigger model calls
+   (like our demo) need to enforce budgets; we keep our own spend meter on disk.
+8. **Sandboxes are gated behind a beta form.** For the "agents that write, run, and test code"
+   track it would be great to have hackathon access by default; we ship our own hardened
+   Node sandbox meanwhile.
