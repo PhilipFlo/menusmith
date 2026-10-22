@@ -1,0 +1,38 @@
+{
+  "id": "cafe-loft-fixture",
+  "url": "fixture://cafe-loft/",
+  "domain": "cafe-loft.fixture",
+  "restaurant": null,
+  "platform": "unknown",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:55:39.922Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 0.889,
+    "oracleCount": 18,
+    "extractorCount": 18
+  },
+  "tokens": {
+    "prompt": 3648,
+    "completion": 1901
+  },
+  "costUsd": 0.002805,
+  "baselineHash": "f5a9c24e3c8928cb",
+  "baselineCount": 18,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:55:39.922Z"
+    }
+  ]
+}

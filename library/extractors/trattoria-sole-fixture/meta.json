@@ -1,0 +1,38 @@
+{
+  "id": "trattoria-sole-fixture",
+  "url": "fixture://trattoria-sole/",
+  "domain": "trattoria-sole.fixture",
+  "restaurant": null,
+  "platform": "wordpress",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:54:40.803Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 25,
+    "extractorCount": 25
+  },
+  "tokens": {
+    "prompt": 9516,
+    "completion": 2799
+  },
+  "costUsd": 0.005374,
+  "baselineHash": "6d0c2db5c2a5afc6",
+  "baselineCount": 25,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:54:40.803Z"
+    }
+  ]
+}

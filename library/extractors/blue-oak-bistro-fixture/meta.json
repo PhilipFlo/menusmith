@@ -1,0 +1,38 @@
+{
+  "id": "blue-oak-bistro-fixture",
+  "url": "fixture://blue-oak-bistro/",
+  "domain": "blue-oak-bistro.fixture",
+  "restaurant": null,
+  "platform": "webflow",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:55:02.416Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 20,
+    "extractorCount": 20
+  },
+  "tokens": {
+    "prompt": 7089,
+    "completion": 1644
+  },
+  "costUsd": 0.003606,
+  "baselineHash": "d37060a17d161bc0",
+  "baselineCount": 20,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:55:02.416Z"
+    }
+  ]
+}

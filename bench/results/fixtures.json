@@ -1,0 +1,121 @@
+{
+  "runAt": "2026-10-17T10:19:29.835Z",
+  "summary": {
+    "sites": 10,
+    "avgF1VsTruth": 1,
+    "perfect": 10,
+    "deterministic": 10
+  },
+  "rows": [
+    {
+      "site": "fjord-burger",
+      "version": 4,
+      "serving": "original",
+      "truth": 18,
+      "extracted": 18,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "taqueria-luna",
+      "version": 2,
+      "serving": "original",
+      "truth": 16,
+      "extracted": 16,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "kebab-kongen",
+      "version": 1,
+      "serving": "original",
+      "truth": 22,
+      "extracted": 22,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "nonna-pizza",
+      "version": 1,
+      "serving": "original",
+      "truth": 18,
+      "extracted": 18,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "bao-street",
+      "version": 1,
+      "serving": "original",
+      "truth": 14,
+      "extracted": 14,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "cafe-loft",
+      "version": 1,
+      "serving": "original",
+      "truth": 18,
+      "extracted": 18,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "sushi-koi",
+      "version": 1,
+      "serving": "original",
+      "truth": 24,
+      "extracted": 24,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "blue-oak-bistro",
+      "version": 1,
+      "serving": "original",
+      "truth": 20,
+      "extracted": 20,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "pho-hanoi-house",
+      "version": 1,
+      "serving": "original",
+      "truth": 30,
+      "extracted": 30,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    },
+    {
+      "site": "trattoria-sole",
+      "version": 1,
+      "serving": "original",
+      "truth": 25,
+      "extracted": 25,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "deterministic": true
+    }
+  ]
+}

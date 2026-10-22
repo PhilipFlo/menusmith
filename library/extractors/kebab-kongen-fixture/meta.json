@@ -1,0 +1,38 @@
+{
+  "id": "kebab-kongen-fixture",
+  "url": "fixture://kebab-kongen/",
+  "domain": "kebab-kongen.fixture",
+  "restaurant": null,
+  "platform": "unknown",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:59:03.669Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 22,
+    "extractorCount": 22
+  },
+  "tokens": {
+    "prompt": 4638,
+    "completion": 2349
+  },
+  "costUsd": 0.003506,
+  "baselineHash": "ff66660447694b70",
+  "baselineCount": 22,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:59:03.669Z"
+    }
+  ]
+}

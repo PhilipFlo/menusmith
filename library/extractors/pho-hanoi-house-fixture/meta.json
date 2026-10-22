@@ -1,0 +1,38 @@
+{
+  "id": "pho-hanoi-house-fixture",
+  "url": "fixture://pho-hanoi-house/",
+  "domain": "pho-hanoi-house.fixture",
+  "restaurant": null,
+  "platform": "wix",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:54:53.650Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 30,
+    "extractorCount": 30
+  },
+  "tokens": {
+    "prompt": 11320,
+    "completion": 2369
+  },
+  "costUsd": 0.005528,
+  "baselineHash": "33e71bed47058b83",
+  "baselineCount": 30,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:54:53.650Z"
+    }
+  ]
+}

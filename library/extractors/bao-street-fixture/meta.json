@@ -1,0 +1,38 @@
+{
+  "id": "bao-street-fixture",
+  "url": "fixture://bao-street/",
+  "domain": "bao-street.fixture",
+  "restaurant": null,
+  "platform": "unknown",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:56:04.084Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 13,
+    "extractorCount": 14
+  },
+  "tokens": {
+    "prompt": 4395,
+    "completion": 1767
+  },
+  "costUsd": 0.002909,
+  "baselineHash": "4e5b2a57f72f5287",
+  "baselineCount": 14,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:56:04.084Z"
+    }
+  ]
+}

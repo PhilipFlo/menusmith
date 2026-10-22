@@ -1,0 +1,38 @@
+{
+  "id": "sushi-koi-fixture",
+  "url": "fixture://sushi-koi/",
+  "domain": "sushi-koi.fixture",
+  "restaurant": null,
+  "platform": "unknown",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:55:27.552Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 24,
+    "extractorCount": 24
+  },
+  "tokens": {
+    "prompt": 8438,
+    "completion": 2269
+  },
+  "costUsd": 0.004573,
+  "baselineHash": "041c3b380b2555e4",
+  "baselineCount": 24,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:55:27.552Z"
+    }
+  ]
+}

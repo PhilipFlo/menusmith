@@ -1,0 +1,54 @@
+{
+  "id": "fjord-burger-fixture",
+  "url": "fixture://fjord-burger/",
+  "domain": "fjord-burger.fixture",
+  "restaurant": null,
+  "platform": "squarespace",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T10:19:27.251Z",
+  "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 18,
+    "extractorCount": 18
+  },
+  "tokens": {
+    "prompt": 6981,
+    "completion": 1982
+  },
+  "costUsd": 0.007361,
+  "baselinePriced": 1,
+  "baselineHash": "56d8e9c355d9c354",
+  "baselineCount": 18,
+  "reusedFrom": null,
+  "version": 4,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:53:34.571Z"
+    },
+    {
+      "version": 2,
+      "reason": "self-heal: returned no items",
+      "at": "2026-10-17T08:53:55.677Z"
+    },
+    {
+      "version": 3,
+      "reason": "self-heal: returned no items",
+      "at": "2026-10-17T10:18:28.246Z"
+    },
+    {
+      "version": 4,
+      "reason": "forged",
+      "at": "2026-10-17T10:19:27.251Z"
+    }
+  ]
+}

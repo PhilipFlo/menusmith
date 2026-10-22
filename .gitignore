@@ -9,3 +9,13 @@ web/dist/
 bench/private/
 *.log
 .DS_Store
+# Recordings and generated extractors for REAL restaurants stay local; only the
+# fictional demo sites' versions are committed (see the negations below).
+cassettes/
+library/*
+!library/extractors/
+library/extractors/*
+!library/extractors/*-fixture/
+bench/results/*
+!bench/results/fixtures.json
+!bench/results/latest.json

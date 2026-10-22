@@ -1,0 +1,43 @@
+{
+  "id": "taqueria-luna-fixture",
+  "url": "fixture://taqueria-luna/",
+  "domain": "taqueria-luna.fixture",
+  "restaurant": null,
+  "platform": "shopify",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T09:36:37.803Z",
+  "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "rounds": 1,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 16,
+    "extractorCount": 16
+  },
+  "tokens": {
+    "prompt": 5679,
+    "completion": 5572
+  },
+  "costUsd": 0.020238,
+  "baselineHash": "c0a5aa948bd064d6",
+  "baselineCount": 16,
+  "reusedFrom": null,
+  "version": 2,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:55:51.892Z"
+    },
+    {
+      "version": 2,
+      "reason": "forged",
+      "at": "2026-10-17T09:36:37.803Z"
+    }
+  ]
+}

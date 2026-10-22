@@ -1,0 +1,38 @@
+{
+  "id": "nonna-pizza-fixture",
+  "url": "fixture://nonna-pizza/",
+  "domain": "nonna-pizza.fixture",
+  "restaurant": null,
+  "platform": "unknown",
+  "source": {
+    "kind": "html",
+    "request": null
+  },
+  "createdAt": "2026-10-17T08:56:20.655Z",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "rounds": 2,
+  "score": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "pricedRatio": 1,
+    "oracleCount": 18,
+    "extractorCount": 18
+  },
+  "tokens": {
+    "prompt": 7032,
+    "completion": 2758
+  },
+  "costUsd": 0.004592,
+  "baselineHash": "fa7768fb80a57d50",
+  "baselineCount": 18,
+  "reusedFrom": null,
+  "version": 1,
+  "history": [
+    {
+      "version": 1,
+      "reason": "forged",
+      "at": "2026-10-17T08:56:20.655Z"
+    }
+  ]
+}
