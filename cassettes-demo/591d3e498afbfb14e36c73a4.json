@@ -3,7 +3,7 @@
   "model": "nvidia/nemotron-3-super-120b-a12b",
   "promptTokens": 1711,
   "completionTokens": 845,
-  "ms": 4477,
+  "ms": 3672,
   "label": "oracle (2nd read)",
   "preview": "Page URL: fixture://fjord-burger/\n\nPAGE TEXT:\nFjord Burger\nHjem\nMeny\nBestill bord\nSelskap\nGavekort\nOm oss\nKontakt\nBestill takeaway\nMenyen vår\nBriochebrød fra ba"
 }

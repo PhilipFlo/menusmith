@@ -3,7 +3,7 @@
   "model": "nvidia/nemotron-3-super-120b-a12b",
   "promptTokens": 2158,
   "completionTokens": 1236,
-  "ms": 7490,
+  "ms": 9214,
   "label": "oracle (2nd read)",
   "preview": "Page URL: fixture://trattoria-sole/\n\nPAGE TEXT:\nHopp til innhold\nCucina italiana dal 2011\nHjem\nMeny\nBestill bord\nSelskap\nGavekort\nOm oss\nKontakt\nVår meny\nAlt la"
 }
