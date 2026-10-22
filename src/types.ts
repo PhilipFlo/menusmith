@@ -42,7 +42,7 @@ export interface Score {
 }
 
 /** Where an extractor's input comes from. */
-export type SourceKind = 'html' | 'rendered' | 'json' | 'image';
+export type SourceKind = 'html' | 'rendered' | 'json' | 'image' | 'document';
 
 /** A captured API request that returns the menu as JSON — replayed on every re-run. */
 export interface SourceRequest {
@@ -52,6 +52,8 @@ export interface SourceRequest {
   headers?: Record<string, string>;
   /** Image menus: each picture and the fingerprint of its bytes when last read. */
   images?: { url: string; sha256: string }[];
+  /** PDF menus: the file and the fingerprint of its bytes when last read. */
+  document?: { url: string; sha256: string };
 }
 
 /** Website builder or hosted ordering system ("wordpress", "squarespace", "winorder", …) or "unknown". */

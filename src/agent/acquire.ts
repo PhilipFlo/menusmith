@@ -5,6 +5,8 @@ import { pageText } from '../html/simplify.ts';
 import type { Emit, SourceKind, SourceRequest } from '../types.ts';
 import { menuLinks, priceDensity } from './discover.ts';
 import { findMenuImages } from './vision.ts';
+import { menuPdfLinks } from './document.ts';
+import * as cheerio from 'cheerio';
 
 /**
  * ACQUIRE: get the menu in the most stable form the site offers.
@@ -78,7 +80,14 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
       note: `menu API ${j.method} ${new URL(j.url).hostname}${new URL(j.url).pathname} (${j.menuObjects} objects)`,
     };
   }
-  // No text menu and no menu API — maybe the menu is published as pictures.
+  // No text menu and no menu API — maybe the menu is a PDF or published as pictures.
+  if (domPrices < 5) {
+    const pdfs = [...new Set([...menuPdfLinks(r.html, r.finalUrl, cheerio), ...menuPdfLinks(start.html, start.finalUrl, cheerio)])];
+    if (pdfs.length) {
+      emit({ type: 'step', step: 'render', status: 'done', detail: `The menu is a PDF: ${pdfs[0]!.split('/').pop()}` });
+      return { kind: 'document', url: r.finalUrl, payload: pdfs[0]!, html: r.html, text, request: { url: pdfs[0]!, method: 'GET' }, note: `PDF menu ${pdfs[0]}` };
+    }
+  }
   if (domPrices < 5) {
     const imgs = findMenuImages(r.html, r.finalUrl);
     if (imgs.length) {

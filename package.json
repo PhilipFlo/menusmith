@@ -1,7 +1,7 @@
 {
   "name": "menusmith",
   "version": "0.1.0",
-  "description": "Agents that write the menu scraper once, test it, and heal it \u2014 so a restaurant price index runs forever. Built on NVIDIA Nemotron via Nebius Token Factory.",
+  "description": "Agents that write the menu scraper once, test it, and heal it — so a restaurant price index runs forever. Built on NVIDIA Nemotron via Nebius Token Factory.",
   "license": "MIT",
   "type": "module",
   "private": true,
@@ -27,6 +27,7 @@
     "dotenv": "^16.6.1",
     "hono": "^4.13.13",
     "openai": "^4.104.0",
+    "pdfjs-dist": "^4.10.38",
     "playwright": "^1.64.1",
     "zod": "^3.25.76"
   },

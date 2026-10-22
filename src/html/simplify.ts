@@ -79,21 +79,38 @@ function cssPath($: cheerio.CheerioAPI, el: Element): string {
 
 /** The smallest element that contains (most of) the price-bearing nodes. */
 export function findMenuRoot($: cheerio.CheerioAPI): { root: Element; priceNodes: number } | null {
-  // The smallest element whose full text is a price-bearing snippet. Prices are
-  // often split across elements (<span>179</span><span>kr</span>), so own text
-  // alone misses them.
+  // The smallest elements whose full text is a short price-bearing snippet. Prices are
+  // often split across elements (<span>179</span><span>kr</span>), so own text alone
+  // misses them. One bottom-up pass, O(n): each element's text is assembled from its
+  // children's and abandoned as soon as it is too long to be a price.
   const priceEls: Element[] = [];
-  $('body *').each((_, el) => {
-    if (el.type !== 'tag') return;
-    const e = el as Element;
-    const t = $(e).text().replace(/\s+/g, ' ').trim();
-    if (!t || t.length > 40 || !PRICE_RE.test(t)) return;
-    const childHas = $(e)
-      .children()
-      .toArray()
-      .some((c) => PRICE_RE.test($(c).text().replace(/\s+/g, ' ').trim()));
-    if (!childHas) priceEls.push(e);
-  });
+  const MAX = 200;
+  const visit = (node: AnyNode): { text: string | null; hasPrice: boolean } => {
+    if (node.type === 'text') {
+      const d = (node as unknown as { data: string }).data;
+      return { text: d.length > MAX ? null : d, hasPrice: false };
+    }
+    if (node.type !== 'tag' && node.type !== 'root') return { text: '', hasPrice: false };
+    let text = '';
+    let tooLong = false;
+    let descendantPrice = false;
+    for (const c of (node as Element).children) {
+      const r = visit(c);
+      if (r.hasPrice) descendantPrice = true;
+      if (r.text === null) tooLong = true;
+      else if (!tooLong) {
+        text += r.text;
+        if (text.length > MAX) tooLong = true;
+      }
+    }
+    if (node.type !== 'tag' || tooLong) return { text: null, hasPrice: descendantPrice };
+    const t = text.replace(/\s+/g, ' ').trim();
+    const isPrice = !!t && t.length <= 40 && PRICE_RE.test(t);
+    if (isPrice && !descendantPrice) priceEls.push(node as Element);
+    return { text, hasPrice: isPrice || descendantPrice };
+  };
+  const body = $('body')[0] || $.root()[0];
+  if (body) visit(body as AnyNode);
   if (priceEls.length < 2) return null;
   const counts = new Map<Element, number>();
   for (const p of priceEls) {

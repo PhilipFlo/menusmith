@@ -149,3 +149,14 @@ export function updateImageSource(id: string, images: { url: string; sha256: str
   meta.baselineCount = baselineCount;
   writeFileSync(metaFile, JSON.stringify(meta, null, 2) + '\n');
 }
+
+/** PDF menus: record the fingerprint of the file just read, and the new baseline. */
+export function updateDocumentSource(id: string, document: { url: string; sha256: string }, baselineHash: string, baselineCount: number): void {
+  const metaFile = resolve(dir(), id, 'meta.json');
+  if (!existsSync(metaFile)) return;
+  const meta = JSON.parse(readFileSync(metaFile, 'utf8')) as ExtractorMeta;
+  meta.source = { kind: 'document', request: { ...(meta.source?.request ?? { url: meta.url, method: 'GET' }), document } };
+  meta.baselineHash = baselineHash;
+  meta.baselineCount = baselineCount;
+  writeFileSync(metaFile, JSON.stringify(meta, null, 2) + '\n');
+}

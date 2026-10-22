@@ -15,6 +15,7 @@ import { itemsHash, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
 import { arbitrate } from './judge.ts';
 import { readMenuImages } from './vision.ts';
+import { fetchPdf, looksLikePdfUrl, pdfText } from './document.ts';
 import { jsonShapeReport, selectorReport } from './debugger.ts';
 
 export interface ForgeInput {
@@ -48,13 +49,19 @@ export interface ForgeOutcome {
   bestScore?: Score;
   ledger: Ledger;
   ms: number;
-  /** "forged" | "reused" | "healed" | "vision" (image menu, fingerprinted) */
-  mode?: 'forged' | 'reused' | 'healed' | 'vision';
+  /** "forged" | "reused" | "healed" | "vision" (image menu) | "document" (PDF menu) — the last two are fingerprinted */
+  mode?: 'forged' | 'reused' | 'healed' | 'vision' | 'document';
   /** The reference reading the extractor was graded against (after arbitration). */
   oracle?: MenuItem[];
 }
 
 const noop: Emit = () => {};
+
+/** Stored in place of code for PDF menus (never executed). */
+export const DOCUMENT_EXTRACTOR = `// This restaurant publishes its menu as a PDF. Its text layer is extracted locally
+// (pdf.js) and read by Nemotron 3 Super; Menusmith stores the file's sha256
+// fingerprint and the fleet re-reads it only when the PDF changes.
+function extract() { return []; }`;
 
 /** Stored in place of code for image menus (never executed). */
 export const IMAGE_EXTRACTOR = `// This restaurant publishes its menu as image(s), so there is no page structure to
@@ -85,6 +92,70 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     return { ok: false, reason, oracleCount: 0, rounds: 0, ledger, ms: Date.now() - t0, ...extra };
   };
 
+  // PDF menus: extract the text layer, let the oracle read it, fingerprint the file.
+  const documentPath = async (docUrl: string, pageUrl: string): Promise<ForgeOutcome> => {
+    emit({ type: 'step', step: 'document', status: 'start', detail: `Reading the PDF menu ${docUrl.split('/').pop()}` });
+    let pdf: Awaited<ReturnType<typeof fetchPdf>>;
+    let text: string;
+    try {
+      pdf = await fetchPdf(docUrl);
+      const t = await pdfText(pdf.bytes);
+      text = t.text;
+      emit({ type: 'log', message: `PDF: ${t.pages} page(s), ${text.length.toLocaleString()} characters of text` });
+    } catch (e) {
+      emit({ type: 'step', step: 'document', status: 'fail', detail: (e as Error).message });
+      return fail(`could not read the PDF: ${(e as Error).message}`);
+    }
+    if (text.replace(/\s+/g, '').length < 150) {
+      emit({ type: 'step', step: 'document', status: 'fail', detail: 'the PDF has no text layer (scanned)' });
+      return fail('scanned PDF without a text layer');
+    }
+    let items: MenuItem[];
+    try {
+      const o = await readMenu(text, { url: docUrl, restaurant: input.restaurant }, ledger, emit);
+      items = groundOracle(o.items, text).kept;
+    } catch (e) {
+      emit({ type: 'step', step: 'document', status: 'fail', detail: (e as Error).message });
+      return fail(`oracle failed: ${(e as Error).message}`);
+    }
+    if (items.length < 3) {
+      emit({ type: 'step', step: 'document', status: 'fail', detail: 'no menu found in the PDF' });
+      return fail('no menu with dishes found in the PDF');
+    }
+    emit({ type: 'oracle', items });
+    emit({ type: 'step', step: 'document', status: 'done', detail: `${items.length} dishes from the PDF` });
+    const domain = domainOf(pageUrl);
+    const platform = detectPlatform('', pageUrl);
+    const id = idForUrl(pageUrl, domain, platform);
+    const priced = items.filter((i) => i.price != null).length / items.length;
+    const meta = saveExtractor(
+      {
+        id,
+        url: pageUrl,
+        domain,
+        restaurant: input.restaurant ?? null,
+        platform,
+        source: { kind: 'document', request: { url: pageUrl, method: 'GET', document: { url: pdf.finalUrl, sha256: pdf.sha256 } } },
+        createdAt: new Date().toISOString(),
+        model: MODELS.oracle[0]!,
+        rounds: 0,
+        score: { precision: 1, recall: 1, f1: 1, pricedRatio: Math.round(priced * 1000) / 1000, oracleCount: items.length, extractorCount: items.length },
+        tokens: { prompt: ledger.promptTokens, completion: ledger.completionTokens },
+        costUsd: Math.round(ledger.listCostUsd * 1e6) / 1e6,
+        baselineHash: itemsHash(items),
+        baselineCount: items.length,
+        baselinePriced: Math.round(priced * 1000) / 1000,
+        reusedFrom: null,
+      },
+      DOCUMENT_EXTRACTOR,
+      'document: read the PDF menu',
+    );
+    saveSnapshot(id, items);
+    emit({ type: 'step', step: 'commit', status: 'done', detail: `${id} v${meta.version} (PDF fingerprint)` });
+    emit({ type: 'result', ok: true, meta, items });
+    return { ok: true, meta, code: DOCUMENT_EXTRACTOR, items, oracleCount: items.length, rounds: 0, ledger, ms: Date.now() - t0, mode: 'document' };
+  };
+
   // 1. Locate the website.
   let url = input.url?.trim();
   if (!url) {
@@ -103,6 +174,9 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     emit({ type: 'step', step: 'discover', status: 'done', detail: `Tavily: ${site.title} → ${url}` });
   }
 
+  // A link straight to a PDF menu.
+  if (looksLikePdfUrl(url)) return documentPath(url, url);
+
   // 2. Fetch + find the menu page.
   emit({ type: 'step', step: 'fetch', status: 'start', detail: url });
   let page: Page;
@@ -112,6 +186,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     emit({ type: 'step', step: 'fetch', status: 'fail', detail: (e as Error).message });
     return fail((e as Error).message);
   }
+  // Served as a PDF despite the URL.
+  if (page.html.startsWith('%PDF')) return documentPath(page.finalUrl, page.finalUrl);
   if (page.status >= 400) {
     emit({ type: 'step', step: 'fetch', status: 'fail', detail: `HTTP ${page.status}` });
     return fail(`HTTP ${page.status} from ${url}`);
@@ -149,6 +225,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     }
   }
   emit({ type: 'log', message: `Source: ${acq.note} · platform ${platform}` });
+
+  if (acq.kind === 'document') return documentPath(acq.payload, acq.url);
 
   // Image menus: no structure to write code against. Read the pictures with Nemotron
   // 3.5 Super VL and store their fingerprints — re-runs only re-read a changed image.
@@ -424,7 +502,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
 export async function rerun(id: string, opts: { fresh?: boolean } = {}) {
   const stored = loadExtractor(id);
   if (!stored) throw new Error(`no extractor ${id}`);
-  if (stored.meta.source?.kind === 'image') throw new Error('image menus are re-checked by the fleet (fingerprints), not re-run as code');
+  if (stored.meta.source?.kind === 'image' || stored.meta.source?.kind === 'document')
+    throw new Error('image and PDF menus are re-checked by the fleet (fingerprints), not re-run as code');
   const src = await reacquire({ kind: stored.meta.source?.kind ?? 'html', url: stored.meta.url, request: stored.meta.source?.request });
   const run = await runExtractor(stored.code, src.payload, stored.meta.url, stored.meta.source?.kind === 'json' ? 'json' : 'html');
   return { stored, src, run, fresh: opts.fresh };

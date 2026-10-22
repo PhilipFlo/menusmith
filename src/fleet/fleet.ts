@@ -6,7 +6,8 @@ import { reacquire } from '../agent/acquire.ts';
 import { priceDensity } from '../agent/discover.ts';
 import { pageText } from '../html/simplify.ts';
 import { Ledger } from '../llm/client.ts';
-import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateImageSource, type StoredExtractor } from '../library/store.ts';
+import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateDocumentSource, updateImageSource, type StoredExtractor } from '../library/store.ts';
+import { fetchPdf, pdfText } from '../agent/document.ts';
 import { fetchImage, findMenuImages, readMenuImages } from '../agent/vision.ts';
 import { renderPage } from '../html/render.ts';
 import { runExtractor } from '../sandbox/runner.ts';
@@ -150,6 +151,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
 
   const kind = x.meta.source?.kind ?? 'html';
   if (kind === 'image') return checkImages(x, ledger, done, emit, opts);
+  if (kind === 'document') return checkDocument(x, ledger, done, emit, opts);
   const mode = kind === 'json' ? 'json' : 'html';
   let src: { payload: string; html: string; via: string };
   try {
@@ -277,6 +279,37 @@ async function checkImages(
   saveSnapshot(x.meta.id, v.items);
   updateImageSource(x.meta.id, v.images, itemsHash(v.items), v.items.length);
   return done({ status: 'changed', detail: `menu image changed: ${summarise(changes)}`, items: v.items.length, changes });
+}
+
+/** PDF menus: compare the file fingerprint; re-read only a changed PDF. */
+async function checkDocument(
+  x: StoredExtractor,
+  ledger: Ledger,
+  done: (e: Pick<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> & { version?: number }) => FleetEntry,
+  emit: Emit,
+  opts: { heal: boolean; budget?: Budget },
+): Promise<FleetEntry> {
+  const stored = x.meta.source?.request?.document;
+  const prev = loadSnapshot(x.meta.id) || [];
+  if (!stored) return done({ status: 'error', detail: 'no PDF recorded for this menu', items: prev.length, changes: [] });
+  let pdf: Awaited<ReturnType<typeof fetchPdf>>;
+  try {
+    pdf = await fetchPdf(stored.url);
+  } catch (e) {
+    return done({ status: 'broken', detail: `PDF menu unavailable: ${(e as Error).message}`, items: 0, changes: [] });
+  }
+  if (pdf.sha256 === stored.sha256) return done({ status: 'stable', detail: 'PDF menu unchanged (fingerprint matches)', items: prev.length, changes: [] });
+  if (!opts.heal || (opts.budget && opts.budget.left() <= 0))
+    return done({ status: 'review', detail: 'PDF menu changed — not re-read (healing off or budget used up)', items: prev.length, changes: [] });
+  emit({ type: 'log', message: `[fleet] ${x.meta.id}: PDF changed — re-reading` });
+  const { text } = await pdfText(pdf.bytes);
+  const o = await readMenu(text, { url: stored.url, restaurant: x.meta.restaurant }, ledger, emit);
+  const items = groundOracle(o.items, text).kept;
+  if (items.length < 3) return done({ status: 'broken', detail: 'the changed PDF has no readable menu', items: 0, changes: [] });
+  const changes = diffItems(prev, items);
+  saveSnapshot(x.meta.id, items);
+  updateDocumentSource(x.meta.id, { url: pdf.finalUrl, sha256: pdf.sha256 }, itemsHash(items), items.length);
+  return done({ status: 'changed', detail: `PDF menu changed: ${summarise(changes)}`, items: items.length, changes });
 }
 
 function summarise(changes: PriceChange[]): string {
