@@ -180,6 +180,19 @@ async function main() {
       }
     }),
   );
+  // --merge-into <tag>: replace the rows of re-run sites in an existing result file
+  // (e.g. sites that failed during a network outage) and recompute the summary.
+  const mergeInto = arg('--merge-into');
+  if (mergeInto) {
+    const f = resolve(ROOT, 'bench/results', `${mergeInto}.json`);
+    const prev = JSON.parse(readFileSync(f, 'utf8')) as { runAt: string; rows: Record<string, unknown>[] };
+    const fresh = new Map(rows.map((r) => [r.name, r]));
+    const merged = prev.rows.map((r) => fresh.get(r.name) ?? r);
+    const out = { runAt: prev.runAt, rerunAt: new Date().toISOString(), summary: summarise(merged), rows: merged };
+    writeFileSync(f, JSON.stringify(out, null, 2));
+    console.log(`\nMerged ${fresh.size} re-run site(s) into ${mergeInto}.json\n`, JSON.stringify(out.summary, null, 2));
+    return;
+  }
   const result = { runAt: new Date().toISOString(), summary: summarise(rows), rows };
   const dir = resolve(ROOT, 'bench/results');
   mkdirSync(dir, { recursive: true });

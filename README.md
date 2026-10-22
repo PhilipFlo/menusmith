@@ -54,9 +54,15 @@ flowchart LR
 
 1. **Find** — given a name, Tavily search finds the official site (aggregators filtered out);
    Tavily map + Nemotron Nano triage find the menu page among the site's links.
-2. **Acquire** — if the menu isn't in the server HTML, a headless browser renders the page and
-   **captures the JSON the page loads from its menu API**. The extractor is then written over that
-   JSON and re-runs replay the request directly — no browser, no HTML fragility.
+2. **Acquire** — the menu is taken in its most stable form:
+   - **server HTML** → plain HTTP re-runs;
+   - **a menu API** — a headless browser renders the page and **captures the JSON the page loads**;
+     the extractor is written over that JSON and re-runs replay the request directly;
+   - **rendered DOM** for menus that only exist after JavaScript runs;
+   - **PDF menus** — text layer extracted locally with pdf.js, read by Nemotron 3 Super;
+   - **image menus** — read by **Nemotron 3.5 Super VL**.
+   PDFs and images have no structure to write code against, so Menusmith **fingerprints the
+   file (sha256)** instead: the fleet re-reads it only when the bytes change — re-runs stay free.
 3. **Oracle** — Nemotron 3 Super reads the visible page (or the API data) and writes down the menu.
    Items whose names don't occur on the page are dropped (hallucination guard).
 4. **Forge** — Nemotron 3 Super, with reasoning on, writes `extract($, ctx)` (cheerio) or
@@ -103,7 +109,7 @@ that does each job well:
 | Oracle (read the menu) | `nvidia/nemotron-3-super-120b-a12b` | long structured extraction, 262K context | thinking off, JSON mode, chunked |
 | Forge + repair (write code) | `nvidia/nemotron-3-super-120b-a12b` | solves most sites in 1–2 rounds at a third of Ultra's price | thinking **on**, multi-turn with test feedback |
 | Escalation (hard repairs) | `nvidia/Nemotron-3-Ultra-550b-a55b` | strongest reasoning, only when Super is stuck | thinking **on**, continues the same conversation |
-| Vision (image/PDF menus, roadmap) | `nvidia/Nemotron-3.5-Super-VL` | — | — |
+| Vision (image menus) | `nvidia/Nemotron-3.5-Super-VL` | reads menus published as pictures (~$0.002 per image) | JSON mode; images fingerprinted so re-runs don't call it |
 
 - Reasoning is toggled per call with `chat_template_kwargs.enable_thinking`; the model's reasoning
   (`message.reasoning`) is streamed into the UI's "Agent thinking" panel.
@@ -193,8 +199,7 @@ own scraper is not part of Menusmith.
 
 ## Limitations
 
-- Image-only and PDF menus are out of scope for the code-writing path (a vision path with
-  Nemotron 3.5 Super VL is on the roadmap).
+- Scanned PDFs without a text layer aren't read yet (the image path could rasterise them).
 - Some hosted APIs mix dishes with add-on options; arbitration settles most disputes, but very
   large option-heavy menus can still fail to converge.
 - Sites behind aggressive bot protection are not bypassed — by design.
