@@ -15,15 +15,7 @@
  * For ranges/multiple prices ("189 / 249") the FIRST price is returned — size
  * variants are a separate concern from extraction.
  */
-function parsePrice(input) {
-  if (input === null || input === undefined) return null;
-  if (typeof input === 'number') return Number.isFinite(input) && input >= 0 ? input : null;
-  let s = String(input).replace(/ | /g, ' ').trim();
-  if (!s) return null;
-  // First run of digits with optional thousand separators / decimals.
-  const m = s.match(/\d{1,3}(?:[ .,'’]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?/);
-  if (!m) return null;
-  let num = m[0];
+function toNumber(num) {
   // Decide what the separators mean.
   const lastSep = Math.max(num.lastIndexOf(','), num.lastIndexOf('.'));
   if (lastSep !== -1) {
@@ -41,6 +33,47 @@ function parsePrice(input) {
   const v = Number(num);
   if (!Number.isFinite(v) || v < 0 || v > 1_000_000) return null;
   return Math.round(v * 100) / 100;
+}
+
+const CURRENCY_BEFORE = /(kr\.?|nok|sek|dkk|usd|eur|us\$|\$|€|£)\s*$/i;
+const CURRENCY_AFTER = /^\s*(,-|\.-|,–|kr\b|nok\b|sek\b|dkk\b|usd\b|eur\b|€|\$)/i;
+// Quantities and sizes that are not prices: "2 stk", "0,5 l", "33 cl", "120 g", "8 biter", "3x".
+const UNIT_AFTER = /^\s*(stk|pcs|pc|biter|bitar|pieces|x\b|cl\b|ml\b|dl\b|l\b|ltr|liter|g\b|gr\b|gram|kg\b|cm\b|%|oz\b|personer|pers\b|people|kuler)/i;
+
+/**
+ * Parse a menu price string into a number, or null when there is no price.
+ *
+ * Handles the formats seen on real menus:
+ *   "189,-"  "kr 189"  "NOK 1 290"  "1.290,00 kr"  "$12.50"  "12"  "189 / 249"
+ * When the text holds several numbers it does NOT blindly take the first one: list
+ * numbering ("17. Gustosa 190,-") and quantities ("2 stk · 69 kr", "0,5 l 35,-") are
+ * skipped, and a number next to a currency marker wins. Among equally good
+ * candidates (e.g. sizes "189 / 249") the FIRST is returned.
+ */
+function parsePrice(input) {
+  if (input === null || input === undefined) return null;
+  if (typeof input === 'number') return Number.isFinite(input) && input >= 0 ? input : null;
+  const s = String(input).replace(/\u00a0|\u202f/g, ' ').trim();
+  if (!s) return null;
+  const re = /\d{1,3}(?:[ .,'’]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?/g;
+  const cands = [];
+  let m;
+  while ((m = re.exec(s))) {
+    const before = s.slice(Math.max(0, m.index - 6), m.index);
+    const after = s.slice(m.index + m[0].length, m.index + m[0].length + 10);
+    const value = toNumber(m[0]);
+    if (value === null) continue;
+    const isNumbering = m.index === 0 && /^\s*[.)]\s+\S/.test(after) && /^\d{1,3}$/.test(m[0]);
+    const isUnit = UNIT_AFTER.test(after);
+    const hasCurrency = CURRENCY_BEFORE.test(before) || CURRENCY_AFTER.test(after);
+    cands.push({ value, hasCurrency, skip: isNumbering || (isUnit && !hasCurrency) });
+  }
+  if (!cands.length) return null;
+  const withCurrency = cands.find((c) => c.hasCurrency && !c.skip);
+  if (withCurrency) return withCurrency.value;
+  const plain = cands.find((c) => !c.skip);
+  if (plain) return plain.value;
+  return cands.length === 1 && !UNIT_AFTER.test(s.slice(String(cands[0].value).length)) ? cands[0].value : null;
 }
 
 /** Collapse whitespace and trim. */

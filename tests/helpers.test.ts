@@ -86,3 +86,18 @@ describe('normName', () => {
     expect(normName('Phở Đặc Biệt')).toBe('pho dac biet');
   });
 });
+
+describe('parsePrice skips numbering and quantities (benchmark findings)', () => {
+  const { parsePrice } = createRequire(import.meta.url)('../src/sandbox/helpers.cjs') as { parsePrice: (s: unknown) => number | null };
+  it.each([
+    ['17. Gustosa 190,-', 190],
+    ['1 stk 175,-', 175],
+    ['2 stk · 69 kr', 69],
+    ['0,5 l 35,-', 35],
+    ['33 cl fl 55,-', 55],
+    ['8 biter 159', 159],
+    ['120 g', null],
+  ])('%s → %s', (input, expected) => {
+    expect(parsePrice(input)).toBe(expected);
+  });
+});

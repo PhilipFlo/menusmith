@@ -116,6 +116,7 @@ async function one(site: Site) {
 
 function summarise(rows: Record<string, unknown>[]) {
   const ok = rows.filter((r) => r.ok);
+  const forgedOk = ok.filter((r) => r.mode === 'forged' || r.mode === 'healed');
   const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
   const median = (xs: number[]) => {
     if (!xs.length) return 0;
@@ -139,10 +140,13 @@ function summarise(rows: Record<string, unknown>[]) {
     successRateOnHtmlMenus: reachable.length ? Math.round((ok.length / reachable.length) * 1000) / 10 : 0,
     forged: ok.filter((r) => r.mode === 'forged').length,
     reused: ok.filter((r) => r.mode === 'reused').length,
-    medianRounds: median(ok.map((r) => r.rounds as number)),
-    firstTryPassRate: ok.length ? Math.round((ok.filter((r) => r.rounds === 1).length / ok.length) * 1000) / 10 : 0,
+    // Code metrics only cover extractors the agent WROTE (not reused, PDF or image menus).
+    medianRounds: median(forgedOk.map((r) => r.rounds as number)),
+    firstTryPassRate: forgedOk.length ? Math.round((forgedOk.filter((r) => r.rounds === 1).length / forgedOk.length) * 1000) / 10 : 0,
+    pdfMenus: ok.filter((r) => r.mode === 'document').length,
+    imageMenus: ok.filter((r) => r.mode === 'vision').length,
     deterministicRate: ok.length ? Math.round((ok.filter((r) => r.deterministic === true).length / ok.length) * 1000) / 10 : 0,
-    avgF1Oracle: Math.round(avg(ok.map((r) => r.f1Oracle as number)) * 1000) / 1000,
+    avgF1Oracle: Math.round(avg(forgedOk.map((r) => r.f1Oracle as number)) * 1000) / 1000,
     avgPrecisionVsNearBite: Math.round(avg(ok.filter((r) => r.precisionReference != null).map((r) => r.precisionReference as number)) * 1000) / 1000,
     avgRecallVsNearBite: Math.round(avg(ok.filter((r) => r.recallReference != null).map((r) => r.recallReference as number)) * 1000) / 1000,
     avgCostPerSuccessUsd: Math.round(avg(ok.map((r) => r.costUsd as number)) * 1e4) / 1e4,
