@@ -26,8 +26,9 @@ export interface MenuImage {
   sha256: string;
 }
 
-const MENU_WORD = /(meny|menu|menus|spisekart|mat|food|drikke|drink|lunsj|lunch|middag|dinner|brunch|carte|takeaway|pizza|sushi|grill|dessert)/i;
-const NOT_MENU = /(logo|icon|favicon|avatar|sprite|banner-?ad|payment|vipps|visa|mastercard|instagram|facebook|tripadvisor|\.svg)/i;
+// Only explicit menu words: dish words ("sushi", "dessert") also name food PHOTOS.
+const MENU_WORD = /(meny|menu|menus|menyen|spisekart|drikkekart|vinkart|prisliste|price[-_ ]?list|carte)/i;
+const NOT_MENU = /(logo|icon|favicon|avatar|sprite|banner-?ad|payment|vipps|visa|mastercard|instagram|facebook|tripadvisor|foodora|wolt|ubereats|doordash|\.svg)/i;
 const MAX_IMAGES = 6;
 const MAX_BYTES = 8 * 1024 * 1024;
 
@@ -47,13 +48,32 @@ export function findMenuImages(html: string, baseUrl: string): string[] {
     const file = decodeURIComponent(new URL(u).pathname.split('/').pop() || '');
     if (MENU_WORD.test(file) || MENU_WORD.test(hint)) out.add(u);
   };
-  $('img').each((_, el) => {
-    const e = $(el);
+  const srcOf = (e: ReturnType<typeof $>) => {
     const srcset = (e.attr('srcset') || e.attr('data-srcset') || '').split(',').map((s) => s.trim().split(/\s+/)[0]).filter(Boolean);
     // Prefer the largest srcset candidate (last), else src / lazy-load attributes.
-    const src = srcset[srcset.length - 1] || e.attr('data-src') || e.attr('src');
-    add(src, `${e.attr('alt') || ''} ${e.attr('title') || ''}`);
+    return srcset[srcset.length - 1] || e.attr('data-src') || e.attr('src');
+  };
+  const strong: ReturnType<typeof $>[] = [];
+  $('img').each((_, el) => {
+    const e = $(el);
+    const before = out.size;
+    add(srcOf(e), `${e.attr('alt') || ''} ${e.attr('title') || ''}`);
+    if (out.size > before) strong.push(e);
   });
+  // Multi-page menus are often a gallery where only some pictures are named "meny":
+  // include the other pictures in the same container as a clearly-named one.
+  for (const e of strong) {
+    const box = e.parent().parent();
+    box.find('img').each((_, el) => {
+      const src = srcOf($(el));
+      if (!src || src.startsWith('data:') || NOT_MENU.test(src)) return;
+      try {
+        out.add(new URL(src, baseUrl).toString());
+      } catch {
+        /* ignore */
+      }
+    });
+  }
   $('a[href]').each((_, el) => {
     const href = $(el).attr('href') || '';
     if (/\.(png|jpe?g|webp)(\?|$)/i.test(href)) add(href, $(el).text());
