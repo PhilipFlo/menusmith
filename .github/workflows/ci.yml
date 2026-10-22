@@ -19,4 +19,7 @@ jobs:
       - run: npm test
         env:
           MENUSMITH_LLM: replay
+      # The full agent loop (forge 3 sites + self-heal) replayed from recorded
+      # Nemotron responses — proves the pipeline end to end with no API key.
+      - run: npm run demo
       - run: npm run build

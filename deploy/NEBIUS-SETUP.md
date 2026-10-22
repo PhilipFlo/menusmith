@@ -50,12 +50,19 @@ filesystem id — the rest is scripted.
 export IMAGE=cr.<region>.nebius.cloud/<registry-id-without-prefix>/menusmith:latest
 export SUBNET_ID=<subnet id>
 export VOLUME=<filesystem id>
-export NEBIUS_API_KEY=...  TAVILY_API_KEY=...   # from .env
+deploy/nebius.sh secrets     # copy the API keys from .env into Nebius MysteryBox (never printed)
 deploy/nebius.sh build       # docker build + push (linux/amd64)
 deploy/nebius.sh endpoint    # public web app
 deploy/nebius.sh fleet-job   # one fleet run as a Serverless Job
 deploy/nebius.sh url         # print the public URL
 ```
+
+## Keeping the API keys safe
+
+- Keys live only in `.env` locally (git-ignored, docker-ignored, deleted in the image build)
+  and in **Nebius MysteryBox** in the cloud. The endpoint and job read them with
+  `--env-secret`, so they never appear in the deployment spec, the image, or the repo.
+- Rotate both keys after the hackathon.
 
 ## Keeping costs down
 

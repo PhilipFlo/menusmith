@@ -154,7 +154,8 @@ npm run forge -- "Restaurant Name" --city Oslo    # find the site with Tavily fi
 npm run fleet                                     # re-run everything, heal what broke
 npx tsx src/cli.ts redesign fjord-burger on       # simulate a website redesign…
 npm run fleet                                     # …and watch it heal
-npm test                                          # 130+ tests, no API key needed
+npm test                                          # 140+ tests, no API key needed
+npm run demo                                      # full loop + self-heal, replayed — no API key
 ```
 
 ## Benchmark

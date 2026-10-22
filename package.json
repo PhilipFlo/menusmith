@@ -17,7 +17,7 @@
     "forge": "tsx src/cli.ts forge",
     "fleet": "tsx src/cli.ts fleet",
     "bench": "tsx bench/run.ts",
-    "demo": "MENUSMITH_LLM=replay MENUSMITH_LIBRARY=.cache/demo-library tsx src/cli.ts demo",
+    "demo": "MENUSMITH_LLM=replay MENUSMITH_CASSETTES=cassettes-demo MENUSMITH_LIBRARY=.cache/demo-library tsx src/cli.ts demo",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
