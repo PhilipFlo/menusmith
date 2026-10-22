@@ -45,7 +45,8 @@ const SANITIZE_SRC = `function (raw, max) {
   // Exact repeats (same section, name and price — e.g. an API that lists a dish twice,
   // or mobile + desktop copies of a page) carry no information: keep the first one.
   var seen = Object.create(null);
-  var keyOf = function (s, n, p) { return (s || '').toLowerCase() + '|' + n.toLowerCase().replace(/\\s+/g, ' ') + '|' + (p === null ? '' : p); };
+  var norm = function (x) { return (x || '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim(); };
+  var keyOf = function (s, n, p) { return norm(s) + '|' + norm(n) + '|' + (p === null ? '' : p); };
   for (var i = 0; i < raw.length && out.length < max; i++) {
     var it = raw[i];
     if (!it || typeof it !== 'object') continue;

@@ -15,6 +15,7 @@ import { forge } from '../src/agent/pipeline.ts';
 import { itemsHash, scoreAgainstOracle } from '../src/agent/evaluate.ts';
 import { fetchPage } from '../src/html/fetch.ts';
 import { runExtractor } from '../src/sandbox/runner.ts';
+import { closeBrowser } from '../src/html/render.ts';
 import type { MenuItem } from '../src/types.ts';
 
 interface Site {
@@ -104,7 +105,7 @@ async function one(site: Site) {
     mkdirSync(resolve(ROOT, '.cache/bench-failures'), { recursive: true });
     writeFileSync(
       resolve(ROOT, '.cache/bench-failures', `${String(site.name).replace(/[^a-z0-9]+/gi, '-').slice(0, 40)}.json`),
-      JSON.stringify({ url: site.url, reason: out.reason, score: out.bestScore, code: out.code }, null, 2),
+      JSON.stringify({ url: site.url, reason: out.reason, score: out.bestScore, code: out.code, oracle: out.oracle }, null, 2),
     );
   }
   const mark = out.ok ? `OK  ${out.mode} r${out.rounds} f1=${out.bestScore?.f1}` : `FAIL ${row.category}: ${out.reason}`;
@@ -179,7 +180,10 @@ async function main() {
   console.log('\n', JSON.stringify(result.summary, null, 2));
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exitCode = 1;
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exitCode = 1;
+  })
+  // The headless browser keeps the event loop alive — close it so the run exits.
+  .finally(() => closeBrowser());

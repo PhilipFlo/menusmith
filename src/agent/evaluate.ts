@@ -98,7 +98,7 @@ export function scoreAgainstOracle(
     const ex = e[k]!;
     // A second copy of a dish already matched in the same section is a duplicate,
     // not a candidate for another reference item.
-    const dupOf = o.find((c) => c.used && nameSimilarity(ex.n, c.n) >= 0.9 && normName(c.it.section ?? '') === normName(ex.it.section ?? ''));
+    const dupOf = o.find((c) => c.used && ex.n === c.n && normName(c.it.section ?? '') === normName(ex.it.section ?? ''));
     if (dupOf) continue;
     let best = -1;
     let bestSim = 0;
@@ -123,7 +123,7 @@ export function scoreAgainstOracle(
   for (let k = 0; k < e.length; k++) {
     if (matched[k]) continue;
     const ex = e[k]!;
-    if (o.some((c) => c.used && nameSimilarity(ex.n, c.n) >= 0.9 && normName(c.it.section ?? '') === normName(ex.it.section ?? ''))) {
+    if (o.some((c) => c.used && ex.n === c.n && normName(c.it.section ?? '') === normName(ex.it.section ?? ''))) {
       // The same dish listed twice in one section (page copies, or one entry per
       // size/price) — always an error: one entry per dish, first price.
       duplicates++;

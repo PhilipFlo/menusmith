@@ -49,6 +49,8 @@ export interface ForgeOutcome {
   ms: number;
   /** "forged" | "reused" | "healed" */
   mode?: 'forged' | 'reused' | 'healed';
+  /** The reference reading the extractor was graded against (after arbitration). */
+  oracle?: MenuItem[];
 }
 
 const noop: Emit = () => {};
@@ -356,6 +358,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     ledger,
     ms: Date.now() - t0,
     oracleCount: oracleItems.length,
+    oracle: oracleItems,
     rounds: roundsUsed,
     bestScore: best?.score,
     code: best?.code,

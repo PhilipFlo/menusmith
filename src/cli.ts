@@ -5,6 +5,7 @@ import { setFixtureRedesigned } from './html/fetch.ts';
 import { listExtractors } from './library/store.ts';
 import { forge } from './agent/pipeline.ts';
 import { runFleet } from './fleet/fleet.ts';
+import { closeBrowser } from './html/render.ts';
 import type { AgentEvent } from './types.ts';
 
 const [cmd, ...rest] = process.argv.slice(2);
@@ -98,7 +99,10 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(`${c.red}${(e as Error).message}${c.reset}`);
-  process.exitCode = 1;
-});
+main()
+  .catch((e) => {
+    console.error(`${c.red}${(e as Error).message}${c.reset}`);
+    process.exitCode = 1;
+  })
+  // The headless browser keeps the event loop alive — close it so the command exits.
+  .finally(() => closeBrowser());
