@@ -84,6 +84,7 @@ export function countMenuObjects(value: unknown, depth = 0): number {
 
 const MAX_JSON = 4 * 1024 * 1024;
 const MAX_HTML = 6 * 1024 * 1024;
+const RENDER_LIMIT_MS = 60_000;
 
 export async function renderPage(url: string, opts: { timeoutMs?: number } = {}): Promise<Rendered> {
   const t0 = Date.now();
@@ -95,6 +96,9 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
     locale: 'nb-NO',
     viewport: { width: 1280, height: 900 },
   });
+  // Hard ceiling for the whole render: closing the context makes every pending page
+  // operation reject, so nothing here can hang a caller indefinitely.
+  const watchdog = setTimeout(() => void ctx.close().catch(() => {}), opts.timeoutMs ? opts.timeoutMs + 30_000 : RENDER_LIMIT_MS);
   try {
     const page = await ctx.newPage();
     let blocked: string | null = null;
@@ -148,13 +152,16 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
       })
       .catch(() => {});
     await page.waitForLoadState('networkidle', { timeout: 6_000 }).catch(() => {});
-    await Promise.allSettled(pending);
+    // Response bodies of long-lived requests (SSE, long-polling) never complete —
+    // never wait more than a few seconds for captured bodies.
+    await Promise.race([Promise.allSettled(pending), new Promise((r) => setTimeout(r, 5000))]);
     let html = await page.content();
     if (html.length > MAX_HTML) html = html.slice(0, MAX_HTML);
     json.sort((a, b) => b.menuObjects - a.menuObjects);
     if (blocked) emitBlocked(blocked);
     return { url, finalUrl: page.url(), html, json: json.filter((j) => !isBlockedUrlSync(j.url)), ms: Date.now() - t0 };
   } finally {
+    clearTimeout(watchdog);
     await ctx.close().catch(() => {});
   }
 }

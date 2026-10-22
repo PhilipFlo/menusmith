@@ -36,6 +36,7 @@ const limit = Number(arg('--limit', '40'));
 const offset = Number(arg('--offset', '0'));
 const concurrency = Number(arg('--concurrency', '3'));
 const tag = arg('--tag', 'latest')!;
+const SITE_LIMIT_MS = 8 * 60_000;
 
 /** Map a failure reason to a small taxonomy for the report. */
 function category(reason = ''): string {
@@ -165,7 +166,14 @@ async function main() {
       while (queue.length) {
         const s = queue.shift()!;
         try {
-          rows.push(await one(s));
+          // Watchdog: one pathological site must never stall the whole benchmark.
+          let timer: NodeJS.Timeout | undefined;
+          const limit = new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error(`site timed out after ${SITE_LIMIT_MS / 60000} min`)), SITE_LIMIT_MS)));
+          try {
+            rows.push(await Promise.race([one(s), limit]));
+          } finally {
+            clearTimeout(timer);
+          }
         } catch (e) {
           rows.push({ name: s.name, url: s.url, ok: false, reason: (e as Error).message, category: 'other', rounds: 0, costUsd: 0, ms: 0 });
         }
