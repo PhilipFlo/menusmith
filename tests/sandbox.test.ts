@@ -137,3 +137,17 @@ describe('sandbox hardening (review findings)', () => {
     expect(r.items[0]?.name).toBe('undefined/undefined');
   });
 });
+
+describe('sandbox output normalisation', () => {
+  it('drops exact repeats (same section, name, price) but keeps price variants', async () => {
+    const { runExtractor } = await import('../src/sandbox/runner.ts');
+    const code = `function extract(){ return [
+      { section: 'Pita', name: 'Kebab i pita', price: 185 },
+      { section: 'Pita', name: 'Kebab  i pita', price: 185 },
+      { section: 'Pita', name: 'Kebab i pita', price: 195 },
+      { section: 'Boks', name: 'Kebab i pita', price: 185 },
+    ] }`;
+    const r = await runExtractor(code, '<p></p>', '');
+    expect(r.items.map((i) => `${i.section}|${i.price}`)).toEqual(['Pita|185', 'Pita|195', 'Boks|185']);
+  });
+});

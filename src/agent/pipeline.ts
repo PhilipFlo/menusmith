@@ -10,7 +10,7 @@ import { findOfficialSite, tavilyEnabled } from '../tools/tavily.ts';
 import type { Emit, ExtractorMeta, MenuItem, RunResult, Score } from '../types.ts';
 import { findMenuPage, priceDensity } from './discover.ts';
 import { acquire, reacquire, type Acquired } from './acquire.ts';
-import { detectHardcoding, feedbackMessage, initialMessages, initialMessagesJson, writeCode } from './forge.ts';
+import { detectHardcoding, ESCALATE_AFTER, feedbackMessage, initialMessages, initialMessagesJson, writeCode } from './forge.ts';
 import { itemsHash, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
 import { arbitrate } from './judge.ts';
@@ -242,6 +242,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
           method: acq.request!.method,
           jsonSkeleton: jsonSkeletonText(JSON.parse(acq.payload)),
           oracle: oracleItems,
+          pathReport: jsonShapeReport(acq.payload),
         })
       : initialMessages({ url: menuUrl, platform, skeleton: skeleton(acq.payload), oracle: oracleItems });
   if (input.repairOf) {
@@ -260,7 +261,11 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   let roundsUsed = 0;
   for (let round = 1; round <= maxRounds; round++) {
     roundsUsed = round;
-    emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1 ? `${modelName(MODELS.forge[0]!)} is writing the extractor` : `Repair round ${round - 1}: ${modelName(MODELS.forge[0]!)} is fixing its code` });
+    emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1
+          ? `${modelName(MODELS.forge[0]!)} is writing the extractor`
+          : round > ESCALATE_AFTER
+            ? `Repair round ${round - 1}: escalated to ${modelName(MODELS.escalate[0]!)}`
+            : `Repair round ${round - 1}: ${modelName(MODELS.forge[0]!)} is fixing its code` });
     let code: string | null;
     try {
       const w = await writeCode(messages, round, ledger, emit);

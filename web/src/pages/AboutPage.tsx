@@ -4,9 +4,10 @@ import { useLoad } from '../controllers.ts';
 import { href } from '../router.ts';
 
 const ROUTING = [
-  { role: 'triage', label: 'Triage', fallback: 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B', job: 'Pick the menu page from a site map; quick yes/no checks', why: 'Called many times per site — cheapest and fastest', price: '$0.06 · $0.24' },
+  { role: 'triage', label: 'Triage & arbitration', fallback: 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B', job: 'Pick the menu page; rule on items the code and the reading disagree about', why: 'Called many times per site — cheapest and fastest', price: '$0.06 · $0.24' },
   { role: 'oracle', label: 'Oracle', fallback: 'nvidia/nemotron-3-super-120b-a12b', job: 'Read a whole menu page into structured dishes and prices', why: 'Long context and careful reading at a mid-tier price', price: '$0.30 · $0.90' },
-  { role: 'forge', label: 'Forge & repair', fallback: 'nvidia/Nemotron-3-Ultra-550b-a55b', job: 'Write the extractor, then fix it from test feedback', why: 'Strongest reasoning — but only a few calls per site, ever', price: '$1.00 · $3.00' },
+  { role: 'forge', label: 'Forge & repair', fallback: 'nvidia/nemotron-3-super-120b-a12b', job: 'Write the extractor, then fix it from test feedback (reasoning on)', why: 'Solves most sites in one or two rounds at a third of the price', price: '$0.30 · $0.90' },
+  { role: 'escalate', label: 'Escalation', fallback: 'nvidia/Nemotron-3-Ultra-550b-a55b', job: 'Take over repairs that Super could not fix in two rounds', why: 'Strongest reasoning, spent only on the hard cases', price: '$1.00 · $3.00' },
   { role: 'vision', label: 'Vision', fallback: 'nvidia/Nemotron-3.5-Super-VL', job: 'Read image and scanned-PDF menus', why: "For menus that aren't text at all", price: '$0.30 · $0.90' },
 ] as const;
 
@@ -163,7 +164,7 @@ function LoopDiagram() {
     <svg className="diagram" viewBox="0 -14 892 300" role="img" aria-labelledby="dg-title dg-desc">
       <title id="dg-title">The Menusmith loop</title>
       <desc id="dg-desc">
-        Discover the site, read the menu with Nemotron 3 Super, write an extractor with Nemotron 3 Ultra, run it in a sandbox, and test it. Failures loop back to repair. A passing extractor is committed to the library; the nightly fleet re-runs it for free and, when a redesign breaks it, sends it back to be healed.
+        Discover the site, read the menu with Nemotron 3 Super, write an extractor with Nemotron 3 Super (escalating to Nemotron 3 Ultra when repairs stall), run it in a sandbox, and test it. Failures loop back to repair. A passing extractor is committed to the library; the nightly fleet re-runs it for free and, when a redesign breaks it, sends it back to be healed.
       </desc>
       <defs>
         <marker id="dg-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -177,7 +178,7 @@ function LoopDiagram() {
       {/* Row 1 */}
       <Node x={20} y={30} title="Discover" sub="Tavily · Nemotron 3 Nano" kind="llm" />
       <Node x={195} y={30} title="Read the menu" sub="Nemotron 3 Super" kind="llm" />
-      <Node x={370} y={30} title="Write code" sub="Nemotron 3 Ultra" kind="llm" />
+      <Node x={370} y={30} title="Write code" sub="Super → Ultra" kind="llm" />
       <Node x={545} y={30} title="Run" sub="isolated sandbox" kind="det" />
       <Node x={720} y={30} title="Test" sub="precision · recall · F1" kind="det" />
 
@@ -232,7 +233,7 @@ function LoopList() {
     ['Discover', 'Tavily finds the site; Nemotron 3 Nano picks the menu page.', 'llm'],
     ['Read the menu', 'Nemotron 3 Super reads every dish — the oracle.', 'llm'],
     ['Reuse?', 'A same-platform extractor from the library may already work — 0 tokens.', 'det'],
-    ['Write code', 'Nemotron 3 Ultra writes a deterministic extractor.', 'llm'],
+    ['Write code', 'Nemotron 3 Super writes a deterministic extractor; Ultra takes over if repairs stall.', 'llm'],
     ['Run & test', 'Sandboxed run, scored on precision, recall and F1. Fail → repair.', 'det'],
     ['Commit', 'The passing extractor is versioned in the library.', 'det'],
     ['Nightly fleet', 'Re-runs everything for $0. A redesign that breaks code triggers self-heal.', 'det'],

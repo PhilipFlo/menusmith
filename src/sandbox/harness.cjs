@@ -42,6 +42,10 @@ const SANITIZE_SRC = `function (raw, max) {
   if (!Array.isArray(raw)) throw new Error('extract() must return an array, got ' + typeof raw);
   var clean = function (v, n) { return typeof v === 'string' ? v.replace(/\\s+/g, ' ').trim().slice(0, n) : (typeof v === 'number' && isFinite(v) ? String(v).slice(0, n) : ''); };
   var out = [];
+  // Exact repeats (same section, name and price — e.g. an API that lists a dish twice,
+  // or mobile + desktop copies of a page) carry no information: keep the first one.
+  var seen = Object.create(null);
+  var keyOf = function (s, n, p) { return (s || '').toLowerCase() + '|' + n.toLowerCase().replace(/\\s+/g, ' ') + '|' + (p === null ? '' : p); };
   for (var i = 0; i < raw.length && out.length < max; i++) {
     var it = raw[i];
     if (!it || typeof it !== 'object') continue;
@@ -50,7 +54,11 @@ const SANITIZE_SRC = `function (raw, max) {
     var price = it.price;
     if (typeof price === 'string') price = parsePrice(price);
     if (typeof price !== 'number' || !isFinite(price)) price = null;
-    out.push({ section: clean(it.section, 120) || null, name: name, description: clean(it.description, 500) || null, price: price, currency: clean(it.currency, 8) || null });
+    var section = clean(it.section, 120) || null;
+    var k = keyOf(section, name, price);
+    if (seen[k]) continue;
+    seen[k] = true;
+    out.push({ section: section, name: name, description: clean(it.description, 500) || null, price: price, currency: clean(it.currency, 8) || null });
   }
   return JSON.stringify(out);
 }`;

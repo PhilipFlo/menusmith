@@ -10,7 +10,7 @@ export interface Health {
   llmMode: 'live' | 'record' | 'replay' | string;
   nebius: boolean;
   tavily: boolean;
-  models: Partial<Record<'triage' | 'oracle' | 'forge' | 'vision', string>>;
+  models: Partial<Record<'triage' | 'oracle' | 'forge' | 'escalate' | 'vision', string>>;
 }
 
 export interface ForgeSummary {

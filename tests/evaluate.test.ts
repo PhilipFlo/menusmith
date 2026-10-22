@@ -170,3 +170,27 @@ describe('duplicates vs legitimately repeated dishes', () => {
     expect(scoreAgainstOracle(oracle, got, 'Pizza Margherita 159').duplicates).toBe(1);
   });
 });
+
+describe('matching order (page copies with different prices)', () => {
+  it('lets the correctly priced copy claim the reference item; the other copy is a duplicate', async () => {
+    const { scoreAgainstOracle } = await import('../src/agent/evaluate.ts');
+    const oracle = [{ section: 'Burger Middag', name: 'Hotshot Burger Middag', price: 205 }];
+    const got = [
+      { section: 'Burger Middag', name: 'Hotshot Burger Middag', price: 165 }, // "from 165" teaser copy first
+      { section: 'Burger Middag', name: 'Hotshot Burger Middag', price: 205 },
+    ];
+    const s = scoreAgainstOracle(oracle, got, 'Burger Middag Hotshot Burger Middag 205');
+    expect(s.matched).toBe(1);
+    expect(s.wrongPrice).toHaveLength(0);
+    expect(s.duplicates).toBe(1);
+  });
+  it('one entry per size/price is reported as a duplicate', async () => {
+    const { scoreAgainstOracle } = await import('../src/agent/evaluate.ts');
+    const oracle = [{ section: 'Pizza', name: 'Kebab Pizza', price: 185 }];
+    const got = [
+      { section: 'Pizza', name: 'Kebab Pizza', price: 185 },
+      { section: 'Pizza', name: 'Kebab Pizza', price: 245 },
+    ];
+    expect(scoreAgainstOracle(oracle, got, 'Pizza Kebab Pizza 185 245').duplicates).toBe(1);
+  });
+});

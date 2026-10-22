@@ -37,20 +37,52 @@ export function selectorReport(code: string, html: string): string | null {
   return `Selector check on the real page (whole document, ignoring nesting in your code):\n${lines.join('\n')}`;
 }
 
-/** For JSON sources: the top-level shape, so "0 items" can be traced to a wrong path. */
+// Also matches language/variant suffixes: nameNor, name_en, titleNo, priceInclVat, …
+const NAME_KEY = /^(name|title|navn|label)([A-Z_].*)?$|^(display|product|item|dish)_?name$/i;
+const PRICE_KEY = /^(price|pris|amount|cost)([A-Z_].*)?$|^(unit|base|gross|display|sale)_?price$/i;
+
+/**
+ * For JSON sources: where in the document the dishes actually are. Lists the array
+ * paths whose elements look like menu items (a name-ish and a price-ish key), with
+ * counts — written relative to the extractor's `data` argument, so a wrapper key
+ * like GraphQL's {"data": {...}} shows up as data.data.… and can't be missed.
+ */
 export function jsonShapeReport(payload: string): string | null {
+  let doc: unknown;
   try {
-    const data = JSON.parse(payload) as unknown;
-    const describe = (v: unknown): string =>
-      Array.isArray(v) ? `array(${v.length})` : v && typeof v === 'object' ? `object{${Object.keys(v).slice(0, 12).join(', ')}}` : typeof v;
-    if (Array.isArray(data)) return `Top level is ${describe(data)}; first element: ${describe(data[0])}`;
-    if (data && typeof data === 'object')
-      return `Top-level keys: ${Object.entries(data as Record<string, unknown>)
-        .slice(0, 20)
-        .map(([k, v]) => `${k}: ${describe(v)}`)
-        .join('; ')}`;
-    return `Top level is ${typeof data}`;
+    doc = JSON.parse(payload);
   } catch {
     return null;
   }
+  const found = new Map<string, { count: number; keys: Set<string> }>();
+  const walk = (v: unknown, path: string, depth: number) => {
+    if (depth > 14 || v === null || typeof v !== 'object') return;
+    if (Array.isArray(v)) {
+      const p = `${path}[]`;
+      for (const el of v) {
+        if (el && typeof el === 'object' && !Array.isArray(el)) {
+          const keys = Object.keys(el as object);
+          if (keys.some((k) => NAME_KEY.test(k)) && keys.some((k) => PRICE_KEY.test(k))) {
+            const f = found.get(p) || { count: 0, keys: new Set<string>() };
+            f.count++;
+            keys.slice(0, 14).forEach((k) => f.keys.add(k));
+            found.set(p, f);
+          }
+        }
+        walk(el, p, depth + 1);
+      }
+      return;
+    }
+    for (const [k, x] of Object.entries(v as Record<string, unknown>)) walk(x, /^[A-Za-z_$][\w$]*$/.test(k) ? `${path}.${k}` : `${path}[${JSON.stringify(k)}]`, depth + 1);
+  };
+  walk(doc, 'data', 0);
+  const top =
+    doc && typeof doc === 'object' && !Array.isArray(doc)
+      ? `The extractor's \`data\` argument is the whole document; its top-level keys are: ${Object.keys(doc as object).slice(0, 20).join(', ')}.`
+      : `The extractor's \`data\` argument is the whole document (top level: ${Array.isArray(doc) ? 'array' : typeof doc}).`;
+  const paths = [...found.entries()].sort((a, b) => b[1].count - a[1].count).slice(0, 6);
+  if (!paths.length) return `${top}\nNo arrays of {name, price}-like objects were found — prices may be nested (e.g. price.amount) or names under another key.`;
+  return `${top}\nArrays that contain menu-item-like objects (path relative to \`data\` → how many, their keys):\n${paths
+    .map(([p, f]) => `  ${p} → ${f.count} objects · keys: ${[...f.keys].join(', ')}`)
+    .join('\n')}`;
 }

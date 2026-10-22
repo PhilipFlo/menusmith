@@ -23,7 +23,9 @@ export const CONTRACT_JSON = `Write ONE JavaScript function with exactly this si
 
   function extract(data, ctx) { ... return items; }
 
-- data is the parsed JSON response of the restaurant's menu API (shape shown below; arrays are shortened in the sample — your code must walk ALL elements).
+- data is the parsed JSON response of the restaurant's menu API — the WHOLE document shown below (arrays are shortened in the sample; your code must walk ALL elements). If the document itself has a top-level key named "data" (common in GraphQL), you reach it as data.data.
+- MENU ITEM ARRAYS FOUND IN THIS DOCUMENT (paths relative to the data argument):
+{{PATHS}}
 - ctx.url is the restaurant's page URL.
 - Two helper globals exist: parsePrice(str|number) -> number|null, cleanText(str) -> trimmed string.
 - Return an array of {section, name, description, price}: section = category/group name (string or null), name = dish name, description = string or null, price = number in the menu currency or null.
@@ -61,8 +63,10 @@ export function initialMessagesJson(input: {
   method: string;
   jsonSkeleton: string;
   oracle: MenuItem[];
+  pathReport?: string | null;
 }): ChatMessage[] {
-  const user = `${CONTRACT_JSON}
+  const paths = (input.pathReport || '').split('\n').filter((l) => l.startsWith('  ')).join('\n') || '  (none detected automatically)';
+  const user = `${CONTRACT_JSON.replace('{{PATHS}}', paths)}
 
 RESTAURANT PAGE: ${input.url}
 PLATFORM: ${input.platform}
@@ -131,6 +135,8 @@ export function feedbackMessage(round: number, run: RunResult, score: Score | nu
       s.missing.slice(0, 15).map((i) => `- [${i.section ?? ''}] ${i.name} — ${i.price ?? 'no price'}`).join('\n'));
   if (s.wrongPrice.length)
     parts.push(`WRONG PRICE:\n` + s.wrongPrice.slice(0, 10).map((w) => `- ${w.name}: expected ${w.expected}, got ${w.got}`).join('\n'));
+  if (s.duplicates)
+    parts.push(`DUPLICATES: ${s.duplicates} dish(es) appear more than once in the same section (shown below as "(duplicate)"). The page may repeat its menu (mobile + desktop copies) or list a dish once per size/price — return each dish ONCE per section, with its first price.`);
   if (s.extra.length)
     parts.push(`NOT ON THE MENU (your output, not found in the reference or the page text):\n` +
       s.extra.slice(0, 10).map((i) => `- [${i.section ?? ''}] ${i.name} — ${i.price ?? ''}`).join('\n'));
@@ -164,14 +170,20 @@ export function detectHardcoding(code: string, oracle: MenuItem[]): string[] {
   return hits.length >= 3 ? hits : [];
 }
 
+/** Rounds handled by the forge model before escalating to the strongest model. */
+export const ESCALATE_AFTER = Number(process.env.MENUSMITH_ESCALATE_AFTER || 2);
+
 export async function writeCode(
   messages: ChatMessage[],
   round: number,
   ledger: Ledger,
   emit?: Emit,
 ): Promise<{ code: string | null; reply: string; reasoning?: string }> {
+  // Escalation: Nemotron 3 Super writes the first attempts; if they keep failing,
+  // Nemotron 3 Ultra takes over the same conversation for the harder reasoning.
+  const role = round <= ESCALATE_AFTER ? 'forge' : 'escalate';
   const r = await chat(
-    { role: 'forge', label: round === 1 ? 'forge' : `repair ${round - 1}`, thinking: true, maxTokens: 24_000, messages },
+    { role, label: round === 1 ? 'forge' : role === 'escalate' ? `repair ${round - 1} (escalated)` : `repair ${round - 1}`, thinking: true, maxTokens: 24_000, messages },
     ledger,
     emit,
   );

@@ -42,7 +42,7 @@ flowchart LR
   E --> F
   F --> G{Library extractor<br/>for this platform passes?}
   G -- yes --> K[Adopt — 0 tokens]
-  G -- no --> H[Forge<br/>Nemotron 3 Ultra writes extract()]
+  G -- no --> H[Forge<br/>Nemotron 3 Super writes extract()<br/>escalates to Ultra if stuck]
   H --> I[Sandbox run + score<br/>precision · recall · F1]
   I -- disputed items --> J[Arbitrate<br/>Nemotron 3 Nano]
   J --> I
@@ -59,7 +59,7 @@ flowchart LR
    JSON and re-runs replay the request directly — no browser, no HTML fragility.
 3. **Oracle** — Nemotron 3 Super reads the visible page (or the API data) and writes down the menu.
    Items whose names don't occur on the page are dropped (hallucination guard).
-4. **Forge** — Nemotron 3 Ultra, with reasoning on, writes `extract($, ctx)` (cheerio) or
+4. **Forge** — Nemotron 3 Super, with reasoning on, writes `extract($, ctx)` (cheerio) or
    `extract(data, ctx)` (JSON) against a compact skeleton of the page: the menu region is located
    by price density and long runs of identical items are collapsed.
 5. **Test** — the code runs in an isolated sandbox and is scored against the oracle. Code that
@@ -67,8 +67,10 @@ flowchart LR
 6. **Arbitrate** — when the code and the reading disagree on specific items (add-on options,
    promo banners, a dish the reading skimmed past), **Nemotron 3 Nano rules on each one** and both
    sides are corrected. The extractor is only penalised for real mistakes.
-7. **Repair** — failures go back to Ultra as concrete feedback (missing dishes, wrong prices,
-   runtime errors with line numbers). Repairs stop early if they stop improving.
+7. **Repair + escalation** — failures go back as concrete feedback (missing dishes, wrong
+   prices, duplicates, runtime errors with line numbers, a selector-by-selector execution
+   trace, or the exact JSON paths that hold dishes). If two rounds don't fix it, **Nemotron 3
+   Ultra takes over the same conversation**. Repairs stop early if they stop improving.
 8. **Commit** — only after a second run proves the output is deterministic.
 9. **Fleet** — re-runs every extractor at zero token cost. Unchanged → stable. Plausible change →
    recorded as price changes. Broken (0 items, collapsed count, lost prices) → the oracle checks
@@ -99,7 +101,8 @@ that does each job well:
 |---|---|---|---|
 | Triage (menu links), arbitration | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` | many small yes/no calls, $0.06/M in | thinking off, JSON mode |
 | Oracle (read the menu) | `nvidia/nemotron-3-super-120b-a12b` | long structured extraction, 262K context | thinking off, JSON mode, chunked |
-| Forge + repair (write code) | `nvidia/Nemotron-3-Ultra-550b-a55b` | reasoning about HTML/JSON structure | thinking **on**, multi-turn with test feedback |
+| Forge + repair (write code) | `nvidia/nemotron-3-super-120b-a12b` | solves most sites in 1–2 rounds at a third of Ultra's price | thinking **on**, multi-turn with test feedback |
+| Escalation (hard repairs) | `nvidia/Nemotron-3-Ultra-550b-a55b` | strongest reasoning, only when Super is stuck | thinking **on**, continues the same conversation |
 | Vision (image/PDF menus, roadmap) | `nvidia/Nemotron-3.5-Super-VL` | — | — |
 
 - Reasoning is toggled per call with `chat_template_kwargs.enable_thinking`; the model's reasoning

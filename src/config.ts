@@ -4,14 +4,15 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-export type Role = 'triage' | 'oracle' | 'forge' | 'vision';
+export type Role = 'triage' | 'oracle' | 'forge' | 'escalate' | 'vision';
 export type LlmMode = 'live' | 'record' | 'replay';
 
 /**
  * Model routing — the cheapest model that can do each job well.
  *   triage  : yes/no + link picking, called many times      → Nemotron 3 Nano
  *   oracle  : read a whole menu page into structured JSON    → Nemotron 3 Super
- *   forge   : write and repair extractor code (reasoning)    → Nemotron 3 Ultra
+ *   forge   : write and repair extractor code (reasoning)    → Nemotron 3 Super
+ *   escalate: repairs that Super couldn't fix                 → Nemotron 3 Ultra
  * Each role has a fallback chain used when a model is unavailable or rate-limited.
  */
 export const MODELS: Record<Role, string[]> = {
@@ -23,8 +24,13 @@ export const MODELS: Record<Role, string[]> = {
     process.env.MENUSMITH_MODEL_ORACLE || 'nvidia/nemotron-3-super-120b-a12b',
     'nvidia/Nemotron-3-Ultra-550b-a55b',
   ],
+  // Code writing starts on Super (reasoning on) and escalates to Ultra when repairs stall.
   forge: [
-    process.env.MENUSMITH_MODEL_FORGE || 'nvidia/Nemotron-3-Ultra-550b-a55b',
+    process.env.MENUSMITH_MODEL_FORGE || 'nvidia/nemotron-3-super-120b-a12b',
+    'nvidia/Nemotron-3-Ultra-550b-a55b',
+  ],
+  escalate: [
+    process.env.MENUSMITH_MODEL_ESCALATE || 'nvidia/Nemotron-3-Ultra-550b-a55b',
     'nvidia/nemotron-3-super-120b-a12b',
   ],
   // Image / scanned-PDF menus — NVIDIA's own vision-language model on Token Factory.

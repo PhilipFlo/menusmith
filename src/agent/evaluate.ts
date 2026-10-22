@@ -68,45 +68,69 @@ export function scoreAgainstOracle(
   let groundedExtras = 0;
   let duplicates = 0;
 
-  for (const ex of e) {
-    // Best unused oracle item by name, preferring one whose price also agrees.
+  // Phase 1 — exact pairs: same dish name AND same price. Done first so that when a
+  // page repeats a dish (mobile + desktop copies, "from 165" vs "205"), the correctly
+  // priced copy claims the reference item instead of whichever copy came first.
+  const matched = new Array<boolean>(e.length).fill(false);
+  for (let k = 0; k < e.length; k++) {
+    const ex = e[k]!;
     let best = -1;
-    let bestScore = 0;
+    let bestSim = 0;
+    for (let i = 0; i < o.length; i++) {
+      const cand = o[i]!;
+      if (cand.used || !samePrice(ex.it.price, cand.it.price)) continue;
+      const sim = nameSimilarity(ex.n, cand.n);
+      if (sim >= 0.6 && sim > bestSim) {
+        bestSim = sim;
+        best = i;
+      }
+    }
+    if (best >= 0) {
+      o[best]!.used = true;
+      matched[k] = true;
+      nameMatched++;
+      correct++;
+    }
+  }
+  // Phase 2 — same dish, different price.
+  for (let k = 0; k < e.length; k++) {
+    if (matched[k]) continue;
+    const ex = e[k]!;
+    // A second copy of a dish already matched in the same section is a duplicate,
+    // not a candidate for another reference item.
+    const dupOf = o.find((c) => c.used && nameSimilarity(ex.n, c.n) >= 0.9 && normName(c.it.section ?? '') === normName(ex.it.section ?? ''));
+    if (dupOf) continue;
+    let best = -1;
+    let bestSim = 0;
     for (let i = 0; i < o.length; i++) {
       const cand = o[i]!;
       if (cand.used) continue;
       const sim = nameSimilarity(ex.n, cand.n);
-      if (sim < 0.6) continue;
-      const s = sim + (samePrice(ex.it.price, cand.it.price) ? 0.5 : 0);
-      if (s > bestScore) {
-        bestScore = s;
+      if (sim >= 0.6 && sim > bestSim) {
+        bestSim = sim;
         best = i;
       }
     }
     if (best >= 0) {
       const cand = o[best]!;
       cand.used = true;
+      matched[k] = true;
       nameMatched++;
-      if (samePrice(ex.it.price, cand.it.price)) correct++;
-      else if (wrongPrice.length < MAX_LISTED)
-        wrongPrice.push({ name: cand.it.name, expected: cand.it.price, got: ex.it.price });
-    } else if (
-      o.some(
-        (c) =>
-          c.used &&
-          nameSimilarity(ex.n, c.n) >= 0.9 &&
-          normName(c.it.section ?? '') === normName(ex.it.section ?? '') &&
-          samePrice(c.it.price, ex.it.price),
-      )
-    ) {
-      // A second copy of a dish we already matched, in the same section at the same
-      // price (mobile + desktop copies, or a container matched as an item) — an error.
-      // The same dish listed under two different sections is legitimate and goes to
-      // the grounded/arbitration path instead.
+      if (wrongPrice.length < MAX_LISTED) wrongPrice.push({ name: cand.it.name, expected: cand.it.price, got: ex.it.price });
+    }
+  }
+  // Phase 3 — classify what's left.
+  for (let k = 0; k < e.length; k++) {
+    if (matched[k]) continue;
+    const ex = e[k]!;
+    if (o.some((c) => c.used && nameSimilarity(ex.n, c.n) >= 0.9 && normName(c.it.section ?? '') === normName(ex.it.section ?? ''))) {
+      // The same dish listed twice in one section (page copies, or one entry per
+      // size/price) — always an error: one entry per dish, first price.
       duplicates++;
       if (extra.length < MAX_LISTED) extra.push({ ...ex.it, name: `${ex.it.name} (duplicate)` });
     } else if (ex.n && page.includes(ex.n) && !opts.rejected?.has(ex.n)) {
-      // On the page but not in the reference: the oracle may have missed it.
+      // On the page but not in the reference (a different section, or a dish the
+      // oracle missed) — arbitration decides.
       groundedExtras++;
       if (grounded.length < MAX_LISTED) grounded.push(ex.it);
     } else if (extra.length < MAX_LISTED) {
