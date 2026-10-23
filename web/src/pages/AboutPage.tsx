@@ -8,7 +8,7 @@ const ROUTING = [
   { role: 'oracle', label: 'Oracle', fallback: 'nvidia/nemotron-3-super-120b-a12b', job: 'Read a whole menu page into structured dishes and prices', why: 'Long context and careful reading at a mid-tier price', price: '$0.30 · $0.90' },
   { role: 'forge', label: 'Forge & repair', fallback: 'nvidia/nemotron-3-super-120b-a12b', job: 'Write the extractor, then fix it from test feedback (reasoning on)', why: 'Solves most sites in one or two rounds at a third of the price', price: '$0.30 · $0.90' },
   { role: 'escalate', label: 'Escalation', fallback: 'nvidia/Nemotron-3-Ultra-550b-a55b', job: 'Take over repairs that Super could not fix in two rounds', why: 'Strongest reasoning, spent only on the hard cases', price: '$1.00 · $3.00' },
-  { role: 'vision', label: 'Vision', fallback: 'nvidia/Nemotron-3.5-Super-VL', job: 'Read image and scanned-PDF menus', why: "For menus that aren't text at all", price: '$0.30 · $0.90' },
+  { role: 'vision', label: 'Vision', fallback: 'nvidia/Nemotron-3.5-Super-VL', job: 'Read menus published as images (PDF menus are read from their text layer by Super)', why: "For menus that aren't text at all", price: '$0.30 · $0.90' },
 ] as const;
 
 const SANDBOX = [
@@ -22,8 +22,7 @@ const SANDBOX = [
 
 const SERVICES = [
   { t: 'Nebius Token Factory', d: 'Serves every NVIDIA Nemotron model Menusmith calls, through one OpenAI-compatible API, with per-call token and cost accounting.', tag: 'Inference' },
-  { t: 'Nebius Serverless Jobs', d: 'Runs the nightly fleet: re-scrape every extractor, detect drift, and heal what broke — then shut down.', tag: 'Fleet' },
-  { t: 'Nebius Serverless Endpoints', d: 'Hosts this app and its API.', tag: 'Hosting' },
+  { t: 'Nebius AI Cloud Serverless', d: 'Deployment scripts for an Endpoint (this app, full image with the headless browser) and a Job (the nightly fleet). This public demo runs on a free host with the slim image; the fleet runs as a scheduled job.', tag: 'Hosting' },
   { t: 'Tavily', d: 'Finds the official website from a restaurant name, and maps the site to locate the menu page.', tag: 'Search' },
 ];
 
@@ -201,7 +200,7 @@ function LoopDiagram() {
 
       {/* Row 2 */}
       <Node x={720} y={210} title="Commit" sub="versioned in the library" kind="det" />
-      <Node x={420} y={210} w={200} title="Nightly fleet" sub="re-run all · $0 · Serverless Jobs" kind="det" />
+      <Node x={420} y={210} w={200} title="Nightly fleet" sub="re-run all · $0 · scheduled job" kind="det" />
       <Node x={20} y={210} w={210} title="Price index" sub="dishes & prices over time" kind="out" />
 
       <path className="dg-arrow" d="M718 242H622" markerEnd="url(#dg-arrow)" />
@@ -259,8 +258,63 @@ function renderValue(v: unknown): string {
 
 function BenchView({ data }: { data: unknown }) {
   if (typeof data !== 'object' || data === null) return null;
-  const d = data as { summary?: unknown; rows?: unknown };
-  const summary = d.summary && typeof d.summary === 'object' && !Array.isArray(d.summary) ? Object.entries(d.summary as Record<string, unknown>) : [];
+  const d = data as { summary?: Record<string, unknown>; rows?: unknown };
+  const sm = (d.summary && typeof d.summary === 'object' ? d.summary : {}) as Record<string, unknown>;
+  const rescue = (sm.rescue && typeof sm.rescue === 'object' ? sm.rescue : {}) as Record<string, unknown>;
+  if (typeof sm.sites === 'number' && Array.isArray(d.rows)) {
+    const rowsR = d.rows as Record<string, unknown>[];
+    const tiles: [string, string][] = [
+      ['Working extractor, from the homepage', String(rescue.successFromHomepageIncludingRescue ?? '—')],
+      ['…from the stored menu link alone', `${sm.succeeded}/${sm.sites} (${sm.successRate}%)`],
+      ['Sites with a text menu', `${sm.successRateOnHtmlMenus}%`],
+      ['Pass on the first attempt', `${sm.firstTryPassRate}% of written extractors`],
+      ['Average F1 vs. the reading', String(sm.avgF1Oracle)],
+      ['Deterministic re-runs', `${sm.deterministicRate}% (${sm.deterministicMeasured ?? ''})`],
+      ['Median re-run', `${sm.medianRerunMs} ms · $0`],
+      ['PDF / image menus read', `${sm.pdfMenus ?? 0} / ${sm.imageMenus ?? 0}`],
+    ];
+    const label = (r: Record<string, unknown>) =>
+      r.ok ? `${r.mode}${r.sourceKind ? ' · ' + r.sourceKind : ''}` : (r.rescue as { ok?: boolean; mode?: string } | undefined)?.ok ? `rescued · ${(r.rescue as { mode?: string }).mode}` : String(r.category ?? 'failed');
+    return (
+      <Panel title="Benchmark — 120 real restaurant websites" subtitle="One clean run of the final code across Oslo and Palo Alto, plus a homepage rescue pass. Failures are listed, not hidden.">
+        <dl className="facts facts-grid">
+          {tiles.map(([k, v]) => (
+            <div key={k}>
+              <dt>{k}</dt>
+              <dd className="num">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="table-wrap" style={{ maxHeight: 420 }}>
+          <table className="table table-compact">
+            <thead>
+              <tr>
+                <th scope="col">Restaurant</th>
+                <th scope="col">City</th>
+                <th scope="col">Result</th>
+                <th scope="col" className="right">Rounds</th>
+                <th scope="col" className="right">Dishes</th>
+                <th scope="col" className="right">One-time cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rowsR.map((r, i) => (
+                <tr key={i}>
+                  <td>{String(r.name ?? '')}</td>
+                  <td>{String(r.city ?? '')}</td>
+                  <td className={r.ok || (r.rescue as { ok?: boolean } | undefined)?.ok ? 'pass-text' : 'muted'}>{label(r)}</td>
+                  <td className="num right">{r.ok ? String(r.rounds ?? '') : ''}</td>
+                  <td className="num right">{r.ok ? String(r.extracted ?? '') : ''}</td>
+                  <td className="num right">{typeof r.costUsd === 'number' ? `$${(r.costUsd as number).toFixed(4)}` : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    );
+  }
+  const summary = Object.entries(sm);
   const rows = Array.isArray(d.rows) ? (d.rows.filter((r) => r && typeof r === 'object') as Record<string, unknown>[]) : [];
   const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))].slice(0, 10);
   if (!summary.length && !rows.length) return null;
