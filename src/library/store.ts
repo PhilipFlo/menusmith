@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config } from '../config.ts';
+import { mirror, writePersisted } from './persist.ts';
 import type { ExtractorMeta, Platform } from '../types.ts';
 
 /**
@@ -95,6 +96,7 @@ export function saveExtractor(meta: Omit<ExtractorMeta, 'version' | 'history'>, 
     };
     try {
       writeFileSync(resolve(folder, `v${version}.js`), header(full) + code.trim() + '\n', { flag: 'wx' });
+      mirror(resolve(folder, `v${version}.js`));
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === 'EEXIST') {
         version++;
@@ -105,6 +107,7 @@ export function saveExtractor(meta: Omit<ExtractorMeta, 'version' | 'history'>, 
     const tmp = resolve(folder, `.meta.${process.pid}.${version}.tmp`);
     writeFileSync(tmp, JSON.stringify(full, null, 2) + '\n');
     renameSync(tmp, resolve(folder, 'meta.json'));
+    mirror(resolve(folder, 'meta.json'));
     return full;
   }
 }
@@ -116,7 +119,7 @@ export function updateBaseline(id: string, baselineHash: string, baselineCount: 
   const meta = JSON.parse(readFileSync(metaFile, 'utf8')) as ExtractorMeta;
   meta.baselineHash = baselineHash;
   meta.baselineCount = baselineCount;
-  writeFileSync(metaFile, JSON.stringify(meta, null, 2) + '\n');
+  writePersisted(metaFile, JSON.stringify(meta, null, 2) + '\n');
 }
 
 /** Extractors on the same website platform — candidates for zero-token reuse. */
@@ -136,7 +139,7 @@ export function loadSnapshot(id: string): import('../types.ts').MenuItem[] | nul
 export function saveSnapshot(id: string, items: import('../types.ts').MenuItem[]): void {
   const d = resolve(config.libraryDir, 'snapshots');
   mkdirSync(d, { recursive: true });
-  writeFileSync(resolve(d, `${id}.json`), JSON.stringify(items, null, 1) + '\n');
+  writePersisted(resolve(d, `${id}.json`), JSON.stringify(items, null, 1) + '\n');
 }
 
 /** Image menus: record the fingerprints of the pictures just read, and the new baseline. */
@@ -147,7 +150,7 @@ export function updateImageSource(id: string, images: { url: string; sha256: str
   meta.source = { kind: 'image', request: { ...(meta.source?.request ?? { url: meta.url, method: 'GET' }), images } };
   meta.baselineHash = baselineHash;
   meta.baselineCount = baselineCount;
-  writeFileSync(metaFile, JSON.stringify(meta, null, 2) + '\n');
+  writePersisted(metaFile, JSON.stringify(meta, null, 2) + '\n');
 }
 
 /** PDF menus: record the fingerprint of the file just read, and the new baseline. */
@@ -158,5 +161,5 @@ export function updateDocumentSource(id: string, document: { url: string; sha256
   meta.source = { kind: 'document', request: { ...(meta.source?.request ?? { url: meta.url, method: 'GET' }), document } };
   meta.baselineHash = baselineHash;
   meta.baselineCount = baselineCount;
-  writeFileSync(metaFile, JSON.stringify(meta, null, 2) + '\n');
+  writePersisted(metaFile, JSON.stringify(meta, null, 2) + '\n');
 }

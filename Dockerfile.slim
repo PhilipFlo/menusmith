@@ -1,0 +1,24 @@
+# Slim image for small / free hosts (e.g. Render free: 512 MB RAM, 0.1 CPU).
+# No Chromium: menus that only exist after JavaScript runs are skipped; server HTML,
+# captured-API (JSON) re-runs, PDF menus and image menus all work. The full image
+# (Dockerfile) adds the headless browser for Nebius AI Cloud or any bigger host.
+FROM node:22-slim
+
+WORKDIR /app
+ENV NODE_ENV=production \
+    PORT=8790 \
+    MENUSMITH_LLM=live \
+    MENUSMITH_RENDER=off \
+    MENUSMITH_MAX_CONCURRENT=1 \
+    MENUSMITH_FLEET_CONCURRENCY=1 \
+    MENUSMITH_SANDBOX_TIMEOUT_MS=60000 \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev --no-audit --no-fund
+
+COPY . .
+RUN npm run build && rm -rf .env .cache bench/private
+
+EXPOSE 8790
+CMD ["npx", "tsx", "src/server/index.ts"]

@@ -11,6 +11,7 @@ import { forge } from '../agent/pipeline.ts';
 import { fleetHistory, runFleet } from '../fleet/fleet.ts';
 import type { AgentEvent } from '../types.ts';
 import { Ledger } from '../llm/client.ts';
+import { hydrate, storeEnabled } from '../library/persist.ts';
 
 const app = new Hono();
 
@@ -69,6 +70,8 @@ app.get('/api/health', (c) =>
     llmMode: config.llmMode,
     nebius: !!config.nebiusApiKey,
     tavily: !!config.tavilyApiKey,
+    browser: process.env.MENUSMITH_RENDER !== 'off',
+    store: storeEnabled(),
     budget: { dailyUsd: DAILY_BUDGET_USD, leftUsd: Math.max(0, Math.round(budgetLeft() * 100) / 100) },
     models: Object.fromEntries(Object.entries(MODELS).map(([k, v]) => [k, v[0]])),
   }),
@@ -213,6 +216,14 @@ const shippedLibrary = resolve(ROOT, 'library');
 if (config.libraryDir !== shippedLibrary && existsSync(shippedLibrary) && !existsSync(resolve(config.libraryDir, 'extractors'))) {
   cpSync(shippedLibrary, config.libraryDir, { recursive: true });
   console.log(`Seeded library at ${config.libraryDir} from the image`);
+}
+
+// Durable store (ephemeral hosts): restore the library before serving.
+try {
+  const h = await hydrate();
+  if (storeEnabled()) console.log(`Store: restored ${h.restored} file(s)${h.seeded ? `, seeded ${h.seeded} from the image` : ''}`);
+} catch (e) {
+  console.warn(`Store unavailable, continuing with local files: ${(e as Error).message}`);
 }
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {

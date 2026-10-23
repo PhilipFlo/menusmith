@@ -1,0 +1,36 @@
+# Nightly fleet on a free GitHub Actions runner (Render's free tier has no cron jobs).
+# Restores the library from the durable store, re-runs every extractor (zero tokens
+# when nothing changed), heals what broke, and mirrors results back — the web app
+# shows them on its next request. Same command as the Nebius Serverless Job.
+name: fleet
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC daily
+  workflow_dispatch:
+
+concurrency: fleet
+
+jobs:
+  fleet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      MENUSMITH_STORE_URL: ${{ secrets.MENUSMITH_STORE_URL }}
+      MENUSMITH_STORE_KEY: ${{ secrets.MENUSMITH_STORE_KEY }}
+      MENUSMITH_STORE_TOKEN: ${{ secrets.MENUSMITH_STORE_TOKEN }}
+      MENUSMITH_LLM: live
+      # Hard ceiling on model spend per nightly run.
+      MENUSMITH_MAX_JOB_USD: '0.4'
+      MENUSMITH_TOTAL_BUDGET_USD: '1.5'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run the fleet
+        run: npx tsx src/cli.ts fleet

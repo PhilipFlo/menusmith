@@ -1,0 +1,31 @@
+# Render Blueprint — free web service running the slim image.
+# Secrets are declared with `sync: false`: Render asks for their values in the
+# dashboard when the Blueprint is created; they are never stored in this repo.
+services:
+  - type: web
+    name: menusmith
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile.slim
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NEBIUS_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: MENUSMITH_STORE_URL
+        sync: false
+      - key: MENUSMITH_STORE_KEY
+        sync: false
+      - key: MENUSMITH_STORE_TOKEN
+        sync: false
+      - key: MENUSMITH_ADMIN_TOKEN
+        sync: false
+      - key: MENUSMITH_DAILY_BUDGET_USD
+        value: "2"
+      - key: MENUSMITH_MAX_JOB_USD
+        value: "0.4"
+      - key: MENUSMITH_FORGES_PER_HOUR
+        value: "10"

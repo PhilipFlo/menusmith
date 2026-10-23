@@ -7,7 +7,10 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const HARNESS = resolve(HERE, 'harness.cjs');
 const NODE_MODULES = resolve(HERE, '../../node_modules');
 
-const WALL_TIMEOUT_MS = 12_000;
+/** Wall-clock limit per run. Raise on slow hosts (e.g. 0.1 CPU free tiers): MENUSMITH_SANDBOX_TIMEOUT_MS. */
+const WALL_TIMEOUT_MS = Number(process.env.MENUSMITH_SANDBOX_TIMEOUT_MS || 12_000);
+/** CPU budget for the extractor itself inside the vm, scaled with the wall limit. */
+const CPU_TIMEOUT_MS = Math.max(4_000, Math.round(WALL_TIMEOUT_MS / 3));
 const MAX_ITEMS = 3000;
 
 /** Never trust the child's output shape: re-validate and cap on the host side too. */
@@ -104,6 +107,8 @@ export function runExtractor(code: string, payload: string, url: string, mode: '
     });
 
     child.stdin.on('error', () => {});
-    child.stdin.end(JSON.stringify(mode === 'json' ? { code, json: payload, url, mode } : { code, html: payload, url, mode }));
+    child.stdin.end(
+      JSON.stringify(mode === 'json' ? { code, json: payload, url, mode, cpuMs: CPU_TIMEOUT_MS } : { code, html: payload, url, mode, cpuMs: CPU_TIMEOUT_MS }),
+    );
   });
 }

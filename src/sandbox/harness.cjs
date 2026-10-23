@@ -162,7 +162,8 @@ async function main() {
       `"use strict";\n${input.code}\n;__result = (${SANITIZE_SRC})(extract(${isJson ? 'data' : '$'}, ctx), ${MAX_ITEMS});`,
       { filename: 'extractor.js' },
     );
-    script.runInContext(sandbox, { timeout: CPU_TIMEOUT_MS });
+    const cpuMs = Math.min(60_000, Math.max(1_000, Number(input.cpuMs) || CPU_TIMEOUT_MS));
+    script.runInContext(sandbox, { timeout: cpuMs });
     if (typeof sandbox.__result !== 'string') throw new Error('extractor result could not be serialised');
     const items = JSON.parse(sandbox.__result);
     process.stdout.write(JSON.stringify({ ok: true, items, ms: Date.now() - t0, trace: summarizeTrace(trace) }) + '\n');

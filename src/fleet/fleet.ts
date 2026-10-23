@@ -6,6 +6,7 @@ import { reacquire } from '../agent/acquire.ts';
 import { priceDensity } from '../agent/discover.ts';
 import { pageText } from '../html/simplify.ts';
 import { Ledger } from '../llm/client.ts';
+import { writePersisted } from '../library/persist.ts';
 import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateDocumentSource, updateImageSource, type StoredExtractor } from '../library/store.ts';
 import { fetchPdf, pdfText } from '../agent/document.ts';
 import { fetchImage, findMenuImages, readMenuImages } from '../agent/vision.ts';
@@ -167,6 +168,11 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
     return done({ status: 'stable', detail: `${run.items.length} items, unchanged`, items: run.items.length, changes: [] });
   }
 
+  // A sandbox timeout / crash says nothing about the website — never "heal" code
+  // because the host was slow or overloaded.
+  if (!run.ok && /timed out after|sandbox crashed|spawn failed|output too large/i.test(run.error || '')) {
+    return done({ status: 'error', detail: `sandbox: ${run.error} (infrastructure, not a site change — not healed)`, items: 0, changes: [] });
+  }
   const broken = run.ok ? looksBroken(run.items, x.meta.baselineCount, x.meta.baselinePriced ?? 1) : `crashed: ${run.error}`;
   const suspicious = !broken && run.ok ? looksSuspicious(run.items, prev, x.meta.baselineCount) : null;
   if (!broken && !suspicious) {
@@ -332,7 +338,7 @@ export async function runFleet(
   if (opts.only?.length) xs = xs.filter((x) => opts.only!.includes(x.meta.id));
   const entries: FleetEntry[] = [];
   const queue = [...xs];
-  const workers = Array.from({ length: Math.max(1, opts.concurrency ?? 4) }, async () => {
+  const workers = Array.from({ length: Math.max(1, opts.concurrency ?? Number(process.env.MENUSMITH_FLEET_CONCURRENCY || 4)) }, async () => {
     while (queue.length) {
       const x = queue.shift()!;
       entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget }));
@@ -359,7 +365,7 @@ export async function runFleet(
     },
   };
   mkdirSync(reportDir(), { recursive: true });
-  writeFileSync(resolve(reportDir(), `${startedAt.replace(/[:.]/g, '-')}.json`), JSON.stringify(report, null, 2));
+  writePersisted(resolve(reportDir(), `${startedAt.replace(/[:.]/g, '-')}.json`), JSON.stringify(report, null, 2));
   return report;
 }
 

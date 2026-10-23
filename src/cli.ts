@@ -6,6 +6,7 @@ import { listExtractors } from './library/store.ts';
 import { forge } from './agent/pipeline.ts';
 import { runFleet } from './fleet/fleet.ts';
 import { closeBrowser } from './html/render.ts';
+import { flush, hydrate, storeEnabled } from './library/persist.ts';
 import type { AgentEvent } from './types.ts';
 
 const [cmd, ...rest] = process.argv.slice(2);
@@ -46,6 +47,11 @@ function printer(verbose: boolean) {
 }
 
 async function main() {
+  // Ephemeral runners (GitHub Actions, serverless jobs): restore the library first.
+  if (storeEnabled()) {
+    const h = await hydrate();
+    console.log(`store: restored ${h.restored} file(s)${h.seeded ? `, seeded ${h.seeded}` : ''}`);
+  }
   // A Serverless Job may start on an empty shared volume — seed it from the image.
   const shipped = resolve(ROOT, 'library');
   if (config.libraryDir !== shipped && existsSync(shipped) && !existsSync(resolve(config.libraryDir, 'extractors')))
@@ -105,4 +111,8 @@ main()
     process.exitCode = 1;
   })
   // The headless browser keeps the event loop alive — close it so the command exits.
-  .finally(() => closeBrowser());
+  // Uploads to the durable store must finish before the process exits.
+  .finally(async () => {
+    await closeBrowser();
+    await flush();
+  });

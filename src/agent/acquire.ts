@@ -46,8 +46,34 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
   if (staticDensity >= STATIC_OK) {
     return { kind: 'html', url: start.finalUrl, payload: start.html, html: start.html, text: staticText, note: `server-rendered HTML (${staticDensity} prices)` };
   }
-  if (opts.allowRender === false || !/^https?:/i.test(start.finalUrl)) {
-    return { kind: 'html', url: start.finalUrl, payload: start.html, html: start.html, text: staticText, note: `static HTML only (${staticDensity} prices)` };
+  const renderAllowed = opts.allowRender !== false && process.env.MENUSMITH_RENDER !== 'off';
+  if (!renderAllowed || !/^https?:/i.test(start.finalUrl)) {
+    // No browser available (e.g. a small free-tier host): PDF and image menus linked
+    // from the plain HTML can still be read.
+    if (staticDensity < 5 && /^https?:/i.test(start.finalUrl)) {
+      const pdfs = menuPdfLinks(start.html, start.finalUrl, cheerio);
+      if (pdfs.length)
+        return { kind: 'document', url: start.finalUrl, payload: pdfs[0]!, html: start.html, text: staticText, request: { url: pdfs[0]!, method: 'GET' }, note: `PDF menu ${pdfs[0]}` };
+      const imgs = findMenuImages(start.html, start.finalUrl);
+      if (imgs.length)
+        return {
+          kind: 'image',
+          url: start.finalUrl,
+          payload: JSON.stringify(imgs),
+          html: start.html,
+          text: staticText,
+          request: { url: start.finalUrl, method: 'GET', images: imgs.map((u) => ({ url: u, sha256: '' })) },
+          note: `menu images: ${imgs.map((u) => u.split('/').pop()).join(', ')}`,
+        };
+    }
+    return {
+      kind: 'html',
+      url: start.finalUrl,
+      payload: start.html,
+      html: start.html,
+      text: staticText,
+      note: renderAllowed ? `static HTML only (${staticDensity} prices)` : `static HTML only (${staticDensity} prices; headless browser disabled on this host)`,
+    };
   }
 
   emit({ type: 'step', step: 'render', status: 'start', detail: 'Menu not in the HTML — rendering with a headless browser and watching its API calls' });
