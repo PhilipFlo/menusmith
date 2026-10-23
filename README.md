@@ -10,7 +10,7 @@ same answer every time**. When a website redesign breaks an extractor, the fleet
 agent heals its own code.
 
 > Nebius × NVIDIA Global AI Hackathon 2026 · Track: **Coding and Agentic Engineering**
-> Demo video: _(link)_ · Live demo: _(link)_
+> **Live demo: https://menusmith.onrender.com** (free tier — the first request after a quiet spell takes ~1 min to wake up) · Demo video: _(link)_
 
 ---
 
