@@ -52,7 +52,7 @@ if (real) {
       : '',
     `| Passed on the first attempt | ${pct(rounds.filter((r) => r === 1).length, rounds.length)} of forged extractors |`,
     `| Adopted from the library (zero new code) | ${ok.filter((r) => r.mode === 'reused').length} sites |`,
-    `| Deterministic on re-run (3 runs, identical output) | ${pct(ok.filter((r) => r.deterministic === true).length, ok.filter((r) => r.deterministic != null).length)} |`,
+    `| Deterministic on re-run (3 runs, identical output) | ${pct(ok.filter((r) => r.deterministic === true).length, ok.filter((r) => r.deterministic != null).length)} (${ok.filter((r) => r.deterministic === true).length}/${ok.filter((r) => r.deterministic != null).length} measured) |`,
     `| Median one-time cost per site | ${usd(median(costs))} |`,
     `| Median re-run time | ${median(ok.filter((r) => r.rerunMs != null).map((r) => r.rerunMs))} ms, **$0** |`,
     `| Precision vs. nearBite's independently scraped menus | ${real.summary.avgPrecisionVsNearBite} |`,

@@ -145,7 +145,12 @@ function summarise(rows: Record<string, unknown>[]) {
     firstTryPassRate: forgedOk.length ? Math.round((forgedOk.filter((r) => r.rounds === 1).length / forgedOk.length) * 1000) / 10 : 0,
     pdfMenus: ok.filter((r) => r.mode === 'document').length,
     imageMenus: ok.filter((r) => r.mode === 'vision').length,
-    deterministicRate: ok.length ? Math.round((ok.filter((r) => r.deterministic === true).length / ok.length) * 1000) / 10 : 0,
+    // Over runs where determinism could be measured (a re-fetch can fail independently).
+    deterministicRate: (() => {
+      const m = ok.filter((r) => r.deterministic != null);
+      return m.length ? Math.round((m.filter((r) => r.deterministic === true).length / m.length) * 1000) / 10 : 0;
+    })(),
+    deterministicMeasured: `${ok.filter((r) => r.deterministic === true).length}/${ok.filter((r) => r.deterministic != null).length}`,
     avgF1Oracle: Math.round(avg(forgedOk.map((r) => r.f1Oracle as number)) * 1000) / 1000,
     avgPrecisionVsNearBite: Math.round(avg(ok.filter((r) => r.precisionReference != null).map((r) => r.precisionReference as number)) * 1000) / 1000,
     avgRecallVsNearBite: Math.round(avg(ok.filter((r) => r.recallReference != null).map((r) => r.recallReference as number)) * 1000) / 1000,
@@ -189,10 +194,15 @@ async function main() {
   const mergeInto = arg('--merge-into');
   if (mergeInto) {
     const f = resolve(ROOT, 'bench/results', `${mergeInto}.json`);
-    const prev = JSON.parse(readFileSync(f, 'utf8')) as { runAt: string; rows: Record<string, unknown>[] };
+    const prev = JSON.parse(readFileSync(f, 'utf8')) as { runAt: string; rows: Record<string, unknown>[]; summary?: Record<string, unknown> };
     const fresh = new Map(rows.map((r) => [r.name, r]));
     const merged = prev.rows.map((r) => fresh.get(r.name) ?? r);
-    const out = { runAt: prev.runAt, rerunAt: new Date().toISOString(), summary: summarise(merged), rows: merged };
+    const out = {
+      runAt: prev.runAt,
+      rerunAt: new Date().toISOString(),
+      summary: { ...summarise(merged), ...(prev.summary?.rescue ? { rescue: prev.summary.rescue } : {}) },
+      rows: merged,
+    };
     writeFileSync(f, JSON.stringify(out, null, 2));
     console.log(`\nMerged ${fresh.size} re-run site(s) into ${mergeInto}.json\n`, JSON.stringify(out.summary, null, 2));
     return;

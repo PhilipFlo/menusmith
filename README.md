@@ -92,15 +92,30 @@ flowchart LR
 
 ## Results
 
-_(Filled in from `bench/results/` — see [Benchmark](#benchmark).)_
+**Ground truth — 10 fictional restaurant sites** (`fixtures/sites`, true menus known): average F1 **1** against the truth, 10/10 perfect, 10/10 deterministic.
 
-| | |
+**Real restaurant websites — 120 sites in Oslo and Palo Alto** (sampled across WordPress, Squarespace, Wix, Webflow, hosted ordering systems and custom sites):
+
+| Metric | Result |
 |---|---|
-| Fixture sites (ground truth known) | TODO |
-| Real restaurant sites (Oslo + Palo Alto) | TODO |
-| Median cost to write an extractor | TODO |
-| Cost of a re-run | **$0.00** (no model call) |
-| Determinism of committed extractors | TODO |
+| Extractor committed, starting from the stored menu URL | **79/120 (65.8%)** |
+| …including the homepage rescue pass (discovery + vision) | **82/120 (68.3%)** |
+| Passed on the first attempt | 59.3% of forged extractors |
+| Adopted from the library (zero new code) | 5 sites |
+| Deterministic on re-run (3 runs, identical output) | 100% (78/78 measured) |
+| Median one-time cost per site | $0.0109 |
+| Median re-run time | 170 ms, **$0** |
+| Precision vs. nearBite's independently scraped menus | 0.737 |
+| Source mix of successes | json: 9 · html: 34 · rendered: 18 · image: 2 · document: 19 |
+
+Remaining failures: no-html-menu (JS/PDF/image) 12 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.
+
+_Recall against nearBite is lower by design: nearBite merges several pages of a site, Menusmith extracts one menu page._
+
+All numbers above are generated from `bench/results/*.json` by `npx tsx bench/report.ts` — one
+clean run of the final code over all 120 sites (Oct 23, 2026), plus one rescue pass that restarts
+failed sites from the restaurant's homepage. Failures are kept and categorised, not hidden: sites
+that block automated visitors (HTTP 403/429) are not bypassed by design.
 
 ## How we use NVIDIA Nemotron on Nebius Token Factory
 

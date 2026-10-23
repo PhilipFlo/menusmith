@@ -40,7 +40,16 @@ code.
   went in and out, so the model debugs like a developer in DevTools.
 
 ## Accomplishments
-_(fill in from bench/results)_
+- **82 of 120 real restaurant websites** (Oslo + Palo Alto) get a working extractor starting from
+  the homepage — 79 from the stored menu link alone; **82% of sites with a text menu**.
+- **59%** of written extractors pass on the **first attempt**; average F1 **0.976** against the
+  oracle; **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
+- **10/10 perfect** (F1 1.0) against ground truth on our fictional fixture sites, including after
+  a simulated website redesign that the fleet detects and heals on its own.
+- Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,
+  **18 PDF menus** and **image menus** (Nemotron 3.5 Super VL), all re-checked for free.
+- Running publicly on a **free** host (512 MB / 0.1 CPU) with a durable token-gated store, a
+  daily model-spend cap and SSRF protection — total model spend for the whole project ≈ $7.
 
 ## What we learned
 Putting the LLM in the *build* step instead of the *run* step changes the economics: the expensive
