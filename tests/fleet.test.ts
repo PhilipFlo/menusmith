@@ -33,3 +33,12 @@ describe('fleet drift logic', () => {
     expect(looksSuspicious(next, prev, 10)).toMatch(/names match/);
   });
 });
+
+describe('fleet filter (review finding)', () => {
+  it('an empty `only` list runs nothing — never the whole library', async () => {
+    const { runFleet } = await import('../src/fleet/fleet.ts');
+    const r = await runFleet({ only: [], heal: false });
+    expect(r.entries).toHaveLength(0);
+    expect(r.totals.extractors).toBe(0);
+  });
+});

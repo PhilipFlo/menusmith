@@ -18,3 +18,21 @@ describe('SSRF guard', () => {
     await expect(assertPublicUrl('file:///etc/passwd')).rejects.toThrow(/http/);
   });
 });
+
+describe('SSRF guard — IPv6 forms of private IPv4 (review finding)', () => {
+  it('blocks IPv4-mapped / compatible / NAT64 addresses in any notation', async () => {
+    const { isBlockedUrlSync } = await import('../src/html/netguard.ts');
+    for (const u of [
+      'http://[::ffff:127.0.0.1]/',
+      'http://[::ffff:7f00:1]/',
+      'http://[::ffff:a9fe:a9fe]/latest/meta-data',
+      'http://[0:0:0:0:0:ffff:a9fe:a9fe]/',
+      'http://[::a9fe:a9fe]/',
+      'http://[64:ff9b::a9fe:a9fe]/',
+      'http://[fe80::1]/',
+      'http://[ff02::1]/',
+    ])
+      expect(isBlockedUrlSync(u), u).toBe(true);
+    expect(isBlockedUrlSync('http://[2606:4700::6810:84e5]/')).toBe(false);
+  });
+});

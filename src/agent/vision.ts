@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import * as cheerio from 'cheerio';
 import { z } from 'zod';
-import { assertPublicUrl } from '../html/netguard.ts';
+import { safeFetch } from '../html/netguard.ts';
 import { chat, type ChatMessage, type Ledger } from '../llm/client.ts';
 import type { Emit, MenuItem } from '../types.ts';
 import { createRequire } from 'node:module';
@@ -45,7 +45,12 @@ export function findMenuImages(html: string, baseUrl: string): string[] {
       return;
     }
     if (NOT_MENU.test(u) || NOT_MENU.test(hint)) return;
-    const file = decodeURIComponent(new URL(u).pathname.split('/').pop() || '');
+    let file = new URL(u).pathname.split('/').pop() || '';
+    try {
+      file = decodeURIComponent(file);
+    } catch {
+      /* Latin-1 escapes like %E5 — match on the raw name */
+    }
     if (MENU_WORD.test(file) || MENU_WORD.test(hint)) out.add(u);
   };
   const srcOf = (e: ReturnType<typeof $>) => {
@@ -82,12 +87,10 @@ export function findMenuImages(html: string, baseUrl: string): string[] {
 }
 
 export async function fetchImage(url: string): Promise<{ bytes: Buffer; mime: string; sha256: string }> {
-  await assertPublicUrl(url);
-  const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(25_000), headers: { 'user-agent': 'Mozilla/5.0 Menusmith/0.1' } });
+  // safeFetch: every redirect hop passes the SSRF guard; size capped while streaming.
+  const res = await safeFetch(url, { maxBytes: MAX_BYTES, timeoutMs: 25_000, init: { headers: { 'user-agent': 'Mozilla/5.0 Menusmith/0.1' } } });
   if (!res.ok) throw new Error(`image HTTP ${res.status}`);
-  if (res.url && res.url !== url) await assertPublicUrl(res.url);
-  const bytes = Buffer.from(await res.arrayBuffer());
-  if (bytes.length > MAX_BYTES) throw new Error('image too large');
+  const bytes = Buffer.from(res.bytes);
   const mime = (res.headers.get('content-type') || 'image/png').split(';')[0]!;
   if (!/^image\/(png|jpe?g|webp|gif)$/.test(mime)) throw new Error(`not a supported image (${mime})`);
   return { bytes, mime, sha256: createHash('sha256').update(bytes).digest('hex') };
@@ -133,9 +136,10 @@ export async function readImage(img: { bytes: Buffer; mime: string; url: string 
 }
 
 /** Fetch + read all menu images; returns the merged menu and each image's fingerprint. */
-export async function readMenuImages(urls: string[], ledger: Ledger, emit?: Emit): Promise<{ items: MenuItem[]; images: MenuImage[] }> {
+export async function readMenuImages(urls: string[], ledger: Ledger, emit?: Emit): Promise<{ items: MenuItem[]; images: MenuImage[]; failed: number }> {
   const images: MenuImage[] = [];
   const items: MenuItem[] = [];
+  let failed = 0;
   for (const url of urls) {
     try {
       const img = await fetchImage(url);
@@ -148,8 +152,11 @@ export async function readMenuImages(urls: string[], ledger: Ledger, emit?: Emit
       items.push(...r.items);
       emit?.({ type: 'log', message: `Nemotron 3.5 Super VL read ${r.items.length} dishes from ${url.split('/').pop()}` });
     } catch (e) {
+      failed++;
       emit?.({ type: 'log', message: `Image ${url} skipped: ${(e as Error).message}` });
+      // Out of budget / cancelled: stop rather than produce a partial reading.
+      if ((e as { status?: number }).status === 402 || (e as { status?: number }).status === 499) break;
     }
   }
-  return { items, images };
+  return { items, images, failed };
 }

@@ -11,6 +11,7 @@ import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateDocum
 import { fetchPdf, pdfText } from '../agent/document.ts';
 import { fetchImage, findMenuImages, readMenuImages } from '../agent/vision.ts';
 import { renderPage } from '../html/render.ts';
+import { fetchPage } from '../html/fetch.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import type { Emit, MenuItem } from '../types.ts';
 import { itemsHash, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
@@ -25,6 +26,13 @@ import { forge, groundOracle } from '../agent/pipeline.ts';
  */
 
 /** review = output looks off but a fresh reading didn't confirm a break — left for a human. */
+/**
+ * Errors produced by the RUNNER itself (process killed at the wall-clock deadline,
+ * could not spawn) — not by the extractor. The vm's own "Script execution timed out"
+ * and crashes caused by the extractor's code are real breakage and get healed.
+ */
+const INFRA_ERROR = /^(timed out after \d+ ms|spawn failed)/;
+
 export type FleetStatus = 'stable' | 'changed' | 'healed' | 'review' | 'broken' | 'error';
 
 export interface PriceChange {
@@ -160,7 +168,10 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
   } catch (e) {
     return done({ status: 'error', detail: (e as Error).message, items: 0, changes: [] });
   }
-  const run = await runExtractor(x.code, src.payload, x.meta.url, mode);
+  let run = await runExtractor(x.code, src.payload, x.meta.url, mode);
+  // Runner-level failures (wall-clock kill, spawn failure) can be the host, not the
+  // site — retry once before drawing conclusions.
+  if (!run.ok && INFRA_ERROR.test(run.error || '')) run = await runExtractor(x.code, src.payload, x.meta.url, mode);
   const prev = loadSnapshot(x.meta.id) || [];
 
   if (run.ok && itemsHash(run.items) === x.meta.baselineHash) {
@@ -170,7 +181,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
 
   // A sandbox timeout / crash says nothing about the website — never "heal" code
   // because the host was slow or overloaded.
-  if (!run.ok && /timed out after|sandbox crashed|spawn failed|output too large/i.test(run.error || '')) {
+  if (!run.ok && INFRA_ERROR.test(run.error || '')) {
     return done({ status: 'error', detail: `sandbox: ${run.error} (infrastructure, not a site change — not healed)`, items: 0, changes: [] });
   }
   const broken = run.ok ? looksBroken(run.items, x.meta.baselineCount, x.meta.baselinePriced ?? 1) : `crashed: ${run.error}`;
@@ -266,20 +277,31 @@ async function checkImages(
   if (!opts.heal || (opts.budget && opts.budget.left() <= 0))
     return done({ status: 'review', detail: 'menu image(s) changed — not re-read (healing off or budget used up)', items: prev.length, changes: [] });
 
-  // Some picture changed or disappeared: look for the menu images on the page again.
-  let urls = now.filter((n) => n.sha256).map((n) => n.url);
+  // Some picture changed or could not be loaded. If any failed to load, look for the
+  // menu images on the page again (plain HTML first — no browser needed).
+  let urls = now.map((n) => n.url);
   if (now.some((n) => !n.sha256)) {
+    let found: string[] = [];
     try {
-      const r = await renderPage(x.meta.url);
-      const found = findMenuImages(r.html, r.finalUrl);
-      if (found.length) urls = found;
+      const p = await fetchPage(x.meta.url, { maxAgeMs: 0 });
+      found = findMenuImages(p.html, p.finalUrl);
+      if (!found.length && process.env.MENUSMITH_RENDER !== 'off') {
+        const r = await renderPage(x.meta.url);
+        found = findMenuImages(r.html, r.finalUrl);
+      }
     } catch {
-      /* keep what still loads */
+      /* page unreachable */
     }
+    // Never overwrite a good reading with a partial one: if the pictures can't all be
+    // accounted for, leave it for review.
+    if (!found.length)
+      return done({ status: 'review', detail: `${now.filter((n) => !n.sha256).length} menu image(s) failed to load and the page couldn't be re-scanned — kept the last reading`, items: prev.length, changes: [] });
+    urls = found;
   }
-  if (!urls.length) return done({ status: 'broken', detail: 'menu images are gone from the page', items: 0, changes: [] });
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: menu image changed — re-reading with Nemotron 3.5 Super VL` });
   const v = await readMenuImages(urls, ledger, emit);
+  if (v.failed > 0)
+    return done({ status: 'review', detail: `${v.failed} of ${urls.length} menu image(s) could not be read — kept the last reading`, items: prev.length, changes: [] });
   if (v.items.length < 3) return done({ status: 'broken', detail: 'changed menu images could not be read', items: 0, changes: [] });
   const changes = diffItems(prev, v.items);
   saveSnapshot(x.meta.id, v.items);
@@ -308,9 +330,14 @@ async function checkDocument(
   if (!opts.heal || (opts.budget && opts.budget.left() <= 0))
     return done({ status: 'review', detail: 'PDF menu changed — not re-read (healing off or budget used up)', items: prev.length, changes: [] });
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: PDF changed — re-reading` });
-  const { text } = await pdfText(pdf.bytes);
-  const o = await readMenu(text, { url: stored.url, restaurant: x.meta.restaurant }, ledger, emit);
-  const items = groundOracle(o.items, text).kept;
+  let items: MenuItem[];
+  try {
+    const { text } = await pdfText(pdf.bytes);
+    const o = await readMenu(text, { url: stored.url, restaurant: x.meta.restaurant }, ledger, emit);
+    items = groundOracle(o.items, text).kept;
+  } catch (e) {
+    return done({ status: 'error', detail: `PDF changed but could not be re-read: ${(e as Error).message}`, items: prev.length, changes: [] });
+  }
   if (items.length < 3) return done({ status: 'broken', detail: 'the changed PDF has no readable menu', items: 0, changes: [] });
   const changes = diffItems(prev, items);
   saveSnapshot(x.meta.id, items);
@@ -335,13 +362,32 @@ export async function runFleet(
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
   let xs = listExtractors();
-  if (opts.only?.length) xs = xs.filter((x) => opts.only!.includes(x.meta.id));
+  // `only` given (even empty) is a filter: an empty list runs nothing, never everything.
+  if (opts.only) xs = xs.filter((x) => opts.only!.includes(x.meta.id));
   const entries: FleetEntry[] = [];
   const queue = [...xs];
   const workers = Array.from({ length: Math.max(1, opts.concurrency ?? Number(process.env.MENUSMITH_FLEET_CONCURRENCY || 4)) }, async () => {
     while (queue.length) {
       const x = queue.shift()!;
-      entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget }));
+      try {
+        entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget }));
+      } catch (e) {
+        // One extractor's failure must never lose the whole run's report.
+        entries.push({
+          id: x.meta.id,
+          domain: x.meta.domain,
+          restaurant: x.meta.restaurant,
+          status: 'error',
+          detail: `check failed: ${(e as Error).message}`,
+          items: 0,
+          baselineItems: x.meta.baselineCount,
+          ms: 0,
+          tokens: 0,
+          costUsd: 0,
+          changes: [],
+          version: x.meta.version,
+        });
+      }
     }
   });
   await Promise.all(workers);
@@ -376,5 +422,7 @@ export function fleetHistory(limit = 30): FleetReport[] {
     .sort()
     .reverse()
     .slice(0, limit)
-    .map((f) => JSON.parse(readFileSync(resolve(reportDir(), f), 'utf8')) as FleetReport);
+    .map((f) => JSON.parse(readFileSync(resolve(reportDir(), f), 'utf8')) as FleetReport)
+    // Runs that checked nothing carry no information.
+    .filter((r) => r.totals.extractors > 0);
 }

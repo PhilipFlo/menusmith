@@ -71,7 +71,11 @@ async function main() {
     );
     process.exitCode = out.ok ? 0 : 1;
   } else if (cmd === 'fleet') {
-    const r = await runFleet({ heal: !flags.has('--no-heal'), only: args.length ? args : undefined }, printer(verbose));
+    const maxUsd = flagValue('--max-usd');
+    const r = await runFleet(
+      { heal: !flags.has('--no-heal'), only: args.filter((a) => a !== maxUsd).length ? args.filter((a) => a !== maxUsd) : undefined, maxUsd: maxUsd ? Number(maxUsd) : undefined },
+      printer(verbose),
+    );
     const t = r.totals;
     console.log(`\nFleet: ${t.extractors} extractors · ${t.stable} stable · ${t.changed} changed · ${t.healed} healed · ${t.broken} broken · ${t.error} errors · ${t.tokens} tokens · $${t.costUsd.toFixed(4)} · ${(t.ms / 1000).toFixed(1)}s`);
   } else if (cmd === 'redesign') {

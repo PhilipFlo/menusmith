@@ -1,6 +1,6 @@
 import { fetchPage, type Page } from '../html/fetch.ts';
 import { renderPage, type CapturedJson } from '../html/render.ts';
-import { assertPublicUrl } from '../html/netguard.ts';
+import { safeFetch } from '../html/netguard.ts';
 import { pageText } from '../html/simplify.ts';
 import type { Emit, SourceKind, SourceRequest } from '../types.ts';
 import { menuLinks, priceDensity } from './discover.ts';
@@ -147,14 +147,16 @@ export async function reacquire(source: { kind: SourceKind; url: string; request
   if (source.kind === 'json' && source.request) {
     const q = source.request;
     try {
-      await assertPublicUrl(q.url);
-      const res = await fetch(q.url, {
-        method: q.method,
-        headers: { 'user-agent': 'Mozilla/5.0 Menusmith/0.1', ...(q.headers || {}) },
-        body: q.method === 'GET' || q.method === 'HEAD' ? undefined : q.body ?? undefined,
-        signal: AbortSignal.timeout(25_000),
+      const res = await safeFetch(q.url, {
+        maxBytes: 8 * 1024 * 1024,
+        timeoutMs: 25_000,
+        init: {
+          method: q.method,
+          headers: { 'user-agent': 'Mozilla/5.0 Menusmith/0.1', ...(q.headers || {}) },
+          body: q.method === 'GET' || q.method === 'HEAD' ? undefined : q.body ?? undefined,
+        },
       });
-      const body = await res.text();
+      const body = new TextDecoder().decode(res.bytes);
       if (res.ok) {
         JSON.parse(body);
         return { payload: body, html: '', via: 'api replay' };

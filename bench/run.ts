@@ -16,6 +16,7 @@ import { itemsHash, scoreAgainstOracle } from '../src/agent/evaluate.ts';
 import { fetchPage } from '../src/html/fetch.ts';
 import { runExtractor } from '../src/sandbox/runner.ts';
 import { closeBrowser } from '../src/html/render.ts';
+import { Ledger } from '../src/llm/client.ts';
 import type { MenuItem } from '../src/types.ts';
 
 interface Site {
@@ -48,9 +49,9 @@ function category(reason = ''): string {
   return 'other';
 }
 
-async function one(site: Site) {
+async function one(site: Site, signal?: AbortSignal) {
   const t0 = Date.now();
-  const out = await forge({ url: site.url, restaurant: site.name, city: site.city });
+  const out = await forge({ url: site.url, restaurant: site.name, city: site.city, ledger: new Ledger(undefined, signal) });
   const row: Record<string, unknown> = {
     name: site.name,
     city: site.city,
@@ -176,10 +177,15 @@ async function main() {
         const s = queue.shift()!;
         try {
           // Watchdog: one pathological site must never stall the whole benchmark.
+          // Abort the site's ledger on timeout so it stops making (paid) model calls.
+          const abort = new AbortController();
           let timer: NodeJS.Timeout | undefined;
-          const limit = new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error(`site timed out after ${SITE_LIMIT_MS / 60000} min`)), SITE_LIMIT_MS)));
+          const limit = new Promise<never>((_, rej) => (timer = setTimeout(() => {
+            abort.abort();
+            rej(new Error(`site timed out after ${SITE_LIMIT_MS / 60000} min`));
+          }, SITE_LIMIT_MS)));
           try {
-            rows.push(await Promise.race([one(s), limit]));
+            rows.push(await Promise.race([one(s, abort.signal), limit]));
           } finally {
             clearTimeout(timer);
           }

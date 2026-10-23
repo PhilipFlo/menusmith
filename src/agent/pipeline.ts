@@ -126,7 +126,9 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     emit({ type: 'step', step: 'document', status: 'done', detail: `${items.length} dishes from the PDF` });
     const domain = domainOf(pageUrl);
     const platform = detectPlatform('', pageUrl);
-    const id = idForUrl(pageUrl, domain, platform);
+    // A direct PDF link often lives on a shared CDN (squarespace-cdn, wsimg, Drive…):
+    // key it by its path too, so different restaurants never share an id.
+    const id = pageUrl === docUrl || looksLikePdfUrl(pageUrl) ? idForUrl(pageUrl, domain, 'pdf') : idForUrl(pageUrl, domain, platform);
     const priced = items.filter((i) => i.price != null).length / items.length;
     const meta = saveExtractor(
       {

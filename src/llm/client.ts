@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import OpenAI from 'openai';
 import { config, costUsd, MODELS, type Role } from '../config.ts';
@@ -96,16 +96,21 @@ export class Ledger {
  */
 const spendFile = () => resolve(config.cacheDir, 'spend.json');
 export function totalSpend(): { usd: number; calls: number; since: string } {
+  if (!existsSync(spendFile())) return { usd: 0, calls: 0, since: new Date().toISOString() };
   try {
     return JSON.parse(readFileSync(spendFile(), 'utf8'));
   } catch {
-    return { usd: 0, calls: 0, since: new Date().toISOString() };
+    // A corrupt meter must fail CLOSED, never read back as $0.
+    return { usd: Number.POSITIVE_INFINITY, calls: 0, since: '' };
   }
 }
 function addTotalSpend(usd: number) {
   const t = totalSpend();
+  if (!Number.isFinite(t.usd)) return;
   mkdirSync(config.cacheDir, { recursive: true });
-  writeFileSync(spendFile(), JSON.stringify({ usd: Math.round((t.usd + usd) * 1e6) / 1e6, calls: t.calls + 1, since: t.since }));
+  const tmp = `${spendFile()}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify({ usd: Math.round((t.usd + usd) * 1e6) / 1e6, calls: t.calls + 1, since: t.since }));
+  renameSync(tmp, spendFile()); // atomic: a kill mid-write can't corrupt the meter
 }
 const TOTAL_BUDGET_USD = Number(process.env.MENUSMITH_TOTAL_BUDGET_USD || 0);
 
@@ -204,6 +209,8 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
       // Token Factory returns Nemotron's reasoning in `message.reasoning`.
       let reasoning = msg?.reasoning || msg?.reasoning_content || undefined;
       if (!text.trim() && choice?.finish_reason === 'length') {
+        // Billed even though unusable — count it.
+        addTotalSpend(costUsd(model, res.usage?.prompt_tokens ?? 0, res.usage?.completion_tokens ?? 0));
         throw new LlmError(`${model}: ran out of output tokens${reasoning ? ' while reasoning' : ''} (max_tokens=${o.maxTokens ?? 4096})`, 413);
       }
       // Some deployments inline the reasoning as <think>…</think> in content.

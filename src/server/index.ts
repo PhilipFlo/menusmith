@@ -11,7 +11,7 @@ import { forge } from '../agent/pipeline.ts';
 import { fleetHistory, runFleet } from '../fleet/fleet.ts';
 import type { AgentEvent } from '../types.ts';
 import { Ledger } from '../llm/client.ts';
-import { hydrate, storeEnabled } from '../library/persist.ts';
+import { flush, hydrate, refresh, storeEnabled, writePersisted } from '../library/persist.ts';
 
 const app = new Hono();
 
@@ -22,11 +22,23 @@ const FORGES_PER_HOUR = Number(process.env.MENUSMITH_FORGES_PER_HOUR || 12);
 const DAILY_BUDGET_USD = Number(process.env.MENUSMITH_DAILY_BUDGET_USD || 3);
 /** Ceiling for a single forge — a normal one costs cents. */
 const PER_FORGE_USD = Number(process.env.MENUSMITH_MAX_JOB_USD || 0.5);
+// Persisted under the library folder (and so in the durable store) — a free host that
+// sleeps and restarts must not get a fresh daily budget on every wake-up.
+const spendFile = () => resolve(config.libraryDir, 'state', 'daily-spend.json');
 const spend = { day: new Date().toISOString().slice(0, 10), usd: 0 };
+function loadSpend() {
+  try {
+    const v = JSON.parse(readFileSync(spendFile(), 'utf8')) as { day: string; usd: number };
+    if (v.day === spend.day && Number.isFinite(v.usd)) spend.usd = v.usd;
+  } catch {
+    /* none yet */
+  }
+}
 function addSpend(usd: number) {
   const today = new Date().toISOString().slice(0, 10);
   if (spend.day !== today) Object.assign(spend, { day: today, usd: 0 });
   spend.usd += usd;
+  if (usd > 0) writePersisted(spendFile(), JSON.stringify(spend));
 }
 function budgetLeft(): number {
   const today = new Date().toISOString().slice(0, 10);
@@ -85,6 +97,7 @@ app.post('/api/forge', async (c) => {
   if (denied) return c.json({ error: denied }, 429);
   running++;
   return streamSSE(c, async (stream) => {
+    await refresh(0); // pick up versions another writer (the nightly fleet) committed
     const send = (e: AgentEvent) => stream.writeSSE({ event: e.type, data: JSON.stringify(e) }).catch(() => {});
     // The ledger is owned here so spend is recorded even if the run throws, and the
     // run stops making model calls if the visitor closes the page.
@@ -118,11 +131,15 @@ app.post('/api/forge', async (c) => {
   });
 });
 
-app.get('/api/library', (c) => c.json(listExtractors().map((x) => x.meta)));
+app.get('/api/library', async (c) => {
+  await refresh();
+  return c.json(listExtractors().map((x) => x.meta));
+});
 
 const ID_RE = /^[a-z0-9-]{1,80}$/;
-app.get('/api/library/:id', (c) => {
+app.get('/api/library/:id', async (c) => {
   if (!ID_RE.test(c.req.param('id'))) return c.json({ error: 'bad id' }, 400);
+  await refresh();
   const x = loadExtractor(c.req.param('id'));
   if (!x) return c.json({ error: 'not found' }, 404);
   const versions = Array.from({ length: x.meta.version }, (_, i) => ({ version: i + 1, code: loadVersion(x.meta.id, i + 1) }));
@@ -150,10 +167,12 @@ app.post('/api/fleet/run', async (c) => {
     if (Date.now() - lastPublicFleet < 180_000) return c.json({ error: 'The demo fleet ran less than 3 minutes ago — try again shortly.' }, 429);
     const demo = listExtractors().filter((x) => x.meta.url.startsWith('fixture://')).map((x) => x.meta.id);
     only = only?.length ? only.filter((x) => demo.includes(x)) : demo;
+    if (!only.length) return c.json({ error: 'nothing to run: the public fleet only covers the demo restaurants' }, 400);
     lastPublicFleet = Date.now();
   }
   fleetRunning = true;
   return streamSSE(c, async (stream) => {
+    await refresh(0);
     const send = (e: AgentEvent) => stream.writeSSE({ event: e.type, data: JSON.stringify(e) }).catch(() => {});
     try {
       const report = await runFleet({ heal: body.heal !== false && budgetLeft() > 0, only, maxUsd: Math.max(0, budgetLeft()) }, send);
@@ -167,7 +186,10 @@ app.post('/api/fleet/run', async (c) => {
   });
 });
 
-app.get('/api/fleet/history', (c) => c.json(fleetHistory(50)));
+app.get('/api/fleet/history', async (c) => {
+  await refresh();
+  return c.json(fleetHistory(50));
+});
 
 app.get('/api/fixtures', (c) => {
   const dir = resolve(ROOT, 'fixtures/sites');
@@ -224,6 +246,16 @@ try {
   if (storeEnabled()) console.log(`Store: restored ${h.restored} file(s)${h.seeded ? `, seeded ${h.seeded} from the image` : ''}`);
 } catch (e) {
   console.warn(`Store unavailable, continuing with local files: ${(e as Error).message}`);
+}
+
+loadSpend();
+
+// Render/containers send SIGTERM before stopping: finish uploads to the durable store.
+for (const sig of ['SIGTERM', 'SIGINT'] as const) {
+  process.once(sig, () => {
+    void flush().finally(() => process.exit(0));
+    setTimeout(() => process.exit(0), 8000).unref();
+  });
 }
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {

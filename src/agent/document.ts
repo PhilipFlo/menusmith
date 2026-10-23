@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
-import { assertPublicUrl } from '../html/netguard.ts';
+import { fileURLToPath } from 'node:url';
+import { Worker } from 'node:worker_threads';
+import { safeFetch } from '../html/netguard.ts';
 
 /**
  * PDF MENUS — very common for restaurants (and a frequent failure for scrapers that
@@ -17,60 +19,42 @@ export function looksLikePdfUrl(url: string): boolean {
 }
 
 export async function fetchPdf(url: string): Promise<{ bytes: Uint8Array; sha256: string; finalUrl: string }> {
-  await assertPublicUrl(url);
-  const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(30_000), headers: { 'user-agent': 'Mozilla/5.0 Menusmith/0.1' } });
-  if (res.url && res.url !== url) await assertPublicUrl(res.url);
+  // safeFetch: every redirect hop passes the SSRF guard; size capped while streaming.
+  const res = await safeFetch(url, { maxBytes: MAX_BYTES, timeoutMs: 30_000, init: { headers: { 'user-agent': 'Mozilla/5.0 Menusmith/0.1' } } });
   if (!res.ok) throw new Error(`PDF HTTP ${res.status}`);
-  const buf = new Uint8Array(await res.arrayBuffer());
-  if (buf.byteLength > MAX_BYTES) throw new Error('PDF too large');
+  const buf = res.bytes;
   if (!(buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46)) throw new Error('not a PDF file');
-  return { bytes: buf, sha256: createHash('sha256').update(buf).digest('hex'), finalUrl: res.url || url };
+  return { bytes: buf, sha256: createHash('sha256').update(buf).digest('hex'), finalUrl: res.url };
 }
 
+const WORKER = fileURLToPath(new URL('./pdf-worker.mjs', import.meta.url));
+
 /**
- * Text of the first pages, one visual line per line (items grouped by their y
- * position, ordered left to right), so "Margherita ........ 189" stays on one line.
+ * Text of the first pages, one visual line per line. Parsing runs in a worker thread
+ * with its own heap cap and a hard timeout — PDFs are untrusted input.
  */
-export async function pdfText(bytes: Uint8Array): Promise<{ text: string; pages: number }> {
-  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-  const doc = await pdfjs.getDocument({
-    // pdf.js takes ownership of (detaches) the buffer — give it a copy.
-    data: bytes.slice(),
-    // Untrusted input: no eval (CVE-2024-4367), no font loading, no external fetches.
-    isEvalSupported: false,
-    disableFontFace: true,
-    useSystemFonts: false,
-    stopAtErrors: false,
-  }).promise;
-  const out: string[] = [];
-  const pages = Math.min(doc.numPages, MAX_PAGES);
-  for (let p = 1; p <= pages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    const rows = new Map<number, { x: number; s: string }[]>();
-    for (const it of content.items as { str?: string; transform?: number[] }[]) {
-      if (!it.str?.trim() || !it.transform) continue;
-      const y = Math.round(it.transform[5]! / 3) * 3; // bucket nearby baselines
-      const row = rows.get(y) || [];
-      row.push({ x: it.transform[4]!, s: it.str });
-      rows.set(y, row);
-    }
-    for (const y of [...rows.keys()].sort((a, b) => b - a)) {
-      out.push(
-        rows
-          .get(y)!
-          .sort((a, b) => a.x - b.x)
-          .map((r) => r.s)
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim(),
-      );
-    }
-    out.push('');
-    page.cleanup();
-  }
-  await doc.destroy();
-  return { text: out.join('\n').trim(), pages };
+export function pdfText(bytes: Uint8Array, timeoutMs = Number(process.env.MENUSMITH_PDF_TIMEOUT_MS || 45_000)): Promise<{ text: string; pages: number }> {
+  return new Promise((resolvePromise, reject) => {
+    const w = new Worker(WORKER, { workerData: { bytes: bytes.slice() }, resourceLimits: { maxOldGenerationSizeMb: 192, maxYoungGenerationSizeMb: 32 } });
+    const timer = setTimeout(() => {
+      void w.terminate();
+      reject(new Error(`PDF parsing timed out after ${Math.round(timeoutMs / 1000)}s`));
+    }, timeoutMs);
+    w.once('message', (m: { ok: boolean; text?: string; pages?: number; error?: string }) => {
+      clearTimeout(timer);
+      void w.terminate();
+      if (m.ok) resolvePromise({ text: m.text || '', pages: m.pages || 0 });
+      else reject(new Error(`PDF parsing failed: ${m.error}`));
+    });
+    w.once('error', (e) => {
+      clearTimeout(timer);
+      reject(new Error(`PDF parsing failed: ${e.message}`));
+    });
+    w.once('exit', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) reject(new Error(`PDF parser stopped (exit ${code}) — file too large or malformed`));
+    });
+  });
 }
 
 /** PDF links on a page whose URL or link text suggests a menu. */

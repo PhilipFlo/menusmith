@@ -27,7 +27,12 @@ const headers = (extra: Record<string, string> = {}) => ({
   ...extra,
 });
 
-const pending = new Set<Promise<void>>();
+// Uploads are serialised (one chain): files go up in the order they were written, so a
+// version's code always lands before the meta.json that points to it.
+let chain: Promise<void> = Promise.resolve();
+let queued = 0;
+/** False after a failed restore — then mirroring stale local files could overwrite good rows. */
+let storeTrusted = true;
 
 function relPath(abs: string): string | null {
   const rel = relative(config.libraryDir, abs);
@@ -56,18 +61,53 @@ export function writePersisted(abs: string, content: string): void {
 /** Mirror a file that was written locally (e.g. via an atomic rename). */
 export function mirror(abs: string, content?: string): void {
   if (!storeEnabled()) return;
+  if (!storeTrusted) {
+    console.warn('[persist] store was not restored at startup — not mirroring (local files may be stale)');
+    return;
+  }
   const path = relPath(abs);
   if (!path) return;
   const body = content ?? readFileSync(abs, 'utf8');
-  const p = upsert([{ path, content: body }])
+  queued++;
+  chain = chain
+    .then(async () => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          await upsert([{ path, content: body }]);
+          return;
+        } catch (e) {
+          if (attempt >= 3) throw e;
+          await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+        }
+      }
+    })
     .catch((e) => console.warn(`[persist] could not mirror ${path}: ${(e as Error).message}`))
-    .finally(() => pending.delete(p));
-  pending.add(p);
+    .finally(() => {
+      queued--;
+    });
 }
 
-/** Wait for queued uploads (call before a CLI/job process exits). */
+/** Wait for queued uploads (call before a CLI/job process exits, and on SIGTERM). */
 export async function flush(): Promise<void> {
-  while (pending.size) await Promise.allSettled([...pending]);
+  while (queued > 0) await chain;
+}
+
+let lastRefresh = 0;
+/**
+ * Re-sync the local folder from the store if the last sync is older than `maxAgeMs`
+ * (another writer — the nightly fleet job — may have updated it). Waits for our own
+ * pending uploads first so we never pull back a stale copy of our own write.
+ */
+export async function refresh(maxAgeMs = 60_000): Promise<void> {
+  if (!storeEnabled() || Date.now() - lastRefresh < maxAgeMs) return;
+  await flush();
+  try {
+    await pull();
+    storeTrusted = true;
+    lastRefresh = Date.now();
+  } catch (e) {
+    console.warn(`[persist] refresh failed, serving local files: ${(e as Error).message}`);
+  }
 }
 
 function listLocal(dir: string): string[] {
@@ -90,8 +130,7 @@ function listLocal(dir: string): string[] {
  * Startup: restore the library folder from the store. If the store is empty (first
  * boot), seed it from the local folder (the library shipped in the image).
  */
-export async function hydrate(): Promise<{ restored: number; seeded: number }> {
-  if (!storeEnabled()) return { restored: 0, seeded: 0 };
+async function pull(): Promise<number> {
   let restored = 0;
   const pageSize = 200;
   for (let from = 0; ; from += pageSize) {
@@ -110,6 +149,19 @@ export async function hydrate(): Promise<{ restored: number; seeded: number }> {
     }
     if (rows.length < pageSize) break;
   }
+  return restored;
+}
+
+export async function hydrate(): Promise<{ restored: number; seeded: number }> {
+  if (!storeEnabled()) return { restored: 0, seeded: 0 };
+  let restored: number;
+  try {
+    restored = await pull();
+  } catch (e) {
+    storeTrusted = false;
+    throw e;
+  }
+  lastRefresh = Date.now();
   let seeded = 0;
   if (restored === 0) {
     const files = listLocal(config.libraryDir);
