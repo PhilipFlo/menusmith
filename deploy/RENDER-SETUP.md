@@ -27,19 +27,34 @@ Tested locally with Render's limits (`docker run --memory=512m --cpus=0.1`):
 
 ## One-time setup (you)
 
-1. **Render account** — sign up at render.com with your GitHub login (free plan; don't add a card).
-2. **New → Blueprint** → pick the `PhilipFlo/menusmith` repo (allow Render to read it).
-   Render reads `render.yaml` and asks for the secret values.
-3. Paste each value from your local `.env` — open the file, or print the six lines in your
-   own terminal:
-   ```bash
-   grep -E '^(NEBIUS_API_KEY|TAVILY_API_KEY|MENUSMITH_STORE_URL|MENUSMITH_STORE_KEY|MENUSMITH_STORE_TOKEN|MENUSMITH_ADMIN_TOKEN)=' .env
-   ```
-   Never paste them into chat, issues, or the repo.
-4. **Apply** — the first build takes ~5 minutes. The URL looks like `https://menusmith-xxxx.onrender.com`.
+1. **Render account** — sign up at render.com (Google or GitHub login both work; free plan, no card).
+2. **New → Blueprint** (or a Web Service with *Dockerfile Path* `./Dockerfile.slim`). When asked for a
+   repository, click **Connect GitHub**, install the Render app for **only** the `menusmith` repo,
+   then select it.
+3. **Environment** — exactly these variables (values for the secrets are in your local `.env`;
+   open it with `open -e ~/Documents/menusmith/.env` and copy only the part after `=`):
+
+   | Name | Value |
+   |---|---|
+   | `NEBIUS_API_KEY` | from `.env` |
+   | `TAVILY_API_KEY` | from `.env` |
+   | `MENUSMITH_STORE_URL` | from `.env` |
+   | `MENUSMITH_STORE_KEY` | from `.env` |
+   | `MENUSMITH_STORE_TOKEN` | from `.env` |
+   | `MENUSMITH_ADMIN_TOKEN` | from `.env` |
+   | `MENUSMITH_DAILY_BUDGET_USD` | `2` |
+   | `MENUSMITH_MAX_JOB_USD` | `0.4` |
+   | `MENUSMITH_FORGES_PER_HOUR` | `10` |
+
+   Don't import the whole `.env` file: development settings like `MENUSMITH_LLM=record` don't
+   belong on the server, and keys the app doesn't use (e.g. a Supabase service-role key) must
+   never be added. Never paste values into chat, issues or the repo.
+4. **Save** — the first build takes ~5 minutes. Check `https://<your-app>.onrender.com/api/health`:
+   it should show `"llmMode":"live"`, `"browser":false`, `"store":true`.
 5. **Nightly fleet** — GitHub → the repo → Settings → Secrets and variables → Actions → *New
-   repository secret*, add the first five names above with the same values. Then Actions →
-   *fleet* → *Run workflow* once to test.
+   repository secret*: `NEBIUS_API_KEY`, `TAVILY_API_KEY`, `MENUSMITH_STORE_URL`,
+   `MENUSMITH_STORE_KEY`, `MENUSMITH_STORE_TOKEN` (same values). Then Actions → *fleet* → *Run
+   workflow* once to test.
 
 ## Running the full fleet on the live demo (owner only)
 
