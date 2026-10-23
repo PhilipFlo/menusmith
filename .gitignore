@@ -19,3 +19,4 @@ library/extractors/*
 bench/results/*
 !bench/results/fixtures.json
 !bench/results/latest.json
+submission/clips/

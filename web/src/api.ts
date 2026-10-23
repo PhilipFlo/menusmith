@@ -8,6 +8,10 @@ export type { Score } from '../../src/types.ts';
 export interface Health {
   ok: boolean;
   llmMode: 'live' | 'record' | 'replay' | string;
+  /** False on hosts without a headless browser (e.g. the free-tier slim image). */
+  browser?: boolean;
+  /** True when the library is mirrored to a durable store. */
+  store?: boolean;
   nebius: boolean;
   tavily: boolean;
   models: Partial<Record<'triage' | 'oracle' | 'forge' | 'escalate' | 'vision', string>>;

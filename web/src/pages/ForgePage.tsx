@@ -18,6 +18,8 @@ import { href } from '../router.ts';
 const EXAMPLE_SITES: { label: string; url: string }[] = [
   { label: 'Damaskus Huset · Oslo', url: 'https://semeny.no/sted/634damaskushusetrestaurant' },
   { label: 'Pizzabakeren · Oslo', url: 'https://www.pizzabakeren.no/glutenfri' },
+  { label: 'Pele Pele · PDF menu', url: 'https://pelepele.no/wp-content/uploads/2025/09/PelePele-Menu.pdf' },
+  { label: 'Listen to Delhi · image menu', url: 'https://listentodelhi.no/' },
 ];
 
 function toRequest(raw: string, city: string) {
@@ -136,6 +138,12 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
           </div>
         </form>
         {health && health.llmMode === 'replay' && <p className="small muted hero-note">Replay mode: model calls are served from recorded cassettes.</p>}
+        {health && health.browser === false && (
+          <p className="small muted hero-note">
+            This free-tier demo runs without a headless browser: menus in the page HTML, menu PDFs and menu images all work; menus that only appear after
+            JavaScript runs need the full build (see the repo). The first request after a quiet spell can take a minute while the server wakes up.
+          </p>
+        )}
       </section>
 
       <LiveStatus state={state} />
