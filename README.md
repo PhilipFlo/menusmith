@@ -14,6 +14,11 @@ agent heals its own code.
 
 ---
 
+<p align="center">
+  <img src="docs/screenshots/extractor-diff.png" width="860" alt="A self-healed extractor: the website was redesigned, the fleet noticed, and Nemotron rewrote its own selectors (v4 → v5 diff)">
+  <br><em>Self-healing: the restaurant redesigned its website, the fleet noticed, and the agent rewrote its own code (v4 → v5).</em>
+</p>
+
 ## Why
 
 We run [nearBite](https://github.com/PhilipFlo), a dish-level restaurant search for Oslo and
@@ -124,11 +129,21 @@ made the cheap calls cheap and the code-writing calls smart.
 
 ### Other Nebius services and Tavily
 
-- **Nebius AI Cloud Serverless Endpoint** — hosts the web app + API (`deploy/nebius.sh endpoint`).
-- **Nebius AI Cloud Serverless Job** — the nightly fleet run (`deploy/nebius.sh fleet-job`):
-  re-runs the library, heals broken extractors, writes the fleet report.
+- **Hosting is portable.** The public demo runs on a free host (`Dockerfile.slim` on Render,
+  library mirrored to a token-gated Postgres table, nightly fleet on GitHub Actions — see
+  `deploy/RENDER-SETUP.md`). The full image with the headless browser deploys to **Nebius AI
+  Cloud Serverless** — an Endpoint for the app and a Job for the nightly fleet
+  (`deploy/nebius.sh`, `deploy/NEBIUS-SETUP.md`).
 - **Tavily** — `/search` finds a restaurant's official website from its name; `/map` discovers
   the menu pages of a site.
+
+## Screenshots
+
+| Library — every extractor, its source and one-time cost | Fleet — nightly re-runs at $0, healing what broke |
+|---|---|
+| <img src="docs/screenshots/library.png" alt="Library"> | <img src="docs/screenshots/fleet.png" alt="Fleet"> |
+| **Image menu** — read by Nemotron 3.5 Super VL, re-checked by fingerprint | **How it works** — model routing and the sandbox |
+| <img src="docs/screenshots/image-menu.png" alt="Image menu"> | <img src="docs/screenshots/how-it-works.png" alt="How it works"> |
 
 ## The sandbox
 
