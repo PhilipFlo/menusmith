@@ -111,6 +111,13 @@ const clips: Record<string, (p: Page) => Promise<void>> = {
     await p.goto(`${BASE}/#/about`);
     await pause(p, 2500);
     await slowScroll(p, 1800, 30);
+    await pause(p, 1500);
+    const bench = p.getByRole('heading', { name: /Benchmark/ });
+    if (await bench.count()) {
+      await bench.scrollIntoViewIfNeeded();
+      await pause(p, 4500);
+      await slowScroll(p, 500, 10);
+    }
     await pause(p, 2500);
   },
 };
