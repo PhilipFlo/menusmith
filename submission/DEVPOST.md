@@ -49,7 +49,7 @@ code.
 - Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,
   **18 PDF menus** and **image menus** (Nemotron 3.5 Super VL), all re-checked for free.
 - Running publicly on a **free** host (512 MB / 0.1 CPU) with a durable token-gated store, a
-  daily model-spend cap and SSRF protection — total model spend for the whole project ≈ $7.
+  daily model-spend cap and SSRF protection — total model spend for the whole project, including every benchmark run, under $10.
 
 ## What we learned
 Putting the LLM in the *build* step instead of the *run* step changes the economics: the expensive
