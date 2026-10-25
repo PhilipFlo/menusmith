@@ -7,7 +7,7 @@ import { priceDensity } from '../agent/discover.ts';
 import { pageText } from '../html/simplify.ts';
 import { Ledger } from '../llm/client.ts';
 import { writePersisted } from '../library/persist.ts';
-import { listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateDocumentSource, updateImageSource, type StoredExtractor } from '../library/store.ts';
+import { patchMeta, listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateDocumentSource, updateImageSource, type StoredExtractor } from '../library/store.ts';
 import { fetchPdf, pdfText } from '../agent/document.ts';
 import { fetchImage, findMenuImages, readMenuImages } from '../agent/vision.ts';
 import { renderPage } from '../html/render.ts';
@@ -17,6 +17,7 @@ import type { Emit, MenuItem } from '../types.ts';
 import { itemsHash, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
 import { readMenu } from '../agent/oracle.ts';
 import { forge, groundOracle } from '../agent/pipeline.ts';
+import { arbitrate } from '../agent/judge.ts';
 
 /**
  * The FLEET: re-run every extractor in the library against the live page.
@@ -43,6 +44,22 @@ export interface PriceChange {
   newPrice?: number | null;
 }
 
+/** Result of comparing the extractor's output with a fresh Nemotron reading of the page. */
+export interface AuditResult {
+  at: string;
+  pass: boolean;
+  recall: number;
+  precision: number;
+  f1: number;
+  oracleCount: number;
+  extractorCount: number;
+  missing: MenuItem[];
+  /** Dishes that dropped out of the output since the last run but are still on the page. */
+  stillOnPage: string[];
+  wrongPrice: { name: string; expected: number | null; got: number | null }[];
+  extra: MenuItem[];
+}
+
 export interface FleetEntry {
   id: string;
   domain: string;
@@ -56,6 +73,8 @@ export interface FleetEntry {
   costUsd: number;
   changes: PriceChange[];
   version: number;
+  /** Present when this check included a coverage audit against a fresh reading. */
+  audit?: AuditResult;
 }
 
 export interface FleetReport {
@@ -132,7 +151,83 @@ interface Budget {
   spend(usd: number): void;
 }
 
-async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; budget?: Budget }): Promise<FleetEntry> {
+function sourceText(src: { payload: string; html: string }, mode: 'html' | 'json'): string {
+  let text = src.html ? pageText(src.html) : '';
+  if (mode === 'json' && (!src.html || priceDensity(src.html) < 5)) {
+    try {
+      text = jsonMenuLines(JSON.parse(src.payload));
+    } catch {
+      /* keep page text */
+    }
+  }
+  return text;
+}
+
+/**
+ * COVERAGE AUDIT: does the extractor still catch everything on the menu? Nemotron reads
+ * the current page (double read), the extractor's output is scored against it, and
+ * disputed items are arbitrated by Nano. A dish that is still on the page but missing
+ * from the output is a silent miss — exactly what a plain re-run can't notice.
+ */
+/** Of the dishes a fresh reading sees but the code missed, which ones were in the last run's output? */
+export function stillListed(missedNow: string[], vanished: string[]): string[] {
+  const gone = vanished.map(normName).filter(Boolean);
+  return missedNow.filter((n) => {
+    const k = normName(n);
+    return !!k && gone.some((g) => g === k || (g.length >= 4 && k.length >= 4 && (g.includes(k) || k.includes(g))));
+  });
+}
+
+async function coverageAudit(
+  x: StoredExtractor,
+  items: MenuItem[],
+  text: string,
+  ledger: Ledger,
+  emit: Emit,
+  /** Dishes that were in the last snapshot but not in this run's output. */
+  vanished: string[] = [],
+): Promise<{ audit: AuditResult; oracle: MenuItem[] }> {
+  const o = await readMenu(text, { url: x.meta.url, restaurant: x.meta.restaurant }, ledger, emit);
+  let oracle = groundOracle(o.items, text).kept;
+  let score = scoreAgainstOracle(oracle, items, text);
+  if (!score.pass && score.f1 >= 0.6 && (score.missing.length || score.extra.length || score.grounded.length)) {
+    const a = await arbitrate([...score.grounded, ...score.extra], score.missing, text, ledger, emit);
+    if (a.disputed) {
+      oracle = [...oracle.filter((i) => !a.rejected.has(normName(i.name))), ...a.accepted];
+      score = scoreAgainstOracle(oracle, items, text, { rejected: a.rejected });
+    }
+  }
+  // A dish that dropped out of the output but is still on the page is a code bug, not a
+  // menu change — however high overall recall is.
+  const stillOnPage = stillListed(score.missing.map((m) => m.name), vanished);
+  const audit: AuditResult = {
+    at: new Date().toISOString(),
+    pass: score.pass && oracle.length >= 3 && stillOnPage.length === 0,
+    stillOnPage,
+    recall: score.recall,
+    precision: score.precision,
+    f1: score.f1,
+    oracleCount: score.oracleCount,
+    extractorCount: score.extractorCount,
+    missing: score.missing.slice(0, 25),
+    wrongPrice: score.wrongPrice.slice(0, 15),
+    extra: score.extra.slice(0, 15),
+  };
+  patchMeta(x.meta.id, { lastAudit: { at: audit.at, pass: audit.pass, recall: audit.recall, f1: audit.f1, missing: score.missing.length } });
+  emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage check — recall ${audit.recall}, ${score.missing.length} dish(es) on the page not extracted` });
+  return { audit, oracle };
+}
+
+export interface CheckOptions {
+  heal: boolean;
+  budget?: Budget;
+  /** never: no LLM coverage check · auto: weekly + when dishes disappear · force: always */
+  audit?: 'never' | 'auto' | 'force';
+  /** For audit:'auto' — re-verify a stable extractor at most every N days. */
+  auditDays?: number;
+}
+
+async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Promise<FleetEntry> {
   const t0 = Date.now();
   const ledger = new Ledger(opts.budget ? Math.max(0, opts.budget.left()) : undefined);
   const base: Omit<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> = {
@@ -145,7 +240,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
     costUsd: 0,
     version: x.meta.version,
   };
-  const done = (e: Pick<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> & { version?: number }): FleetEntry => {
+  const done = (e: Pick<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> & { version?: number; audit?: AuditResult }): FleetEntry => {
     opts.budget?.spend(ledger.costUsd);
     const entry: FleetEntry = {
       ...base,
@@ -174,8 +269,56 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
   if (!run.ok && INFRA_ERROR.test(run.error || '')) run = await runExtractor(x.code, src.payload, x.meta.url, mode);
   const prev = loadSnapshot(x.meta.id) || [];
 
+  /** Rewrite the extractor from its old code + the current page (+ a fresh reading if we have one). */
+  async function heal(reason: string, freshOracle?: MenuItem[], audit?: AuditResult): Promise<FleetEntry> {
+    if (!opts.heal || (opts.budget && opts.budget.left() - ledger.costUsd <= 0))
+      return done({ status: 'review', detail: `${reason} — not healed (healing off or budget used up)`, items: run.items.length, changes: [], audit });
+    emit({ type: 'log', message: `[fleet] ${x.meta.id}: ${reason} — healing` });
+    const tagged: Emit = (e) => emit({ ...e, target: x.meta.id } as typeof e);
+    const healLedger = new Ledger(opts.budget ? Math.max(0, opts.budget.left() - ledger.costUsd) : undefined);
+    const healed = await forge(
+      { url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason }, oracle: freshOracle, ledger: healLedger },
+      tagged,
+    );
+    ledger.merge(healed.ledger);
+    if (healed.ok && healed.items) {
+      const changes = diffItems(prev, healed.items);
+      saveSnapshot(x.meta.id, healed.items);
+      return done({
+        status: 'healed',
+        detail: `${reason} → rewrote extractor v${healed.meta!.version} in ${healed.rounds} round(s)${changes.length ? `; ${summarise(changes)}` : ''}`,
+        items: healed.items.length,
+        changes,
+        version: healed.meta!.version,
+        audit,
+      });
+    }
+    return done({ status: 'broken', detail: `${reason}; heal failed: ${healed.reason}`, items: run.items.length, changes: [], audit });
+  }
+
+  const auditMode = opts.audit ?? 'never';
+  // An explicit check ('force') may spend on the reading even when healing is off;
+  // automatic checks only run in fleets that are allowed to spend (heal on).
+  const canSpend = (opts.heal || auditMode === 'force') && (!opts.budget || opts.budget.left() > 0);
+  const auditDue = () => {
+    if (auditMode === 'force') return true;
+    if (auditMode !== 'auto') return false;
+    const last = x.meta.lastAudit?.at ? Date.parse(x.meta.lastAudit.at) : Date.parse(x.meta.createdAt);
+    return Date.now() - last > (opts.auditDays ?? 7) * 86_400_000;
+  };
+
   if (run.ok && itemsHash(run.items) === x.meta.baselineHash) {
     if (!prev.length) saveSnapshot(x.meta.id, run.items);
+    if (auditDue() && canSpend) {
+      const text = sourceText(src, mode);
+      try {
+        const { audit, oracle } = await coverageAudit(x, run.items, text, ledger, emit);
+        if (audit.pass) return done({ status: 'stable', detail: `${run.items.length} items, unchanged — verified against a fresh reading`, items: run.items.length, changes: [], audit });
+        return heal(`coverage check: ${audit.oracleCount - Math.round(audit.recall * audit.oracleCount)} dish(es) on the page are not extracted`, oracle, audit);
+      } catch (e) {
+        emit({ type: 'log', message: `[fleet] coverage check failed for ${x.meta.id}: ${(e as Error).message}` });
+      }
+    }
     return done({ status: 'stable', detail: `${run.items.length} items, unchanged`, items: run.items.length, changes: [] });
   }
 
@@ -187,8 +330,41 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
   const broken = run.ok ? looksBroken(run.items, x.meta.baselineCount, x.meta.baselinePriced ?? 1) : `crashed: ${run.error}`;
   const suspicious = !broken && run.ok ? looksSuspicious(run.items, prev, x.meta.baselineCount) : null;
   if (!broken && !suspicious) {
-    // Plausible output that differs from last time → the menu itself changed.
+    // Plausible output that differs from last time → probably the menu itself changed.
     const changes = diffItems(prev, run.items);
+    const removed = changes.filter((c) => c.kind === 'removed').length;
+    // Dishes that "disappeared" may really be dishes the code now silently misses —
+    // verify removals against a fresh reading before recording them.
+    if (removed > 0 || auditDue()) {
+      if (auditMode !== 'never' && canSpend) {
+        try {
+          const vanished = changes.filter((c) => c.kind === 'removed').map((c) => c.name);
+          const { audit, oracle } = await coverageAudit(x, run.items, sourceText(src, mode), ledger, emit, vanished);
+          if (!audit.pass)
+            return heal(
+              audit.stillOnPage.length
+                ? `coverage check: ${audit.stillOnPage.length} dish(es) dropped out of the output but are still on the page (${audit.stillOnPage.slice(0, 3).join(', ')})`
+                : `coverage check: dishes on the page are missing from the output (recall ${audit.recall})`,
+              oracle,
+              audit,
+            );
+          saveSnapshot(x.meta.id, run.items);
+          updateBaseline(x.meta.id, itemsHash(run.items), run.items.length);
+          return done({ status: 'changed', detail: `menu updated (verified against a fresh reading): ${summarise(changes)}`, items: run.items.length, changes, audit });
+        } catch (e) {
+          emit({ type: 'log', message: `[fleet] coverage check failed for ${x.meta.id}: ${(e as Error).message}` });
+        }
+      }
+      // Without a check we can't tell "the restaurant removed these" from "the code now
+      // misses these" — keep the last good data rather than recording a guess.
+      if (removed > 0)
+        return done({
+          status: 'review',
+          detail: `${removed} dish(es) disappeared — not recorded until a Nemotron check confirms they are really gone`,
+          items: run.items.length,
+          changes,
+        });
+    }
     saveSnapshot(x.meta.id, run.items);
     updateBaseline(x.meta.id, itemsHash(run.items), run.items.length);
     return done({ status: 'changed', detail: `menu updated: ${summarise(changes)}`, items: run.items.length, changes });
@@ -228,26 +404,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: { heal: boolean; b
     // on a hunch — flag it for review instead.
     return done({ status: 'review', detail: `${suspicious}; a fresh reading did not confirm it — flagged for review`, items: run.items.length, changes: [] });
   }
-  emit({ type: 'log', message: `[fleet] ${x.meta.id}: ${broken} — healing` });
-  const tagged: Emit = (e) => emit({ ...e, target: x.meta.id } as typeof e);
-  const healLedger = new Ledger(opts.budget ? Math.max(0, opts.budget.left() - ledger.costUsd) : undefined);
-  const healed = await forge(
-    { url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason: broken }, oracle: freshOracle, ledger: healLedger },
-    tagged,
-  );
-  ledger.merge(healed.ledger);
-  if (healed.ok && healed.items) {
-    const changes = diffItems(prev, healed.items);
-    saveSnapshot(x.meta.id, healed.items);
-    return done({
-      status: 'healed',
-      detail: `${broken} → rewrote extractor v${healed.meta!.version} in ${healed.rounds} round(s)${changes.length ? `; ${summarise(changes)}` : ''}`,
-      items: healed.items.length,
-      changes,
-      version: healed.meta!.version,
-    });
-  }
-  return done({ status: 'broken', detail: `${broken}; heal failed: ${healed.reason}`, items: run.items.length, changes: [] });
+  return heal(broken, freshOracle);
 }
 
 /**
@@ -324,7 +481,10 @@ async function checkDocument(
   try {
     pdf = await fetchPdf(stored.url);
   } catch (e) {
-    return done({ status: 'broken', detail: `PDF menu unavailable: ${(e as Error).message}`, items: 0, changes: [] });
+    // A timeout / network failure says nothing about the menu — only a missing file (4xx) does.
+    const msg = (e as Error).message;
+    const gone = /\b(404|410|403)\b|not a PDF/i.test(msg);
+    return done({ status: gone ? 'broken' : 'error', detail: `PDF menu unavailable: ${msg}`, items: gone ? 0 : prev.length, changes: [] });
   }
   if (pdf.sha256 === stored.sha256) return done({ status: 'stable', detail: 'PDF menu unchanged (fingerprint matches)', items: prev.length, changes: [] });
   if (!opts.heal || (opts.budget && opts.budget.left() <= 0))
@@ -353,8 +513,17 @@ function summarise(changes: PriceChange[]): string {
   return [p && `${p} price change(s)`, a && `${a} added`, r && `${r} removed`].filter(Boolean).join(', ');
 }
 
+/** Check one extractor (the "Re-scrape now" / "Check against Nemotron" buttons). */
+export async function checkExtractor(id: string, opts: CheckOptions & { maxUsd?: number }, emit: Emit = () => {}): Promise<FleetEntry | null> {
+  const x = listExtractors().find((e) => e.meta.id === id);
+  if (!x) return null;
+  let spent = 0;
+  const budget: Budget | undefined = opts.maxUsd == null ? undefined : { left: () => opts.maxUsd! - spent, spend: (u) => (spent += u) };
+  return checkOne(x, emit, { ...opts, budget });
+}
+
 export async function runFleet(
-  opts: { heal?: boolean; only?: string[]; concurrency?: number; maxUsd?: number } = {},
+  opts: { heal?: boolean; only?: string[]; concurrency?: number; maxUsd?: number; audit?: 'never' | 'auto' | 'force'; auditDays?: number } = {},
   emit: Emit = () => {},
 ): Promise<FleetReport> {
   let spent = 0;
@@ -370,7 +539,7 @@ export async function runFleet(
     while (queue.length) {
       const x = queue.shift()!;
       try {
-        entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget }));
+        entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget, audit: opts.audit ?? 'auto', auditDays: opts.auditDays }));
       } catch (e) {
         // One extractor's failure must never lose the whole run's report.
         entries.push({

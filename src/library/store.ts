@@ -163,3 +163,11 @@ export function updateDocumentSource(id: string, document: { url: string; sha256
   meta.baselineCount = baselineCount;
   writePersisted(metaFile, JSON.stringify(meta, null, 2) + '\n');
 }
+
+/** Merge fields into an extractor's meta.json (e.g. the last coverage-check result). */
+export function patchMeta(id: string, patch: Partial<ExtractorMeta>): void {
+  const metaFile = resolve(dir(), id, 'meta.json');
+  if (!existsSync(metaFile)) return;
+  const meta = JSON.parse(readFileSync(metaFile, 'utf8')) as ExtractorMeta;
+  writePersisted(metaFile, JSON.stringify({ ...meta, ...patch }, null, 2) + '\n');
+}

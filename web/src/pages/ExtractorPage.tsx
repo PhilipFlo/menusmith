@@ -4,13 +4,14 @@ import { CodeViewer } from '../components/CodeViewer.tsx';
 import { DiffView } from '../components/DiffView.tsx';
 import { ItemsTable } from '../components/ItemsTable.tsx';
 import { ScoreBars } from '../components/ScoreBars.tsx';
+import { RecheckPanel } from '../components/RecheckPanel.tsx';
 import { Badge, Empty, ErrorNote, ModelChip, Panel, PlatformBadge, Spinner } from '../components/ui.tsx';
 import { useLoad } from '../controllers.ts';
 import { date, int, pct, relative, usd } from '../format.ts';
 import { href } from '../router.ts';
 
 export function ExtractorPage({ id }: { id: string }) {
-  const { data, error, loading } = useLoad(() => api.extractor(id), [id]);
+  const { data, error, loading, reload } = useLoad(() => api.extractor(id), [id]);
   const [view, setView] = useState<'code' | 'diff'>('code');
   const [version, setVersion] = useState<number | null>(null);
   const [from, setFrom] = useState<number | null>(null);
@@ -195,6 +196,8 @@ export function ExtractorPage({ id }: { id: string }) {
           <p className="muted">One of these versions isn't stored.</p>
         )}
       </Panel>
+
+      <RecheckPanel meta={meta} onDone={reload} />
 
       <Panel title="Latest dishes" subtitle="The most recent snapshot from this extractor — the baseline the fleet compares against.">
         {items && items.length ? <ItemsTable items={items} caption="Latest extracted dishes" /> : <p className="small muted">No snapshot yet — it's written on the first fleet run.</p>}

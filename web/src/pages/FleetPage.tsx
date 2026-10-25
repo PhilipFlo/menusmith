@@ -297,7 +297,7 @@ function EntryRow({ e, open, onToggle }: { e: FleetEntry; open: boolean; onToggl
   );
 }
 
-function ChangesList({ changes }: { changes: PriceChange[] }) {
+export function ChangesList({ changes }: { changes: PriceChange[] }) {
   return (
     <ul className="changes">
       {changes.map((c, i) => {

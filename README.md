@@ -87,6 +87,11 @@ flowchart LR
    recorded as price changes. Broken (0 items, collapsed count, lost prices) → the oracle checks
    whether the menu really shrank; if not, the agent rewrites the extractor from its old code plus
    the new page: **self-healing**.
+   **Silent misses are caught too.** A small drop ("2 dishes gone") looks like a normal menu
+   change, so the fleet never records a removal on trust: it asks Nemotron to read the page fresh
+   and compares. Dishes that left the output but are still on the page mean the *code* is wrong →
+   it is rewritten. Every extractor also gets this coverage check weekly (~$0.003), and anyone can
+   trigger it from the extractor page (**Re-scrape now · $0** / **Check against Nemotron**).
 10. **Reuse** — before writing new code, extractors from sites on the same platform (Squarespace,
     WordPress, or hosted ordering systems like Winorder/Ordera) are tried first — zero tokens.
 

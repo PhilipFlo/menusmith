@@ -2748,3 +2748,8 @@ select.input {
 .mini-review .mini-dot {
   background: var(--info);
 }
+
+/* Re-check panel on the extractor page */
+.recheck-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.recheck-result { margin-top: 14px; display: grid; gap: 8px; }
+.recheck-audit { border-top: 1px solid var(--border); padding-top: 10px; }

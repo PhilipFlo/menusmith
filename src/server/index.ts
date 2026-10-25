@@ -6,9 +6,9 @@ import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { config, MODELS, ROOT } from '../config.ts';
 import { redesignedFixtures, setFixtureRedesigned } from '../html/fetch.ts';
-import { listExtractors, loadExtractor, loadVersion } from '../library/store.ts';
+import { listExtractors, loadExtractor, loadSnapshot, loadVersion } from '../library/store.ts';
 import { forge } from '../agent/pipeline.ts';
-import { fleetHistory, runFleet } from '../fleet/fleet.ts';
+import { checkExtractor, fleetHistory, runFleet } from '../fleet/fleet.ts';
 import type { AgentEvent } from '../types.ts';
 import { Ledger } from '../llm/client.ts';
 import { flush, hydrate, refresh, storeEnabled, writePersisted } from '../library/persist.ts';
@@ -146,6 +146,58 @@ app.get('/api/library/:id', async (c) => {
   const snapFile = resolve(config.libraryDir, 'snapshots', `${x.meta.id}.json`);
   const items = existsSync(snapFile) ? JSON.parse(readFileSync(snapFile, 'utf8')) : null;
   return c.json({ meta: x.meta, code: x.code, versions, items });
+});
+
+// ---- single-extractor checks ------------------------------------------------------
+const lastCheck = new Map<string, number>();
+const busyIds = new Set<string>();
+
+/** "Re-scrape now": run the stored code against the live page — no model, $0. */
+app.post('/api/library/:id/rescrape', async (c) => {
+  const id = c.req.param('id');
+  if (!ID_RE.test(id)) return c.json({ error: 'bad id' }, 400);
+  const ip = clientIp(c);
+  const recent = (hits.get(`rescrape:${ip}`) || []).filter((t) => Date.now() - t < 3_600_000);
+  if (recent.length >= 40) return c.json({ error: 'Too many re-scrapes from this address — try again later.' }, 429);
+  if (busyIds.has(id) || fleetRunning) return c.json({ error: 'This extractor is being checked right now.' }, 409);
+  hits.set(`rescrape:${ip}`, [...recent, Date.now()]);
+  busyIds.add(id);
+  try {
+    await refresh(0);
+    const entry = await checkExtractor(id, { heal: false, audit: 'never' });
+    if (!entry) return c.json({ error: 'not found' }, 404);
+    return c.json({ entry, items: loadSnapshot(id) ?? [] });
+  } finally {
+    busyIds.delete(id);
+  }
+});
+
+/**
+ * "Check against Nemotron": re-scrape, then compare with a fresh model reading of the
+ * page (~$0.003). Dishes still on the page but missing from the output trigger a
+ * self-heal when the daily budget allows; otherwise they're reported for review.
+ */
+app.post('/api/library/:id/audit', async (c) => {
+  const id = c.req.param('id');
+  if (!ID_RE.test(id)) return c.json({ error: 'bad id' }, 400);
+  const denied = allow(clientIp(c));
+  if (denied) return c.json({ error: denied }, 429);
+  if (Date.now() - (lastCheck.get(id) || 0) < 120_000) return c.json({ error: 'This extractor was checked less than 2 minutes ago.' }, 429);
+  if (busyIds.has(id) || fleetRunning) return c.json({ error: 'This extractor is being checked right now.' }, 409);
+  lastCheck.set(id, Date.now());
+  busyIds.add(id);
+  running++;
+  try {
+    await refresh(0);
+    const maxUsd = Math.min(PER_FORGE_USD, Math.max(0, budgetLeft()));
+    const entry = await checkExtractor(id, { heal: maxUsd > 0.05, audit: 'force', maxUsd });
+    if (!entry) return c.json({ error: 'not found' }, 404);
+    addSpend(entry.costUsd);
+    return c.json({ entry, items: loadSnapshot(id) ?? [] });
+  } finally {
+    running--;
+    busyIds.delete(id);
+  }
 });
 
 let fleetRunning = false;

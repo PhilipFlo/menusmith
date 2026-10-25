@@ -16,7 +16,8 @@ deterministic price feed. It reads the menu once, writes a small extractor progr
 website, runs it in a sandbox, tests it against its own reading, and repairs it until it passes.
 Re-runs are plain JavaScript — zero tokens, same output every time. A nightly fleet re-runs the
 whole library; when a website redesign breaks an extractor, the agent notices and rewrites its own
-code.
+code. It doesn't trust quiet changes either: before recording "2 dishes removed", Nemotron re-reads
+the page — if those dishes are still there, the code was wrong, and it is rewritten.
 
 ## How we built it
 - **Nebius Token Factory** serves every model call through one OpenAI-compatible API.
@@ -38,6 +39,10 @@ code.
   Nemotron Nano arbitration that corrects both sides.
 - "0 items" is useless feedback → the sandbox records every selector call and how many elements
   went in and out, so the model debugs like a developer in DevTools.
+- A broken extractor is easy to spot; one that quietly drops 2 of 22 dishes looks exactly like a
+  menu change. Removals are now only recorded after Nemotron re-reads the page and confirms they're
+  gone — in our test the fleet caught a deliberately lossy extractor and rewrote it in 12 s for
+  half a cent.
 
 ## Accomplishments
 - **82 of 120 real restaurant websites** (Oslo + Palo Alto) get a working extractor starting from

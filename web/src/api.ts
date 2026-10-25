@@ -61,6 +61,26 @@ export interface FleetEntry {
   costUsd: number;
   changes: PriceChange[];
   version: number;
+  audit?: AuditResult;
+}
+
+export interface AuditResult {
+  at: string;
+  pass: boolean;
+  recall: number;
+  precision: number;
+  f1: number;
+  oracleCount: number;
+  extractorCount: number;
+  missing: MenuItem[];
+  stillOnPage?: string[];
+  wrongPrice: { name: string; expected: number | null; got: number | null }[];
+  extra: MenuItem[];
+}
+
+export interface CheckResult {
+  entry: FleetEntry;
+  items: MenuItem[];
 }
 
 export interface FleetReport {
@@ -103,6 +123,8 @@ export const api = {
   fleetHistory: () => getJson<FleetReport[]>('/api/fleet/history'),
   fixtures: () => getJson<Fixture[]>('/api/fixtures'),
   bench: () => getJson<unknown>('/api/bench'),
+  rescrape: (id: string) => getJson<CheckResult>(`/api/library/${encodeURIComponent(id)}/rescrape`, { method: 'POST' }),
+  audit: (id: string) => getJson<CheckResult>(`/api/library/${encodeURIComponent(id)}/audit`, { method: 'POST' }),
   redesign: (slug: string, on: boolean) =>
     getJson<{ redesigned: string[] }>(`/api/fixtures/${encodeURIComponent(slug)}/redesign`, {
       method: 'POST',

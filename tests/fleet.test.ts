@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diffItems, looksBroken, looksSuspicious } from '../src/fleet/fleet.ts';
+import { diffItems, looksBroken, looksSuspicious, stillListed } from '../src/fleet/fleet.ts';
 
 const item = (name: string, price: number | null, section = 'Pizza') => ({ section, name, price });
 
@@ -40,5 +40,21 @@ describe('fleet filter (review finding)', () => {
     const r = await runFleet({ only: [], heal: false });
     expect(r.entries).toHaveLength(0);
     expect(r.totals.extractors).toBe(0);
+  });
+});
+
+describe('coverage check: removed vs. silently missed', () => {
+  it('a dish that left the output but is still on the page is the code\'s fault', () => {
+    expect(stillListed(['Ayran', 'Brus 0,5 l'], ['Brus 0,5 l', 'Ayran'])).toEqual(['Ayran', 'Brus 0,5 l']);
+  });
+  it('tolerates small naming differences between the oracle and the old output', () => {
+    expect(stillListed(['Pizza Margherita'], ['Margherita'])).toEqual(['Pizza Margherita']);
+  });
+  it('dishes the restaurant really removed are not flagged', () => {
+    expect(stillListed(['Ayran'], ['Lammeskank'])).toEqual([]);
+    expect(stillListed([], ['Lammeskank'])).toEqual([]);
+  });
+  it('very short names need an exact match', () => {
+    expect(stillListed(['Te'], ['Tea'])).toEqual([]);
   });
 });

@@ -81,6 +81,8 @@ export interface ExtractorMeta {
   baselineCount: number;
   /** Share of items with a price at commit time — so unpriced menus aren't flagged as broken. */
   baselinePriced?: number;
+  /** Last coverage check against a fresh Nemotron reading. */
+  lastAudit?: { at: string; pass: boolean; recall: number; f1: number; missing: number };
   /** If this extractor was adopted from the library instead of forged. */
   reusedFrom?: string | null;
   history?: { version: number; reason: string; at: string }[];
