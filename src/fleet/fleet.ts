@@ -14,7 +14,7 @@ import { renderPage } from '../html/render.ts';
 import { fetchPage } from '../html/fetch.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import type { Emit, MenuItem } from '../types.ts';
-import { itemsHash, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
+import { itemsHash, nameSimilarity, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
 import { readMenu } from '../agent/oracle.ts';
 import { forge, groundOracle } from '../agent/pipeline.ts';
 import { arbitrate } from '../agent/judge.ts';
@@ -48,6 +48,8 @@ export interface PriceChange {
 export interface AuditResult {
   at: string;
   pass: boolean;
+  /** False when the fresh reading itself looks unreliable (< 3 dishes) — then nothing is concluded. */
+  conclusive: boolean;
   recall: number;
   precision: number;
   f1: number;
@@ -169,13 +171,21 @@ function sourceText(src: { payload: string; html: string }, mode: 'html' | 'json
  * disputed items are arbitrated by Nano. A dish that is still on the page but missing
  * from the output is a silent miss — exactly what a plain re-run can't notice.
  */
-/** Of the dishes a fresh reading sees but the code missed, which ones were in the last run's output? */
-export function stillListed(missedNow: string[], vanished: string[]): string[] {
-  const gone = vanished.map(normName).filter(Boolean);
-  return missedNow.filter((n) => {
-    const k = normName(n);
-    return !!k && gone.some((g) => g === k || (g.length >= 4 && k.length >= 4 && (g.includes(k) || k.includes(g))));
-  });
+type Named = { name: string; price?: number | null };
+/**
+ * Of the dishes a fresh reading sees but the code missed, which ones were in the last run's
+ * output? Same normalised name, or a close name at the same price. Dishes that only moved to
+ * another section (still in `current`) don't count as vanished.
+ */
+export function stillListed(missedNow: Named[], vanished: Named[], current: Named[] = []): string[] {
+  const present = new Set(current.map((i) => normName(i.name)));
+  const gone = vanished.filter((v) => normName(v.name) && !present.has(normName(v.name)));
+  return missedNow
+    .filter((m) => {
+      const k = normName(m.name);
+      return !!k && gone.some((g) => normName(g.name) === k || (nameSimilarity(normName(g.name), k) >= 0.6 && samePrice(g.price, m.price)));
+    })
+    .map((m) => m.name);
 }
 
 async function coverageAudit(
@@ -185,7 +195,7 @@ async function coverageAudit(
   ledger: Ledger,
   emit: Emit,
   /** Dishes that were in the last snapshot but not in this run's output. */
-  vanished: string[] = [],
+  vanished: Named[] = [],
 ): Promise<{ audit: AuditResult; oracle: MenuItem[] }> {
   const o = await readMenu(text, { url: x.meta.url, restaurant: x.meta.restaurant }, ledger, emit);
   let oracle = groundOracle(o.items, text).kept;
@@ -199,10 +209,11 @@ async function coverageAudit(
   }
   // A dish that dropped out of the output but is still on the page is a code bug, not a
   // menu change — however high overall recall is.
-  const stillOnPage = stillListed(score.missing.map((m) => m.name), vanished);
+  const stillOnPage = stillListed(score.missing, vanished, items);
   const audit: AuditResult = {
     at: new Date().toISOString(),
-    pass: score.pass && oracle.length >= 3 && stillOnPage.length === 0,
+    conclusive: oracle.length >= 3,
+    pass: score.pass && stillOnPage.length === 0,
     stillOnPage,
     recall: score.recall,
     precision: score.precision,
@@ -213,6 +224,10 @@ async function coverageAudit(
     wrongPrice: score.wrongPrice.slice(0, 15),
     extra: score.extra.slice(0, 15),
   };
+  if (!audit.conclusive) {
+    emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage check inconclusive — the fresh reading found only ${oracle.length} dish(es)` });
+    return { audit, oracle };
+  }
   patchMeta(x.meta.id, { lastAudit: { at: audit.at, pass: audit.pass, recall: audit.recall, f1: audit.f1, missing: score.missing.length } });
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage check — recall ${audit.recall}, ${score.missing.length} dish(es) on the page not extracted` });
   return { audit, oracle };
@@ -227,9 +242,30 @@ export interface CheckOptions {
   auditDays?: number;
 }
 
+/** Thrown when a check fails after it already spent money — carries what it cost. */
+export class CheckError extends Error {
+  constructor(message: string, readonly costUsd: number) {
+    super(message);
+  }
+}
+
+// Heals run one at a time: each one sees the budget the previous one left, so parallel
+// fleet workers can't all spend the same remaining dollars.
+let healLock: Promise<unknown> = Promise.resolve();
+
 async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Promise<FleetEntry> {
-  const t0 = Date.now();
   const ledger = new Ledger(opts.budget ? Math.max(0, opts.budget.left()) : undefined);
+  let recorded = false;
+  try {
+    return await checkWith(x, emit, opts, ledger, () => (recorded = true));
+  } catch (e) {
+    if (!recorded) opts.budget?.spend(ledger.costUsd);
+    throw new CheckError((e as Error).message, Math.round(ledger.listCostUsd * 1e6) / 1e6);
+  }
+}
+
+async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, ledger: Ledger, onRecorded: () => void): Promise<FleetEntry> {
+  const t0 = Date.now();
   const base: Omit<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> = {
     id: x.meta.id,
     domain: x.meta.domain,
@@ -242,6 +278,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Pro
   };
   const done = (e: Pick<FleetEntry, 'status' | 'detail' | 'items' | 'changes'> & { version?: number; audit?: AuditResult }): FleetEntry => {
     opts.budget?.spend(ledger.costUsd);
+    onRecorded();
     const entry: FleetEntry = {
       ...base,
       ...e,
@@ -271,16 +308,33 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Pro
 
   /** Rewrite the extractor from its old code + the current page (+ a fresh reading if we have one). */
   async function heal(reason: string, freshOracle?: MenuItem[], audit?: AuditResult): Promise<FleetEntry> {
+    const turn = healLock.then(() => healNow(reason, freshOracle, audit));
+    healLock = turn.catch(() => {});
+    return turn;
+  }
+  async function healNow(reason: string, freshOracle?: MenuItem[], audit?: AuditResult): Promise<FleetEntry> {
     if (!opts.heal || (opts.budget && opts.budget.left() - ledger.costUsd <= 0))
-      return done({ status: 'review', detail: `${reason} — not healed (healing off or budget used up)`, items: run.items.length, changes: [], audit });
+      return done({
+        status: 'review',
+        detail: `${reason} — flagged for repair (${opts.heal ? 'budget used up' : 'not rewritten from here'}; the next fleet run re-checks it)`,
+        items: run.items.length,
+        changes: [],
+        audit,
+      });
     emit({ type: 'log', message: `[fleet] ${x.meta.id}: ${reason} — healing` });
     const tagged: Emit = (e) => emit({ ...e, target: x.meta.id } as typeof e);
-    const healLedger = new Ledger(opts.budget ? Math.max(0, opts.budget.left() - ledger.costUsd) : undefined);
-    const healed = await forge(
-      { url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason }, oracle: freshOracle, ledger: healLedger },
-      tagged,
-    );
-    ledger.merge(healed.ledger);
+    const left = opts.budget ? Math.max(0, opts.budget.left() - ledger.costUsd) : Infinity;
+    const cap = Math.min(left, Number(process.env.MENUSMITH_MAX_JOB_USD) || Infinity); // hard ceiling for one heal
+    const healLedger = new Ledger(Number.isFinite(cap) ? cap : undefined);
+    let healed: Awaited<ReturnType<typeof forge>>;
+    try {
+      healed = await forge(
+        { url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason }, oracle: freshOracle, ledger: healLedger },
+        tagged,
+      );
+    } finally {
+      ledger.merge(healLedger); // count the spend even if the rewrite threw
+    }
     if (healed.ok && healed.items) {
       const changes = diffItems(prev, healed.items);
       saveSnapshot(x.meta.id, healed.items);
@@ -303,6 +357,7 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Pro
   const auditDue = () => {
     if (auditMode === 'force') return true;
     if (auditMode !== 'auto') return false;
+    if (x.meta.lastAudit && !x.meta.lastAudit.pass) return true; // failed last time → re-check until fixed
     const last = x.meta.lastAudit?.at ? Date.parse(x.meta.lastAudit.at) : Date.parse(x.meta.createdAt);
     return Date.now() - last > (opts.auditDays ?? 7) * 86_400_000;
   };
@@ -313,6 +368,8 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Pro
       const text = sourceText(src, mode);
       try {
         const { audit, oracle } = await coverageAudit(x, run.items, text, ledger, emit);
+        if (!audit.conclusive)
+          return done({ status: 'stable', detail: `${run.items.length} items, unchanged — Nemotron check inconclusive (fresh reading found too few dishes)`, items: run.items.length, changes: [], audit });
         if (audit.pass) return done({ status: 'stable', detail: `${run.items.length} items, unchanged — verified against a fresh reading`, items: run.items.length, changes: [], audit });
         return heal(`coverage check: ${audit.oracleCount - Math.round(audit.recall * audit.oracleCount)} dish(es) on the page are not extracted`, oracle, audit);
       } catch (e) {
@@ -338,9 +395,12 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Pro
     if (removed > 0 || auditDue()) {
       if (auditMode !== 'never' && canSpend) {
         try {
-          const vanished = changes.filter((c) => c.kind === 'removed').map((c) => c.name);
+          const vanished = changes.filter((c) => c.kind === 'removed').map((c) => ({ name: c.name, price: c.oldPrice }));
           const { audit, oracle } = await coverageAudit(x, run.items, sourceText(src, mode), ledger, emit, vanished);
-          if (!audit.pass)
+          if (!audit.conclusive) {
+            if (removed > 0)
+              return done({ status: 'review', detail: `${removed} dish(es) disappeared — the Nemotron check was inconclusive, kept the last good data`, items: run.items.length, changes, audit });
+          } else if (!audit.pass)
             return heal(
               audit.stillOnPage.length
                 ? `coverage check: ${audit.stillOnPage.length} dish(es) dropped out of the output but are still on the page (${audit.stillOnPage.slice(0, 3).join(', ')})`
@@ -388,7 +448,14 @@ async function checkOne(x: StoredExtractor, emit: Emit, opts: CheckOptions): Pro
     const o = await readMenu(text, { url: x.meta.url, restaurant: x.meta.restaurant }, ledger, emit);
     const oracle = groundOracle(o.items, text).kept;
     freshOracle = oracle.length >= 3 ? oracle : undefined;
-    if (run.ok && oracle.length && scoreAgainstOracle(oracle, run.items, text).pass) {
+    const gone = diffItems(prev, run.items)
+      .filter((c) => c.kind === 'removed')
+      .map((c) => ({ name: c.name, price: c.oldPrice }));
+    const score = run.ok && oracle.length >= 3 ? scoreAgainstOracle(oracle, run.items, text) : null;
+    const stillThere = score ? stillListed(score.missing, gone, run.items) : [];
+    if (score && stillThere.length && !broken)
+      return heal(`${suspicious}; ${stillThere.length} of the missing dishes are still on the page (${stillThere.slice(0, 3).join(', ')})`, freshOracle);
+    if (score?.pass && !stillThere.length) {
       // The extractor agrees with a fresh reading — the restaurant really shrank its menu.
       const changes = diffItems(prev, run.items);
       saveSnapshot(x.meta.id, run.items);
@@ -539,7 +606,7 @@ export async function runFleet(
     while (queue.length) {
       const x = queue.shift()!;
       try {
-        entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget, audit: opts.audit ?? 'auto', auditDays: opts.auditDays }));
+        entries.push(await checkOne(x, emit, { heal: opts.heal !== false, budget, audit: opts.audit ?? (budget ? 'auto' : 'never'), auditDays: opts.auditDays }));
       } catch (e) {
         // One extractor's failure must never lose the whole run's report.
         entries.push({
@@ -552,7 +619,7 @@ export async function runFleet(
           baselineItems: x.meta.baselineCount,
           ms: 0,
           tokens: 0,
-          costUsd: 0,
+          costUsd: e instanceof CheckError ? e.costUsd : 0,
           changes: [],
           version: x.meta.version,
         });

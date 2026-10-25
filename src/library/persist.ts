@@ -33,6 +33,8 @@ let chain: Promise<void> = Promise.resolve();
 let queued = 0;
 /** False after a failed restore — then mirroring stale local files could overwrite good rows. */
 let storeTrusted = true;
+/** When each path was last written locally — a re-sync must not revert a write made while it ran. */
+const localWrites = new Map<string, number>();
 
 function relPath(abs: string): string | null {
   const rel = relative(config.libraryDir, abs);
@@ -67,6 +69,7 @@ export function mirror(abs: string, content?: string): void {
   }
   const path = relPath(abs);
   if (!path) return;
+  localWrites.set(path, Date.now());
   const body = content ?? readFileSync(abs, 'utf8');
   queued++;
   chain = chain
@@ -131,6 +134,7 @@ function listLocal(dir: string): string[] {
  * boot), seed it from the local folder (the library shipped in the image).
  */
 async function pull(): Promise<number> {
+  const started = Date.now();
   let restored = 0;
   const pageSize = 200;
   for (let from = 0; ; from += pageSize) {
@@ -143,6 +147,7 @@ async function pull(): Promise<number> {
     for (const r of rows) {
       const abs = resolve(config.libraryDir, r.path);
       if (!abs.startsWith(config.libraryDir + sep)) continue;
+      if ((localWrites.get(r.path) ?? 0) >= started) continue; // written here during this pull — ours is newer
       mkdirSync(dirname(abs), { recursive: true });
       writeFileSync(abs, r.content);
       restored++;

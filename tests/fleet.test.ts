@@ -44,17 +44,23 @@ describe('fleet filter (review finding)', () => {
 });
 
 describe('coverage check: removed vs. silently missed', () => {
+  const d = (name: string, price: number | null = 100) => ({ name, price });
   it('a dish that left the output but is still on the page is the code\'s fault', () => {
-    expect(stillListed(['Ayran', 'Brus 0,5 l'], ['Brus 0,5 l', 'Ayran'])).toEqual(['Ayran', 'Brus 0,5 l']);
+    expect(stillListed([d('Ayran', 30), d('Brus 0,5 l', 35)], [d('Brus 0,5 l', 35), d('Ayran', 30)])).toEqual(['Ayran', 'Brus 0,5 l']);
   });
-  it('tolerates small naming differences between the oracle and the old output', () => {
-    expect(stillListed(['Pizza Margherita'], ['Margherita'])).toEqual(['Pizza Margherita']);
+  it('an exact name counts even if the price changed', () => {
+    expect(stillListed([d('Ayran', 35)], [d('Ayran', 30)])).toEqual(['Ayran']);
+  });
+  it('a close name only counts at the same price', () => {
+    expect(stillListed([d('Pizza Margherita', 129)], [d('Margherita', 129)])).toEqual(['Pizza Margherita']);
+    expect(stillListed([d('Ekstra kebabkjøtt', 25)], [d('Kebab', 129)])).toEqual([]);
+    expect(stillListed([d('Cheeseburger', 159)], [d('Burger', 139)])).toEqual([]);
   });
   it('dishes the restaurant really removed are not flagged', () => {
-    expect(stillListed(['Ayran'], ['Lammeskank'])).toEqual([]);
-    expect(stillListed([], ['Lammeskank'])).toEqual([]);
+    expect(stillListed([d('Ayran')], [d('Lammeskank')])).toEqual([]);
+    expect(stillListed([], [d('Lammeskank')])).toEqual([]);
   });
-  it('very short names need an exact match', () => {
-    expect(stillListed(['Te'], ['Tea'])).toEqual([]);
+  it('a dish that only moved to another section is not "vanished"', () => {
+    expect(stillListed([d('Ayran', 30)], [d('Ayran', 30)], [{ name: 'Ayran', price: 30 }])).toEqual([]);
   });
 });
