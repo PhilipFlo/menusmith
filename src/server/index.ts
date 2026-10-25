@@ -80,7 +80,7 @@ app.get('/api/health', (c) =>
   c.json({
     ok: true,
     llmMode: config.llmMode,
-    commit: (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || "").slice(0, 7) || undefined,
+    commit: (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || '').slice(0, 7) || undefined,
     nebius: !!config.nebiusApiKey,
     tavily: !!config.tavilyApiKey,
     browser: process.env.MENUSMITH_RENDER !== 'off',
