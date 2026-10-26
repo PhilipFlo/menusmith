@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-10-26T12:25:32.656Z",
+  "runAt": "2026-10-26T19:20:25.274Z",
   "summary": {
     "healthyExtractorsChecked": 20,
     "flagged": 0,
@@ -10,7 +10,7 @@
       "site": "telefericbarcelona.com",
       "flagged": false,
       "regressed": false,
-      "recall": 0.934,
+      "recall": 0.933,
       "acceptedRecall": 0.874,
       "missing": 4,
       "missed": [
@@ -20,29 +20,21 @@
         "Shared Plates / Pulpo Telefèric 22"
       ],
       "detail": "92 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.011083
+      "costUsd": 0.01116
     },
     {
       "site": "eero.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0.884,
+      "recall": 0.966,
       "acceptedRecall": 0.87,
-      "missing": 10,
+      "missing": 2,
       "missed": [
-        "Snacks & mingling / Anbefaling fra baren ",
         "Julemeny / Fiskealternativ: torsk · vegetar på forespørsel ",
-        " / Signaturcocktailer utviklet hos oss, klassikere med vår egen vri og et godt utvalg alkoholfrie alternativer. Til mottakelser kan vi gjøre klare to eller tre cocktailer på forhånd, slik at gjestene får noe godt i glasset allerede ved ankomst. ",
-        " / Vinutvalget spenner fra gode hverdagsflasker til toppsjiktet, nøye kuratert av vinsjef Francesco Marzola. Ønsker dere vin på flaske fremfor vinpakke, setter Francesco sammen et utvalg som passer menyen deres. ",
-        " / Marcustic, Sola Wang, Victor Ameln og Elie Pesca kjenner huset, rommet og lyden. De legger seg lavt under middagen og løfter kvelden når bordene ryddes. ",
-        " / Levende innslag tidlig på kvelden — walking jazz mellom bordene, sax over DJ-en, eller julerepertoar i desember. Vi samarbeider med Romslo Entertainment, Sax Attack, Walking Jazz, Music for Christmas og Boysen. ",
-        " / Fullt teknisk team for taler, prisutdelinger og lanseringer: showavvikling, lyd, lys, AV og projeksjon. Kjøreplanen avtales før kvelden — teknikken er på plass før første gjest. ",
-        " / Underholdning og teknisk team prises per arrangement, etter behov og omfang — vi setter opp forslag sammen med tilbudet. ",
-        " / Dinner 1095",
-        " / Dinner + wine 1795"
+        "Snacks & mingling / Kjøtt eller vegetar "
       ],
       "detail": "82 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.006815
+      "costUsd": 0.005301
     },
     {
       "site": "frognerseteren.no",
@@ -61,31 +53,31 @@
       "site": "cafeskansen.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0.898,
+      "recall": 0.891,
       "acceptedRecall": 0.891,
-      "missing": 12,
+      "missing": 13,
       "missed": [
         "Snacks / OLIVEN 85",
         "Snacks / CHIPS SALT & VINEGAR 75",
         "Snacks / CHIPS SALT 69",
         "Snacks / PEANØTTER 69",
         "Snacks / CHILINØTTER 75",
+        "Forretter / BREIFLABBKJAKER 245",
         "Alkoholfritt, Mineralvann & Kaffe / MOZELL EPLEMOST 75",
         "Alkoholfritt, Mineralvann & Kaffe / ISTE FERSKEN / SITRON 75",
         "Alkoholfritt, Mineralvann & Kaffe / FARRIS NATURELL / LIME 65",
-        "Alkoholfritt, Mineralvann & Kaffe / EIRA SPARKLING WATER 70CL 95",
-        "Alkoholfritt, Mineralvann & Kaffe / PEPSI / PEPSI MAX 69"
+        "Alkoholfritt, Mineralvann & Kaffe / EIRA SPARKLING WATER 70CL 95"
       ],
       "detail": "115 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.016298
+      "costUsd": 0.016317
     },
     {
       "site": "newdelhi.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0.896,
+      "recall": 0.887,
       "acceptedRecall": 0.929,
-      "missing": 9,
+      "missing": 10,
       "missed": [
         "Chef’s Table Menu / Chef’s Table Menu with wine package 1999",
         "Chef’s Table Menu / Amuse-bouche ",
@@ -95,36 +87,47 @@
         "Chef’s Table Menu / Punjabi Palak Paneer – vegetarian ",
         "Chef’s Table Menu / Sorbet ice ",
         "Starters – Street Food / Lamb Chops Starter – 2 pcs 179",
-        "Classic Lamb Curries / ★ Lamb 65 🌶️🌶️🌶️ RECOMMENDED 279"
+        "Classic Lamb Curries / ★ Lamb 65 🌶️🌶️🌶️ RECOMMENDED 279",
+        "“Secret” Menu / “Secret” Menu set menu – a full evening experience for friends, family and larger groups 11999"
       ],
       "detail": "154 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.012352
+      "costUsd": 0.012245
     },
     {
       "site": "izakayabyvladimirpak.omakasegroup.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0.977,
+      "recall": 0.867,
       "acceptedRecall": 0.859,
-      "missing": 1,
+      "missing": 10,
       "missed": [
-        "lunch / Chirashi bowl 385"
+        "lunch / Chirashi bowl 385",
+        "Premium Tasting Menu / Wagyu Nigiri (1 pc) ",
+        "Premium Tasting Menu / Salmon Toro Nigiri (1 pc) ",
+        "Premium Tasting Menu / Gunkan Ikura Nigiri (1 pc) ",
+        "Premium Tasting Menu / Akami Nigiri (1 pc) ",
+        "Premium Tasting Menu / Toro Nigiri (1 pc) ",
+        "Premium Tasting Menu / Softshell Crab Maki (2 pcs) ",
+        "Premium Tasting Menu / Tuna Tartare Maki (2 pcs) ",
+        "AUTUMN MENU / Add black caviar +100,- 100",
+        "AUTUMN MENU KUSHIYAKI Extra / Japanese Rice 70"
       ],
       "detail": "67 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.005084
+      "costUsd": 0.006023
     },
     {
       "site": "goldenmountain.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0.976,
+      "recall": 0.961,
       "acceptedRecall": 0.949,
-      "missing": 1,
+      "missing": 2,
       "missed": [
-        "Kjøttretter / La zi chicken "
+        "Middagsmeny med utvalgte retter / 4-retters meny A 428",
+        "Middagsmeny med utvalgte retter / 4-retters meny B 528"
       ],
       "detail": "57 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.006167
+      "costUsd": 0.006693
     },
     {
       "site": "starbirdchicken.com",
@@ -134,12 +137,12 @@
       "acceptedRecall": 0.864,
       "missing": 3,
       "missed": [
-        "Catering Menu / Picnic Chicken Platter ",
-        "Catering Menu / Salad Bowl ",
-        "Catering Menu / Kettle Chips "
+        "PACKAGES / Picnic Chicken Platter ",
+        "PACKAGES / Salad Bowl ",
+        "PACKAGES / Kettle Chips "
       ],
       "detail": "19 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.004496
+      "costUsd": 0.004411
     },
     {
       "site": "bistromaxine.com",
@@ -156,23 +159,14 @@
       "site": "akerbrygge.derpepperngror.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0.881,
+      "recall": 0.892,
       "acceptedRecall": 0.882,
-      "missing": 16,
+      "missing": 1,
       "missed": [
-        "Specials / Vinpakke 650",
-        "Drikke / Te Grønn, svart, frukt og urter 55",
-        "Drikke / Svart kaffe Indian Malabar kaffe 55",
-        "Drikke / Sula Tropical Brut 210",
-        "Drikke / Sula Chenin Blanc 200",
-        "Drikke / Dindori Shiraz 205",
-        "Drikke / Signore Giuseppe Prosecco 160",
-        "Drikke / Il Lusio Cava Brut Nature 160",
-        "Drikke / Alamos Chardonnay 155",
-        "Drikke / Alois Lageder Riff Pinot Grigio 170"
+        "Drikke / Te Grønn, svart, frukt og urter 55"
       ],
       "detail": "120 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.013533
+      "costUsd": 0.010848
     },
     {
       "site": "treehouseatstanford.com",
@@ -182,11 +176,11 @@
       "acceptedRecall": 0.855,
       "missing": 25,
       "missed": [
-        "Choice of / Burrito ",
         "Sauce Choice / Buffalo ",
         "Sauce Choice / Angry Habanero ",
         "Sauce Choice / Sweet Tequila BBQ ",
         "Sauce Choice / Garlic Parmesan ",
+        "Sauce Choice / BBQ Sauce ",
         "Sauce Choice / Plain ",
         "Choice of / Salad ",
         "Choice of / Wrap Salad ",
@@ -194,7 +188,7 @@
         "Add Ons / Steak + $ 3 3"
       ],
       "detail": "207 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.023627
+      "costUsd": 0.022881
     },
     {
       "site": "tea-time.com",
@@ -205,48 +199,39 @@
       "missing": 0,
       "missed": [],
       "detail": "15 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.002816
+      "costUsd": 0.002865
     },
     {
       "site": "paloaltocreamery.com",
       "flagged": false,
       "regressed": false,
-      "recall": 0.95,
+      "recall": 0.986,
       "acceptedRecall": 0.986,
-      "missing": 11,
+      "missing": 3,
       "missed": [
-        "BREAKFAST / Enjoy Our Breakfast All Day ",
-        "BREAKFAST / Fresh fruit optional 13.95",
-        "BREAKFAST / With fresh fruit optional add 18.25",
-        "BREAKFAST / Fresh fruit optional add 18.5",
-        "BREAKFAST / Fresh fruit optional 18.75",
-        "BREAKFAST / Extra items ",
-        "BREAKFAST HOUSE SPECIALS / Pork carnitas optional 25.5",
         "Seasonal pies / Peach, Strawberry Rhubarb, Pumpkin 46",
-        "DESSERT / Chocolate Truffle Bread Pudling 10.25",
-        "Baked Goods / Fresh Baked whole pies 49"
+        "BREAKFAST / Enjoy Our Breakfast All Day ",
+        "DESSERT / Chocolate Truffle Bread Pudling 10.25"
       ],
       "detail": "210 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.021296
+      "costUsd": 0.042671
     },
     {
       "site": "cafeborrone.com",
       "flagged": false,
       "regressed": false,
-      "recall": 0.918,
+      "recall": 0.947,
       "acceptedRecall": 0.891,
-      "missing": 7,
+      "missing": 5,
       "missed": [
-        "Salads / add on acme baguette +$4.85 or garlic bread +$5.75 ",
         "FEATURES ON HOUSE MILK BUN / MEATLOAF SANDWICH ",
         "FEATURES @ 12PM / *ORGANIC VERDURA MISTA & SEARED POLENTA 26",
         "FEATURES @ 12PM / FILE OF SOLE 8",
         "SPECIALTY / Keep It Simple 5",
-        "SPECIALTY / Draft Rotation 11",
-        "Draft Rotation / All Beers from Original Pattern Brewing, Oakland 11"
+        "SPECIALTY / Draft Rotation 11"
       ],
       "detail": "92 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.010557
+      "costUsd": 0.010497
     },
     {
       "site": "italicorestaurant.com",
@@ -263,23 +248,18 @@
       "site": "cohostanford.com",
       "flagged": false,
       "regressed": false,
-      "recall": 0.933,
+      "recall": 0.972,
       "acceptedRecall": 0.972,
-      "missing": 15,
+      "missing": 5,
       "missed": [
-        "Panini & Sandwiches / Panini ",
-        "Panini & Sandwiches / Grilled Cheese ",
-        "Panini & Sandwiches / Sandwiches ",
-        "Soups & Salads / Salads ",
-        "Soups & Salads / Soup ",
-        "Pasta & Risotto / Pasta ",
-        "Pasta & Risotto / Risotto ",
-        "Drinks / Wine ",
-        "Drinks / Beer ",
-        "Drinks / Refreshers "
+        "Coffee & Tea / Oat Milk 2",
+        "Coffee & Tea / Almond Milk 1",
+        "Coffee & Tea / Soy Milk 1",
+        "Coffee & Tea / Coconut Milk 1",
+        "Pasta & Risotto / Today's Special 13"
       ],
       "detail": "209 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.016573
+      "costUsd": 0.016202
     },
     {
       "site": "bluebottlecoffee.com",
@@ -290,7 +270,7 @@
       "missing": 0,
       "missed": [],
       "detail": "9 items, unchanged — verified against a fresh reading",
-      "costUsd": 0.001796
+      "costUsd": 0.001453
     },
     {
       "site": "oslohakunamatata.org",
@@ -309,12 +289,17 @@
       "site": "castellorestaurant.no",
       "flagged": false,
       "regressed": false,
-      "recall": 0,
+      "recall": 0.944,
       "acceptedRecall": 0.933,
-      "missing": 0,
-      "missed": [],
-      "detail": "70 items, unchanged — Nemotron check inconclusive (fresh reading found too few dishes)",
-      "costUsd": 0.010002
+      "missing": 4,
+      "missed": [
+        "TAPAS / Tapas Spekemat ",
+        "TAPAS / Tapas Clásicas Ost 149",
+        "PinSa Romana / Pinsa Rosse 329",
+        "HOVEDRETTER / Burger 349"
+      ],
+      "detail": "70 items, unchanged — verified against a fresh reading",
+      "costUsd": 0.009618
     },
     {
       "site": "istanbulkebab.no",

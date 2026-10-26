@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diffItems, looksBroken, looksSuspicious, stillListed } from '../src/fleet/fleet.ts';
+import { diffItems, looksBroken, looksSuspicious, lostNames, stillListed } from '../src/fleet/fleet.ts';
 
 const item = (name: string, price: number | null, section = 'Pizza') => ({ section, name, price });
 
@@ -66,11 +66,11 @@ describe('coverage check: removed vs. silently missed', () => {
 });
 
 describe('section moves', () => {
-  it('a dish that moved to another section shows up as removed+added in the diff, but keeps its name', () => {
-    const d = diffItems([item('Fries', 7, 'Desserts')], [item('Fries', 7, 'Sides')]);
-    expect(d.map((x) => x.kind).sort()).toEqual(['added', 'removed']);
-    // checkOne only counts a removal when the name is gone from the output entirely.
-    const names = new Set(['fries']);
-    expect(d.filter((c) => c.kind === 'removed' && !names.has(c.name.toLowerCase())).length).toBe(0);
+  it('a dish that moved to another section is not lost', () => {
+    expect([...lostNames([item('Fries', 7, 'Desserts')], [item('Fries', 7, 'Sides')])]).toEqual([]);
+  });
+  it('losing one copy of a dish listed in two sections is a loss', () => {
+    const prev = [item('Pizza', 129, 'Lunch'), item('Pizza', 159, 'Dinner'), item('Salad', 99, 'Lunch')];
+    expect([...lostNames(prev, [item('Pizza', 159, 'Dinner'), item('Salad', 99, 'Lunch')])]).toEqual(['pizza']);
   });
 });

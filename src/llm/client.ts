@@ -133,9 +133,20 @@ function getClient(): OpenAI {
   return client;
 }
 
+/** Benchmark-only temperature override (bench/variance.ts); ignored unless a number in [0, 2]. */
+function envTemperature(): number | undefined {
+  const v = process.env.MENUSMITH_TEMPERATURE;
+  if (v === undefined || v.trim() === '') return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 && n <= 2 ? n : undefined;
+}
+
 function cassetteKey(model: string, o: ChatOptions): string {
+  const t = envTemperature();
   return createHash('sha256')
-    .update(JSON.stringify({ model, messages: o.messages, json: !!o.json, maxTokens: o.maxTokens ?? null, thinking: !!o.thinking }))
+    // The override is part of the key (only when set, so existing recordings stay valid):
+    // a temperature-0 run must never replay answers recorded at the default temperature.
+    .update(JSON.stringify({ model, messages: o.messages, json: !!o.json, maxTokens: o.maxTokens ?? null, thinking: !!o.thinking, ...(t !== undefined ? { temperature: t } : {}) }))
     .digest('hex')
     .slice(0, 24);
 }
@@ -198,7 +209,7 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
         model,
         messages: o.messages,
         max_tokens: o.maxTokens ?? 4096,
-        temperature: o.temperature ?? (process.env.MENUSMITH_TEMPERATURE ? Number(process.env.MENUSMITH_TEMPERATURE) : o.thinking ? 0.6 : 0.2), // env: benchmarks only
+        temperature: o.temperature ?? envTemperature() ?? (o.thinking ? 0.6 : 0.2),
         top_p: 0.95,
         chat_template_kwargs: { enable_thinking: !!o.thinking },
         ...(useJsonMode ? { response_format: { type: 'json_object' as const } } : {}),

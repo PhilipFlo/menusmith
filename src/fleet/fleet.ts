@@ -224,15 +224,14 @@ async function coverageAudit(
     // exactly what an "is this a dish?" tie-break tends to discard).
     const stillOnPage = stillListed(raw.missing, vanished, items);
     // Regression against the extractor's own acceptance, compared like with like:
-    // (a) it returns clearly fewer dishes than when it was accepted while a fresh reading shows
-    //     the menu itself did not shrink — independent of any arbitration; or
+    // (a) its output covers a clearly smaller share of a fresh reading than it did when it was
+    //     accepted — a share, so a menu that really shrank (output and reading both shorter)
+    //     does not count; or
     // (b) after arbitration it catches clearly less of the menu than when it was accepted.
     const was = x.meta.score;
-    const shrunk =
-      !!was?.extractorCount &&
-      items.length <= Math.floor(was.extractorCount * 0.95) &&
-      was.extractorCount - items.length >= 2 &&
-      raw.oracleCount >= (was.oracleCount ?? 0) * 0.9;
+    const wasShare = was?.extractorCount && was.oracleCount ? Math.min(1.2, was.extractorCount / was.oracleCount) : 0;
+    const nowShare = raw.oracleCount ? items.length / raw.oracleCount : 1;
+    const shrunk = wasShare > 0 && wasShare - nowShare >= 0.05 && Math.round(wasShare * raw.oracleCount) - items.length >= 2;
     const expectedMisses = Math.round((1 - accepted) * score.oracleCount);
     const lostCoverage = accepted > 0 && score.recall <= accepted - 0.05 && score.missing.length - expectedMisses >= 2;
     const regressed = shrunk || lostCoverage;
@@ -242,10 +241,13 @@ async function coverageAudit(
   }
 
   let r = await judge();
+  let second: Awaited<ReturnType<typeof judge>> | null = null;
+  /** Dishes BOTH independent readings list as missed (set when a regression is confirmed). */
+  let confirmedMissing: string[] = [];
   // Dishes are about to be recorded as removed: one reading not listing them is weak evidence
   // (readings disagree on add-ons and drinks — bench/variance.ts), so ask a second time.
   if (r.conclusive && vanished.length && !r.stillOnPage.length) {
-    const second = await judge();
+    second = await judge();
     if (second.conclusive && second.stillOnPage.length) {
       emit({ type: 'log', message: `[fleet] ${x.meta.id}: a second reading still lists ${second.stillOnPage.join(', ')} — not a menu change` });
       r = second;
@@ -256,18 +258,22 @@ async function coverageAudit(
   // specific evidence and need no second opinion.
   if (r.conclusive && !r.stillOnPage.length && (r.regressed || r.lowCoverage)) {
     emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage looks low (recall ${r.raw.recall}) — confirming with a second reading` });
-    const second = await judge();
-    if (!(second.regressed || second.lowCoverage) || !second.conclusive) {
-      emit({ type: 'log', message: `[fleet] ${x.meta.id}: second reading disagrees (recall ${second.raw.recall}) — treated as reading noise` });
-      r = { ...second, regressed: false, lowCoverage: false };
-    } else if (second.raw.recall < r.raw.recall) {
-      r = second;
+    const other = second && second !== r ? second : await judge(); // reuse a reading already taken
+    if (!(other.regressed || other.lowCoverage) || !other.conclusive) {
+      emit({ type: 'log', message: `[fleet] ${x.meta.id}: second reading disagrees (recall ${other.raw.recall}) — treated as reading noise` });
+      r = { ...other, regressed: false, lowCoverage: false };
+    } else {
+      const inOther = new Set(other.raw.missing.map((m) => normName(m.name)));
+      confirmedMissing = r.raw.missing.filter((m) => inOther.has(normName(m.name))).map((m) => m.name);
+      if (other.raw.recall < r.raw.recall) r = other;
     }
   }
   const { raw, score, stillOnPage, regressed, lowCoverage } = r;
-  // What a repair must bring back: the vanished dishes, and — when the extractor used to
-  // catch (nearly) everything — every dish it now misses.
-  const mustInclude = [...new Set([...stillOnPage, ...(regressed && accepted >= 0.98 ? raw.missing.map((m) => m.name) : [])])];
+  // What a repair must bring back: dishes the code itself used to return, and — for an
+  // extractor that was accepted catching (nearly) the whole menu — dishes that two independent
+  // readings both list as missed. A single reading's misses may be add-ons it rightly skips;
+  // failed repairs are capped (failedHeals), so this can't turn into a nightly cost loop.
+  const mustInclude = [...new Set([...stillOnPage, ...(regressed && accepted >= 0.98 ? confirmedMissing : [])])];
   const audit: AuditResult = {
     at: new Date().toISOString(),
     conclusive: r.conclusive,
@@ -384,6 +390,15 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
         changes: [],
         audit,
       });
+    const fh = x.meta.failedHeals;
+    if (fh && fh.count >= 2 && Date.now() - Date.parse(fh.at) < 7 * 86_400_000)
+      return done({
+        status: 'review',
+        detail: `${reason} — not rewritten: the last ${fh.count} repairs failed, retrying after a week (or open it and check by hand)`,
+        items: run.items.length,
+        changes: [],
+        audit,
+      });
     emit({ type: 'log', message: `[fleet] ${x.meta.id}: ${reason} — healing` });
     const tagged: Emit = (e) => emit({ ...e, target: x.meta.id } as typeof e);
     const left = opts.budget ? Math.max(0, opts.budget.left() - ledger.costUsd) : Infinity;
@@ -418,6 +433,7 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
         audit,
       });
     }
+    patchMeta(x.meta.id, { failedHeals: { count: (fh?.count ?? 0) + 1, at: new Date().toISOString() } });
     return done({ status: 'broken', detail: `${reason}; heal failed: ${healed.reason}`, items: run.items.length, changes: [], audit });
   }
 
@@ -466,15 +482,18 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
   if (!broken && !suspicious) {
     // Plausible output that differs from last time → probably the menu itself changed.
     const changes = diffItems(prev, run.items);
-    // A dish that only moved to another section (a renamed heading) is not a removal.
-    const stillThere = new Set(run.items.map((i) => normName(i.name)));
-    const removed = changes.filter((c) => c.kind === 'removed' && !stillThere.has(normName(c.name))).length;
+    // A dish that only moved to another section (a renamed heading) is not a removal — but
+    // count per name: menus repeat names across sections (lunch/dinner), and losing one copy
+    // of a repeated dish is still a loss.
+    const lost = lostNames(prev, run.items);
+    const isLost = (c: PriceChange) => c.kind === 'removed' && lost.has(normName(c.name));
+    const removed = changes.filter(isLost).length;
     // Dishes that "disappeared" may really be dishes the code now silently misses —
     // verify removals against a fresh reading before recording them.
     if (removed > 0 || auditDue()) {
       if (auditMode !== 'never' && canSpend) {
         try {
-          const vanished = changes.filter((c) => c.kind === 'removed' && !stillThere.has(normName(c.name))).map((c) => ({ name: c.name, price: c.oldPrice }));
+          const vanished = changes.filter(isLost).map((c) => ({ name: c.name, price: c.oldPrice }));
           const { audit, oracle } = await coverageAudit(x, run.items, sourceText(src, mode), ledger, emit, vanished);
           if (!audit.conclusive) {
             if (removed > 0)
@@ -651,12 +670,28 @@ async function checkDocument(
   return done({ status: 'changed', detail: `PDF menu changed: ${summarise(changes)}`, items: items.length, changes });
 }
 
+const countNames = (xs: { name: string }[]) => {
+  const m = new Map<string, number>();
+  for (const x of xs) m.set(normName(x.name), (m.get(normName(x.name)) ?? 0) + 1);
+  return m;
+};
+
+/** Names that appear fewer times in the new output than in the old one. */
+export function lostNames(prev: { name: string }[], next: { name: string }[]): Set<string> {
+  const before = countNames(prev);
+  const after = countNames(next);
+  return new Set([...before].filter(([n, k]) => (after.get(n) ?? 0) < k).map(([n]) => n));
+}
+
 function summarise(changes: PriceChange[]): string {
   if (!changes.length) return 'no item-level changes';
   const p = changes.filter((c) => c.kind === 'price').length;
-  // A removed + added pair with the same name is a dish that moved to another section.
-  const added = new Set(changes.filter((c) => c.kind === 'added').map((c) => normName(c.name)));
-  const moved = changes.filter((c) => c.kind === 'removed' && added.has(normName(c.name))).length;
+  // A removed + added pair with the same name is a dish that moved to another section
+  // (counted per name, so the numbers can't go negative).
+  const addedBy = countNames(changes.filter((c) => c.kind === 'added'));
+  const removedBy = countNames(changes.filter((c) => c.kind === 'removed'));
+  let moved = 0;
+  for (const [n, k] of removedBy) moved += Math.min(k, addedBy.get(n) ?? 0);
   const a = changes.filter((c) => c.kind === 'added').length - moved;
   const r = changes.filter((c) => c.kind === 'removed').length - moved;
   return [p && `${p} price change(s)`, a && `${a} added`, r && `${r} removed`, moved && `${moved} moved to another section`].filter(Boolean).join(', ');

@@ -271,7 +271,7 @@ function MeasuredView({ m }: { m: Measured }) {
       const r = c[k];
       return typeof r === 'object' && r ? `${r.correctAfter}/${r.cases}` : '—';
     };
-    tiles.push(['Silent dish loss caught', `${ok('removal2')} today · ${ok('weekly2')} weekly`, `Working extractors made to quietly drop 2 dishes; 5 dishes: ${ok('weekly5')}.${m.falseAlarms ? ` False alarms on healthy real sites: ${m.falseAlarms.flagged}/${m.falseAlarms.healthyExtractorsChecked}.` : ''}`]);
+    tiles.push(['Silent dish loss caught', `${ok('removal2')} today · ${ok('weekly2')} weekly`, `Working extractors made to quietly drop 2 dishes; 5 dishes: ${ok('weekly5')}.${typeof c.shrinkRecordedNotRewritten === 'object' && c.shrinkRecordedNotRewritten ? ` Real menu shrinks recorded without a rewrite: ${(c.shrinkRecordedNotRewritten as unknown as { correct: number; cases: number }).correct}/${(c.shrinkRecordedNotRewritten as unknown as { cases: number }).cases}.` : ''}${m.falseAlarms ? ` False alarms on healthy real sites: ${m.falseAlarms.flagged}/${m.falseAlarms.healthyExtractorsChecked}.` : ''}`]);
   }
   const t = m.tavilyHoldout ?? m.tavily;
   if (t) tiles.push(['Name → official website', `${t.matchRate}% (${t.matched}/${t.sites})`, 'Tavily search plus brand/city/country ranking, on restaurants not used for tuning.']);

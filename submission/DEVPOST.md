@@ -49,7 +49,8 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
   menu change. Removals are now only recorded after Nemotron re-reads the page (twice) and
   confirms they're gone, and a weekly check compares each extractor with how complete it was when
   accepted. Measured: quiet loss of 2 dishes caught and fixed 10/10 (today) and 10/10 (weekly),
-  5 dishes 8/10 — with 0 false alarms on 20 healthy real-site extractors.
+  5 dishes 7/10; a real menu shrink is recorded without touching the code (9/9); 0 false alarms
+  on 20 healthy real-site extractors.
 - Site builders like Tilda lay names and prices out in separate blocks; the LLM guessed the
   pairing and read the menu twice over. We rebuild the text in reading order first — that site
   went from F1 0.03 to 0.99 on the first try.

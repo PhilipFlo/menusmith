@@ -9,6 +9,8 @@
  *              still there, and rewrites the code.
  *   weekly   — the loss is old: the baseline already has the shorter list, nothing changes
  *              today. Only the weekly coverage check (a fresh Nemotron reading) can find it.
+ *   shrink   — the control: the RESTAURANT removes 2 dishes from its page and the code is
+ *              fine. The fleet must record a menu change and NOT rewrite working code.
  *
  * Score = does the fleet heal, and does the final extractor match the TRUE menu?
  *
@@ -18,6 +20,8 @@
  * Writes bench/results/coverage.json.
  */
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import * as cheerio from 'cheerio';
+import { normName } from '../src/agent/evaluate.ts';
 import { resolve } from 'node:path';
 import { ROOT, config } from '../src/config.ts';
 import { checkExtractor } from '../src/fleet/fleet.ts';
@@ -65,11 +69,60 @@ async function setup(id: string, drop: number, scenario: 'removal' | 'weekly') {
   return { url: meta.url as string, before: short.items.length, truth: full.items.length };
 }
 
+/** Remove the smallest element holding each dish (its name, and no other dish's name). */
+function withoutDishes(html: string, drop: string[], all: string[]): string {
+  const $ = cheerio.load(html);
+  const others = (keep: string) => all.filter((n) => n !== keep).map(normName);
+  for (const name of drop) {
+    const el = $('body *')
+      .toArray()
+      .filter((e) => normName($(e).text()).includes(normName(name)))
+      .pop(); // innermost match
+    if (!el) continue;
+    let node = $(el);
+    while (node.parent().length && !others(name).some((o) => normName(node.parent().text()).includes(o)) && node.parent()[0]!.tagName !== 'body')
+      node = node.parent();
+    node.remove();
+  }
+  return $.html();
+}
+
 const rows: Record<string, unknown>[] = [];
 for (const id of fixtures) {
   const slug = id.replace(/-fixture$/, '');
   setFixtureRedesigned(slug, false);
   const truth = (JSON.parse(readFileSync(resolve(ROOT, 'fixtures/sites', slug, 'expected.json'), 'utf8')) as { items: MenuItem[] }).items;
+  // Control: the restaurant really removes 2 dishes; the code is untouched.
+  {
+    rmSync(lib, { recursive: true, force: true });
+    cpSync(SOURCE, lib, { recursive: true });
+    const page = resolve(ROOT, 'fixtures/sites', slug, 'index.html');
+    const original = readFileSync(page, 'utf8');
+    const gone = truth.slice(-2).map((t) => t.name);
+    try {
+      const shrunkHtml = withoutDishes(original, gone, truth.map((t) => t.name));
+      // Only a clean edit is a fair control: the untouched code must return exactly the rest.
+      const x0 = listExtractors().find((q) => q.meta.id === id)!;
+      const pre = await runExtractor(x0.code, shrunkHtml, `fixture://${slug}/`);
+      if (scoreAgainstOracle(truth.slice(0, -2), pre.items, '').f1 !== 1) {
+        console.log(`· ${slug.padEnd(16)} shrink  skipped (the dishes are also elsewhere in this page's markup)`);
+        throw new Error('skip');
+      }
+      writeFileSync(page, shrunkHtml);
+      const e = await checkExtractor(id, { heal: true, audit: 'auto', maxUsd: 0.2 });
+      const x = listExtractors().find((q) => q.meta.id === id)!;
+      const after = await runExtractor(x.code, readFileSync(page, 'utf8'), `fixture://${slug}/`);
+      const f1 = scoreAgainstOracle(truth.slice(0, -2), after.items, '').f1;
+      const row = { site: slug, scenario: 'shrink', dropped: 2, of: truth.length, status: e?.status, f1AfterVsTruth: f1, costUsd: e?.costUsd ?? 0, detail: e?.detail };
+      rows.push(row);
+      const ok = e?.status === 'changed' && f1 === 1;
+      console.log(`${ok ? '✓' : '✗'} ${slug.padEnd(16)} shrink  −2/${truth.length}  → ${e?.status} · F1 ${f1} · $${e?.costUsd}`);
+    } catch (e) {
+      if ((e as Error).message !== 'skip') throw e;
+    } finally {
+      writeFileSync(page, original);
+    }
+  }
   for (const [scenario, drop] of [
     ['removal', 2],
     ['weekly', 2],
@@ -93,7 +146,9 @@ const stat = (rs: Record<string, unknown>[]) => ({
   healed: rs.filter((r) => r.status === 'healed').length,
   correctAfter: rs.filter((r) => r.f1AfterVsTruth === 1).length,
 });
+const shrinks = by('shrink', 2);
 const summary = {
+  shrinkRecordedNotRewritten: { cases: shrinks.length, correct: shrinks.filter((r) => r.status === 'changed' && r.f1AfterVsTruth === 1).length, rewritten: shrinks.filter((r) => r.status === 'healed').length },
   removal2: stat(by('removal', 2)),
   weekly2: stat(by('weekly', 2)),
   weekly5: stat(by('weekly', 5)),

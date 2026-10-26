@@ -83,6 +83,8 @@ export interface ExtractorMeta {
   baselinePriced?: number;
   /** Last coverage check against a fresh Nemotron reading. */
   lastAudit?: { at: string; pass: boolean; recall: number; f1: number; missing: number };
+  /** Consecutive failed self-heals — after 2, the fleet waits a week before paying for another. */
+  failedHeals?: { count: number; at: string };
   /** If this extractor was adopted from the library instead of forged. */
   reusedFrom?: string | null;
   history?: { version: number; reason: string; at: string }[];

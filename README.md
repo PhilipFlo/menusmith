@@ -125,8 +125,10 @@ redesigned menu**. Median repair: **$0.005, 10 s**.
 
 **Silent misses, measured** (`bench/coverage.ts`, `bench/false-alarms.ts`): we made working
 extractors quietly drop dishes. Losing 2 dishes today: **10/10** caught and rewritten correctly;
-an older loss of 2 dishes found by the weekly check: **10/10**; of 5 dishes: **8/10** — and the
-weekly check flagged **0 of 20** healthy real-site extractors (no false alarms).
+an older loss of 2 dishes found by the weekly check: **10/10**; of 5 dishes: **7/10**. The
+controls: when the *restaurant* really removes dishes, the change is recorded and working code
+is left alone (**9/9**, 0 rewrites), and the weekly check flagged **0 of 20** healthy real-site
+extractors. Repairs that fail are retried at most twice a week, so a hard case can't run up costs.
 
 **Unusual layouts:** site builders like Tilda put all dish names in one block and all prices in
 another, paired only by position. Menusmith detects this, rebuilds the text in reading order for
