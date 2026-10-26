@@ -453,7 +453,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     // A repair that doesn't bring back the dishes it was started for has not passed.
     if (score && input.mustInclude?.length) {
       const got = run.items.map((i) => normName(i.name));
-      const still = input.mustInclude.filter((n) => !got.some((g) => g === normName(n) || nameSimilarity(g, normName(n)) >= 0.8));
+      const still = input.mustInclude.filter((n) => !got.some((g) => g === normName(n) || nameSimilarity(g, normName(n)) >= 0.6)); // same bar as the scorer
       if (still.length) {
         score = { ...score, pass: false, failures: [`still missing these dishes that are on the page: ${still.slice(0, 8).join(', ')}`, ...score.failures] };
       }

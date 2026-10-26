@@ -46,9 +46,13 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
 - "0 items" is useless feedback → the sandbox records every selector call and how many elements
   went in and out, so the model debugs like a developer in DevTools.
 - A broken extractor is easy to spot; one that quietly drops 2 of 22 dishes looks exactly like a
-  menu change. Removals are now only recorded after Nemotron re-reads the page and confirms they're
-  gone — in our test the fleet caught a deliberately lossy extractor and rewrote it in 12 s for
-  half a cent.
+  menu change. Removals are now only recorded after Nemotron re-reads the page (twice) and
+  confirms they're gone, and a weekly check compares each extractor with how complete it was when
+  accepted. Measured: quiet loss of 2 dishes caught and fixed 10/10 (today) and 10/10 (weekly),
+  5 dishes 8/10 — with 0 false alarms on 20 healthy real-site extractors.
+- Site builders like Tilda lay names and prices out in separate blocks; the LLM guessed the
+  pairing and read the menu twice over. We rebuild the text in reading order first — that site
+  went from F1 0.03 to 0.99 on the first try.
 
 ## Accomplishments
 - **83 of 120 real restaurant websites** (Oslo + Palo Alto) get a working extractor starting from
@@ -63,7 +67,8 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
   real price and dish changes). The fleet detected and rewrote the extractor on **10/10**, and every
   healed extractor scores **F1 1.0 against the true new menu** — median repair **$0.005 and 10 s**.
 - **Measured the premise:** reading the same page 3× with the LLM gave the same dish list on only
-  5 of 22 real sites (median 5% count swing, one empty reading); the extractors: 22/22 identical.
+  5 of 22 real sites (median 5% count swing, one empty reading) — and still only 5 of 22 at
+  temperature 0; the extractors: 22/22 identical.
 - **Start from just a name:** Tavily search plus our ranking finds a restaurant's official website
   from name + city for **85%** of held-out restaurants.
 - Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,

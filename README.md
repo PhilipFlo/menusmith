@@ -36,8 +36,9 @@ to re-read every menu, every month — has three problems:
 2. **Noise.** LLM extraction is not deterministic. We measured it (`bench/variance.ts`): reading
    the *identical* page three times with Nemotron gave the same dish list on only **5 of 22** real
    sites; dish counts moved by a median **5%** and up to 18%, and one reading of one site came back
-   empty. The written extractors returned identical output on **22/22**. In a price *time
-   series*, that noise looks like menu changes.
+   empty. Even at **temperature 0** only 5 of 22 came back identical (15 sites still changed
+   their dish count). The written extractors returned identical output on **22/22**. In a price
+   *time series*, that noise looks like menu changes.
 3. **Half the web is JavaScript.** Ordering systems and site builders ship an empty HTML shell
    and load the menu from an API.
 
@@ -105,8 +106,11 @@ flowchart LR
    **Silent misses are caught too.** A small drop ("2 dishes gone") looks like a normal menu
    change, so the fleet never records a removal on trust: it asks Nemotron to read the page fresh
    and compares. Dishes that left the output but are still on the page mean the *code* is wrong →
-   it is rewritten. Every extractor also gets this coverage check weekly (~$0.003), and anyone can
-   trigger it from the extractor page (**Re-scrape now · $0** / **Check against Nemotron**).
+   it is rewritten — and the rewrite only passes once those dishes are back. Weekly, each extractor
+   is also re-read: if it now returns clearly fewer dishes than when it was accepted while the
+   menu did not shrink, it is rewritten too. Single readings are noisy, so a flag (or a removal)
+   needs a second reading to agree before anything changes. Anyone can trigger the check from the
+   extractor page (**Re-scrape now · $0** / **Check against Nemotron**).
 10. **Reuse** — before writing new code, extractors from sites on the same platform (Squarespace,
     WordPress, or hosted ordering systems like Winorder/Ordera) are tried first — zero tokens.
 
@@ -118,6 +122,16 @@ flowchart LR
 website is **redesigned** (new markup *and* real price/dish changes). The nightly fleet noticed and
 rewrote the extractor on **10/10** sites; afterwards every one scores **F1 1.0 against the true
 redesigned menu**. Median repair: **$0.005, 10 s**.
+
+**Silent misses, measured** (`bench/coverage.ts`, `bench/false-alarms.ts`): we made working
+extractors quietly drop dishes. Losing 2 dishes today: **10/10** caught and rewritten correctly;
+an older loss of 2 dishes found by the weekly check: **10/10**; of 5 dishes: **8/10** — and the
+weekly check flagged **0 of 20** healthy real-site extractors (no false alarms).
+
+**Unusual layouts:** site builders like Tilda put all dish names in one block and all prices in
+another, paired only by position. Menusmith detects this, rebuilds the text in reading order for
+the reader and gives the code a tested pairing helper — miaoceanfront.com went from F1 0.03 to
+**0.99 on the first try** (verified against the rendered page).
 
 **From just a name** (`bench/tavily.ts`): Tavily search plus our ranking found the restaurant's
 official website from *name + city* for **80%** of 40 benchmark restaurants and **85%** of 40
@@ -136,7 +150,7 @@ platform).
 | Median one-time cost per site | $0.0109 |
 | Median re-run time | 170 ms, **$0** |
 | Precision vs. nearBite's independently scraped menus | 0.737 |
-| Same page read 3× — LLM vs. extractor (22 sites) | LLM identical on 5/22 · extractor identical on **22/22** |
+| Same page read 3× — LLM vs. extractor (22 sites) | LLM identical on 5/22 (also 5/22 at temperature 0) · extractor identical on **22/22** |
 | Source mix of successes | json: 9 · html: 34 · rendered: 19 · image: 2 · document: 19 |
 
 Remaining failures after the rescue pass: no-html-menu (JS/PDF/image) 11 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.
@@ -242,7 +256,9 @@ npm run demo                                      # full loop + self-heal, repla
   the true menu. Scores extractors against the truth.
 - `bench/heal.ts` — redesigns every fixture site and measures whether the fleet heals it (vs truth).
 - `bench/tavily.ts` — name + city → official website, with a held-out set (`--offset 40`).
-- `bench/variance.ts` — reads the same page 3× with the LLM vs runs the extractor 3×.
+- `bench/variance.ts` — reads the same page 3× with the LLM vs runs the extractor 3×
+  (`MENUSMITH_TEMPERATURE=0` for the temperature-0 run).
+- `bench/coverage.ts` / `bench/false-alarms.ts` — silent dish loss caught vs. healthy extractors flagged.
 - `bench/precision.ts` — sorts dishes that nearBite's reference doesn't match into causes (offline).
 - `bench/run.ts` — real restaurant websites. Our evaluation set comes from nearBite (private
   data; only per-site metrics are published in `bench/results/`).

@@ -14,7 +14,7 @@ import { renderPage } from '../html/render.ts';
 import { fetchPage } from '../html/fetch.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import type { Emit, MenuItem } from '../types.ts';
-import { itemsHash, nameSimilarity, normName, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
+import { itemsHash, nameSimilarity, normName, PASS, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
 import { readMenu } from '../agent/oracle.ts';
 import { forge, groundOracle } from '../agent/pipeline.ts';
 import { arbitrate } from '../agent/judge.ts';
@@ -58,6 +58,10 @@ export interface AuditResult {
   missing: MenuItem[];
   /** Dishes that dropped out of the output since the last run but are still on the page. */
   stillOnPage: string[];
+  /** Catches clearly fewer of the page's dishes than when the extractor was accepted. */
+  regressed: boolean;
+  /** Dishes a repair has to bring back. */
+  mustInclude: string[];
   wrongPrice: { name: string; expected: number | null; got: number | null }[];
   extra: MenuItem[];
 }
@@ -197,24 +201,80 @@ async function coverageAudit(
   /** Dishes that were in the last snapshot but not in this run's output. */
   vanished: Named[] = [],
 ): Promise<{ audit: AuditResult; oracle: MenuItem[] }> {
-  const o = await readMenu(text, { url: x.meta.url, restaurant: x.meta.restaurant }, ledger, emit);
-  let oracle = groundOracle(o.items, text).kept;
-  let score = scoreAgainstOracle(oracle, items, text);
-  if (!score.pass && score.f1 >= 0.6 && (score.missing.length || score.extra.length || score.grounded.length)) {
-    const a = await arbitrate([...score.grounded, ...score.extra], score.missing, text, ledger, emit);
-    if (a.disputed) {
-      oracle = [...oracle.filter((i) => !a.rejected.has(normName(i.name))), ...a.accepted];
-      score = scoreAgainstOracle(oracle, items, text, { rejected: a.rejected });
+  const accepted = x.meta.score?.recall ?? 0;
+
+  /** One independent reading of the page, judged on coverage only. */
+  async function judge() {
+    const o = await readMenu(text, { url: x.meta.url, restaurant: x.meta.restaurant }, ledger, emit);
+    const rawOracle = groundOracle(o.items, text).kept;
+    const raw = scoreAgainstOracle(rawOracle, items, text, { uncapped: true });
+    let oracle = rawOracle;
+    let score = raw;
+    if (raw.recall < PASS.minRecall && raw.f1 >= 0.6 && raw.missing.length) {
+      // Low coverage: let Nano check whether the "missing" items are really dishes.
+      const a = await arbitrate([...raw.grounded, ...raw.extra], raw.missing, text, ledger, emit);
+      if (a.disputed) {
+        oracle = [...rawOracle.filter((i) => !a.rejected.has(normName(i.name))), ...a.accepted];
+        score = scoreAgainstOracle(oracle, items, text, { rejected: a.rejected });
+      }
+    }
+    // A dish that dropped out of the output but is still on the page is a code bug, not a
+    // menu change — however high overall recall is. Judged on the reading BEFORE arbitration:
+    // the extractor itself used to return these items, so they count (drinks and add-ons are
+    // exactly what an "is this a dish?" tie-break tends to discard).
+    const stillOnPage = stillListed(raw.missing, vanished, items);
+    // Regression against the extractor's own acceptance, compared like with like:
+    // (a) it returns clearly fewer dishes than when it was accepted while a fresh reading shows
+    //     the menu itself did not shrink — independent of any arbitration; or
+    // (b) after arbitration it catches clearly less of the menu than when it was accepted.
+    const was = x.meta.score;
+    const shrunk =
+      !!was?.extractorCount &&
+      items.length <= Math.floor(was.extractorCount * 0.95) &&
+      was.extractorCount - items.length >= 2 &&
+      raw.oracleCount >= (was.oracleCount ?? 0) * 0.9;
+    const expectedMisses = Math.round((1 - accepted) * score.oracleCount);
+    const lostCoverage = accepted > 0 && score.recall <= accepted - 0.05 && score.missing.length - expectedMisses >= 2;
+    const regressed = shrunk || lostCoverage;
+    // Coverage only — precision rules were settled when the extractor was accepted.
+    const lowCoverage = score.recall < Math.min(PASS.minRecall, accepted - 0.05);
+    return { rawOracle, raw, oracle, score, stillOnPage, regressed, lowCoverage, conclusive: rawOracle.length >= 3 };
+  }
+
+  let r = await judge();
+  // Dishes are about to be recorded as removed: one reading not listing them is weak evidence
+  // (readings disagree on add-ons and drinks — bench/variance.ts), so ask a second time.
+  if (r.conclusive && vanished.length && !r.stillOnPage.length) {
+    const second = await judge();
+    if (second.conclusive && second.stillOnPage.length) {
+      emit({ type: 'log', message: `[fleet] ${x.meta.id}: a second reading still lists ${second.stillOnPage.join(', ')} — not a menu change` });
+      r = second;
     }
   }
-  // A dish that dropped out of the output but is still on the page is a code bug, not a
-  // menu change — however high overall recall is.
-  const stillOnPage = stillListed(score.missing, vanished, items);
+  // One reading is noisy (bench/variance.ts): before calling working code broken on coverage
+  // alone, a second independent reading has to agree. Vanished dishes seen on the page are
+  // specific evidence and need no second opinion.
+  if (r.conclusive && !r.stillOnPage.length && (r.regressed || r.lowCoverage)) {
+    emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage looks low (recall ${r.raw.recall}) — confirming with a second reading` });
+    const second = await judge();
+    if (!(second.regressed || second.lowCoverage) || !second.conclusive) {
+      emit({ type: 'log', message: `[fleet] ${x.meta.id}: second reading disagrees (recall ${second.raw.recall}) — treated as reading noise` });
+      r = { ...second, regressed: false, lowCoverage: false };
+    } else if (second.raw.recall < r.raw.recall) {
+      r = second;
+    }
+  }
+  const { raw, score, stillOnPage, regressed, lowCoverage } = r;
+  // What a repair must bring back: the vanished dishes, and — when the extractor used to
+  // catch (nearly) everything — every dish it now misses.
+  const mustInclude = [...new Set([...stillOnPage, ...(regressed && accepted >= 0.98 ? raw.missing.map((m) => m.name) : [])])];
   const audit: AuditResult = {
     at: new Date().toISOString(),
-    conclusive: oracle.length >= 3,
-    pass: score.pass && stillOnPage.length === 0,
+    conclusive: r.conclusive,
+    pass: !lowCoverage && !regressed && stillOnPage.length === 0,
     stillOnPage,
+    regressed,
+    mustInclude,
     recall: score.recall,
     precision: score.precision,
     f1: score.f1,
@@ -225,9 +285,12 @@ async function coverageAudit(
     extra: score.extra.slice(0, 15),
   };
   if (!audit.conclusive) {
-    emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage check inconclusive — the fresh reading found only ${oracle.length} dish(es)` });
-    return { audit, oracle };
+    emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage check inconclusive — the fresh reading found only ${r.rawOracle.length} dish(es)` });
+    return { audit, oracle: r.oracle };
   }
+  // A repair is graded against the full reading when the arbitrated one dropped the very
+  // dishes that are missing.
+  const oracle = stillOnPage.length || regressed ? r.rawOracle : r.oracle;
   patchMeta(x.meta.id, { lastAudit: { at: audit.at, pass: audit.pass, recall: audit.recall, f1: audit.f1, missing: score.missing.length } });
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: coverage check — recall ${audit.recall}, ${score.missing.length} dish(es) on the page not extracted` });
   return { audit, oracle };
@@ -329,7 +392,15 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
     let healed: Awaited<ReturnType<typeof forge>>;
     try {
       healed = await forge(
-        { url: x.meta.url, restaurant: x.meta.restaurant ?? undefined, noDiscover: true, repairOf: { code: x.code, reason }, oracle: freshOracle, ledger: healLedger },
+        {
+          url: x.meta.url,
+          restaurant: x.meta.restaurant ?? undefined,
+          noDiscover: true,
+          repairOf: { code: x.code, reason },
+          oracle: freshOracle,
+          mustInclude: audit?.mustInclude?.length ? audit.mustInclude : undefined,
+          ledger: healLedger,
+        },
         tagged,
       );
     } finally {
@@ -371,7 +442,13 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
         if (!audit.conclusive)
           return done({ status: 'stable', detail: `${run.items.length} items, unchanged — Nemotron check inconclusive (fresh reading found too few dishes)`, items: run.items.length, changes: [], audit });
         if (audit.pass) return done({ status: 'stable', detail: `${run.items.length} items, unchanged — verified against a fresh reading`, items: run.items.length, changes: [], audit });
-        return heal(`coverage check: ${audit.oracleCount - Math.round(audit.recall * audit.oracleCount)} dish(es) on the page are not extracted`, oracle, audit);
+        return heal(
+          audit.regressed
+            ? `coverage check: catches fewer of the page's dishes than when it was written (returns ${run.items.length} now, ${x.meta.score?.extractorCount ?? '?'} then; a fresh reading lists ${audit.oracleCount})`
+            : `coverage check: ${audit.oracleCount - Math.round(audit.recall * audit.oracleCount)} dish(es) on the page are not extracted`,
+          oracle,
+          audit,
+        );
       } catch (e) {
         emit({ type: 'log', message: `[fleet] coverage check failed for ${x.meta.id}: ${(e as Error).message}` });
       }

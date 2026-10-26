@@ -262,9 +262,17 @@ function renderValue(v: unknown): string {
 function MeasuredView({ m }: { m: Measured }) {
   const tiles: [string, string, string][] = [];
   const v = m.variance;
-  if (v) tiles.push(['Same page, read 3×', `LLM identical on ${v.llmAllThreeIdentical}/${v.sites} · extractor ${v.extractorIdentical}/${v.sites}`, `Dish counts from the LLM moved by a median ${Math.round(Number(v.medianLlmCountSpreadPct))}% between readings of the identical page.`]);
+  if (v) tiles.push(['Same page, read 3×', `LLM identical on ${v.llmAllThreeIdentical}/${v.sites} · extractor ${v.extractorIdentical}/${v.sites}`, `Dish counts from the LLM moved by a median ${Math.round(Number(v.medianLlmCountSpreadPct))}% between readings of the identical page.${m.varianceT0 ? ` At temperature 0: still identical on only ${m.varianceT0.llmAllThreeIdentical}/${m.varianceT0.sites}.` : ''}`]);
   const h = m.heal;
   if (h) tiles.push(['Website redesigns healed', `${h.healed}/${h.sites} · F1 ${Number(h.avgF1AfterRedesign).toFixed(2)} vs. truth`, `Each fixture site was redesigned (new markup, real price changes); median repair $${Number(h.medianHealCostUsd).toFixed(3)} in ${Math.round(Number(h.medianHealSeconds))} s.`]);
+  const c = m.coverage;
+  if (c && typeof c.removal2 === 'object' && typeof c.weekly2 === 'object') {
+    const ok = (k: string) => {
+      const r = c[k];
+      return typeof r === 'object' && r ? `${r.correctAfter}/${r.cases}` : '—';
+    };
+    tiles.push(['Silent dish loss caught', `${ok('removal2')} today · ${ok('weekly2')} weekly`, `Working extractors made to quietly drop 2 dishes; 5 dishes: ${ok('weekly5')}.${m.falseAlarms ? ` False alarms on healthy real sites: ${m.falseAlarms.flagged}/${m.falseAlarms.healthyExtractorsChecked}.` : ''}`]);
+  }
   const t = m.tavilyHoldout ?? m.tavily;
   if (t) tiles.push(['Name → official website', `${t.matchRate}% (${t.matched}/${t.sites})`, 'Tavily search plus brand/city/country ranking, on restaurants not used for tuning.']);
   const p = m.precision;

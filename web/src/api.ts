@@ -138,7 +138,10 @@ type Summary = Record<string, number> | null;
 export interface Measured {
   heal: Summary;
   variance: Summary;
+  varianceT0?: Summary;
   tavily: Summary;
   tavilyHoldout: Summary;
   precision: Summary;
+  coverage?: Record<string, { cases: number; healed: number; correctAfter: number } | number> | null;
+  falseAlarms?: Summary;
 }

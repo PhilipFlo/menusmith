@@ -7,6 +7,7 @@
  * Any difference between the three LLM readings is noise a price index would record as change.
  *
  *   MENUSMITH_LIBRARY=.cache/bench-library-final npx tsx bench/variance.ts [--limit 20]
+ *   MENUSMITH_TEMPERATURE=0 … bench/variance.ts   → variance-t0.json (is it just sampling noise?)
  *
  * Writes bench/results/variance.json (names, counts and agreement metrics only).
  */
@@ -106,5 +107,6 @@ const summary = {
   avgLlmPriceFlipPct: avg('llmPriceFlipPct'),
 };
 mkdirSync(resolve(ROOT, 'bench/results'), { recursive: true });
-writeFileSync(resolve(ROOT, 'bench/results/variance.json'), JSON.stringify({ runAt: new Date().toISOString(), summary, rows }, null, 2));
+const outName = process.env.MENUSMITH_TEMPERATURE === '0' ? 'variance-t0.json' : 'variance.json';
+writeFileSync(resolve(ROOT, 'bench/results', outName), JSON.stringify({ runAt: new Date().toISOString(), summary, rows }, null, 2));
 console.log('\n' + JSON.stringify(summary));

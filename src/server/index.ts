@@ -301,7 +301,7 @@ app.get('/api/bench/measured', (c) => {
       return null;
     }
   };
-  return c.json({ heal: summary('heal'), variance: summary('variance'), tavily: summary('tavily'), tavilyHoldout: summary('tavily-holdout'), precision: summary('precision') });
+  return c.json({ heal: summary('heal'), variance: summary('variance'), varianceT0: summary('variance-t0'), tavily: summary('tavily'), tavilyHoldout: summary('tavily-holdout'), precision: summary('precision'), coverage: summary('coverage'), falseAlarms: summary('false-alarms') });
 });
 
 // ---- static web app ---------------------------------------------------------------

@@ -1,0 +1,323 @@
+{
+  "runAt": "2026-10-26T12:41:23.435Z",
+  "summary": {
+    "removal2": {
+      "cases": 10,
+      "healed": 10,
+      "correctAfter": 10
+    },
+    "weekly2": {
+      "cases": 10,
+      "healed": 10,
+      "correctAfter": 10
+    },
+    "weekly5": {
+      "cases": 10,
+      "healed": 8,
+      "correctAfter": 8
+    },
+    "totalCostUsd": 0.4264
+  },
+  "rows": [
+    {
+      "site": "fjord-burger",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.00497,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Ekstra patty, Glutenfritt brød) → rewrote extractor v5 in 1 round(s)"
+    },
+    {
+      "site": "fjord-burger",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.011105,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 16 now, 18 then; a fresh reading lists 18) → rewrote extractor v5 in 2 round(s); 2 added"
+    },
+    {
+      "site": "fjord-burger",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 18,
+      "status": "stable",
+      "f1AfterVsTruth": 0.839,
+      "costUsd": 0.002285,
+      "detail": "13 items, unchanged — verified against a fresh reading"
+    },
+    {
+      "site": "taqueria-luna",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 16,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.017399,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Agua de Jamaica, Mexican Coke) → rewrote extractor v3 in 3 round(s)"
+    },
+    {
+      "site": "taqueria-luna",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 16,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.006857,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 14 now, 16 then; a fresh reading lists 16) → rewrote extractor v3 in 1 round(s); 2 added"
+    },
+    {
+      "site": "taqueria-luna",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 16,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.02099,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 11 now, 16 then; a fresh reading lists 16) → rewrote extractor v3 in 3 round(s); 5 added"
+    },
+    {
+      "site": "kebab-kongen",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 22,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.005066,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Brus 0,5 l, Ayran) → rewrote extractor v2 in 1 round(s)"
+    },
+    {
+      "site": "kebab-kongen",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 22,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.011273,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 20 now, 22 then; a fresh reading lists 22) → rewrote extractor v2 in 2 round(s); 2 added"
+    },
+    {
+      "site": "kebab-kongen",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 22,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.027287,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 17 now, 22 then; a fresh reading lists 22) → rewrote extractor v2 in 3 round(s); 5 added"
+    },
+    {
+      "site": "nonna-pizza",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.006401,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Peroni, Husets rødvin, glass) → rewrote extractor v2 in 1 round(s)"
+    },
+    {
+      "site": "nonna-pizza",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.007911,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 16 now, 18 then; a fresh reading lists 18) → rewrote extractor v2 in 1 round(s); 3 added, 1 removed"
+    },
+    {
+      "site": "nonna-pizza",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.010543,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 13 now, 18 then; a fresh reading lists 15) → rewrote extractor v2 in 2 round(s); 18 added, 13 removed"
+    },
+    {
+      "site": "bao-street",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 14,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.004625,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Asahi, Jasmine Iced Tea) → rewrote extractor v2 in 1 round(s)"
+    },
+    {
+      "site": "bao-street",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 14,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.009855,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 12 now, 14 then; a fresh reading lists 12) → rewrote extractor v2 in 2 round(s); 2 added"
+    },
+    {
+      "site": "bao-street",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 14,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.00605,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 9 now, 14 then; a fresh reading lists 13) → rewrote extractor v2 in 1 round(s); 5 added"
+    },
+    {
+      "site": "cafe-loft",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.005463,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Caffè latte, Chai latte) → rewrote extractor v2 in 2 round(s)"
+    },
+    {
+      "site": "cafe-loft",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.007599,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 16 now, 18 then; a fresh reading lists 18) → rewrote extractor v2 in 1 round(s); 2 added"
+    },
+    {
+      "site": "cafe-loft",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 18,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.0066,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 13 now, 18 then; a fresh reading lists 18) → rewrote extractor v2 in 1 round(s); 5 added"
+    },
+    {
+      "site": "sushi-koi",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 24,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.009989,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Mochi-is, Matcha latte) → rewrote extractor v2 in 2 round(s)"
+    },
+    {
+      "site": "sushi-koi",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 24,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.034398,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 22 now, 24 then; a fresh reading lists 24) → rewrote extractor v2 in 3 round(s); 2 added"
+    },
+    {
+      "site": "sushi-koi",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 24,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.012311,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 19 now, 24 then; a fresh reading lists 24) → rewrote extractor v2 in 2 round(s); 5 added"
+    },
+    {
+      "site": "blue-oak-bistro",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 20,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.005038,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Olive Oil Cake, Dark Chocolate Pot de Crème) → rewrote extractor v2 in 1 round(s)"
+    },
+    {
+      "site": "blue-oak-bistro",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 20,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.007827,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 18 now, 20 then; a fresh reading lists 20) → rewrote extractor v2 in 1 round(s); 2 added"
+    },
+    {
+      "site": "blue-oak-bistro",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 20,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.008844,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 15 now, 20 then; a fresh reading lists 20) → rewrote extractor v2 in 1 round(s); 5 added"
+    },
+    {
+      "site": "pho-hanoi-house",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 30,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.008069,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Trà Đá, Nước Mía) → rewrote extractor v2 in 1 round(s)"
+    },
+    {
+      "site": "pho-hanoi-house",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 30,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.01713,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 28 now, 30 then; a fresh reading lists 30) → rewrote extractor v2 in 2 round(s); 2 added"
+    },
+    {
+      "site": "pho-hanoi-house",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 30,
+      "status": "broken",
+      "f1AfterVsTruth": 0.909,
+      "costUsd": 0.119427,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 25 now, 30 then; a fresh reading lists 30); heal failed: no passing extractor after 5 rounds (best f1 0.909)"
+    },
+    {
+      "site": "trattoria-sole",
+      "scenario": "removal",
+      "dropped": 2,
+      "of": 25,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.007819,
+      "detail": "coverage check: 2 dish(es) dropped out of the output but are still on the page (Torta caprese, Selezione di formaggi) → rewrote extractor v2 in 1 round(s)"
+    },
+    {
+      "site": "trattoria-sole",
+      "scenario": "weekly",
+      "dropped": 2,
+      "of": 25,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.011117,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 23 now, 25 then; a fresh reading lists 25) → rewrote extractor v2 in 1 round(s); 2 added"
+    },
+    {
+      "site": "trattoria-sole",
+      "scenario": "weekly",
+      "dropped": 5,
+      "of": 25,
+      "status": "healed",
+      "f1AfterVsTruth": 1,
+      "costUsd": 0.012111,
+      "detail": "coverage check: catches fewer of the page's dishes than when it was written (returns 20 now, 25 then; a fresh reading lists 25) → rewrote extractor v2 in 1 round(s); 5 added"
+    }
+  ]
+}
