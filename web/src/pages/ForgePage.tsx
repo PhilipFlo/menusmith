@@ -191,7 +191,7 @@ function LiveStatus({ state }: { state: ForgeState }) {
 function IdleExplainer() {
   const items = [
     { n: '1', t: 'Read', d: 'Nemotron 3 Super reads the menu page once into structured dishes — the oracle.' },
-    { n: '2', t: 'Write', d: 'Nemotron 3 Ultra writes a ~50-line JavaScript extractor for this one site.' },
+    { n: '2', t: 'Write', d: 'Nemotron 3 Super writes a ~50-line JavaScript extractor for this one site (Ultra takes over if it gets stuck).' },
     { n: '3', t: 'Test & repair', d: 'The code runs in a locked-down sandbox and is scored on precision, recall and F1 until it passes.' },
     { n: '4', t: 'Run forever', d: 'The extractor is committed to the library. The nightly fleet re-runs it for $0 and heals it if the site changes.' },
   ];
@@ -264,7 +264,7 @@ function RunView({ state }: { state: ForgeState }) {
             <details className="panel collapsible">
               <summary>
                 <span className="panel-title">Agent thinking</span>
-                <span className="muted small">{plural(reasoning.length, 'note')} from Nemotron 3 Ultra's reasoning</span>
+                <span className="muted small">{plural(reasoning.length, 'note')} from the code-writing model's reasoning</span>
               </summary>
               <ol className="thinking">
                 {reasoning.map((r, i) => (
@@ -432,7 +432,7 @@ function Rounds({ state }: { state: ForgeState }) {
   };
 
   return (
-    <Panel title="Rounds" subtitle="Each round: Nemotron 3 Ultra writes code, the sandbox runs it, the score decides.">
+    <Panel title="Rounds" subtitle="Each round: Nemotron writes code (Super, or Ultra after an escalation), the sandbox runs it, the score decides.">
       <div className="tabs" role="tablist" aria-label="Rounds">
         {rounds.map((r, i) => {
           const t = state.tests.find((x) => x.round === r);
