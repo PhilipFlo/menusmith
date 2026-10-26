@@ -13,6 +13,7 @@ const page = await ctx.newPage();
 
 async function shot(name: string, path: string, prep?: () => Promise<void>) {
   await page.goto(`${BASE}${path}`);
+  await page.waitForLoadState('networkidle').catch(() => {});
   await page.waitForTimeout(1500);
   if (prep) await prep();
   await page.screenshot({ path: `${OUT}/${name}.png` });
@@ -34,4 +35,18 @@ await shot('fleet', '/#/fleet', async () => {
 });
 await shot('image-menu', '/#/library/listentodelhi-no');
 await shot('how-it-works', '/#/about');
+await shot('measured', '/#/about', async () => {
+  const m = page.getByRole('heading', { name: 'Measured', exact: true });
+  await m.waitFor({ timeout: 15000 }).catch(() => {});
+  await m.evaluate((el) => el.scrollIntoView({ block: 'start' })).catch(() => {});
+  await page.mouse.wheel(0, -90);
+  await page.waitForTimeout(600);
+});
+await shot('recheck', '/#/library/pizzabakeren-no', async () => {
+  const r = page.getByText('Re-check this menu');
+  await r.waitFor({ timeout: 15000 }).catch(() => {});
+  await r.evaluate((el) => el.scrollIntoView({ block: 'start' })).catch(() => {});
+  await page.mouse.wheel(0, -120);
+  await page.waitForTimeout(600);
+});
 await browser.close();

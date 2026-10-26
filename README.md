@@ -21,8 +21,8 @@ agent heals its own code.
 ---
 
 <p align="center">
-  <img src="docs/screenshots/extractor-diff.png" width="860" alt="A self-healed extractor: the website was redesigned, the fleet noticed, and Nemotron rewrote its own selectors (v4 → v5 diff)">
-  <br><em>Self-healing: the restaurant redesigned its website, the fleet noticed, and the agent rewrote its own code (v4 → v5).</em>
+  <img src="docs/screenshots/extractor-diff.png" width="860" alt="A self-healed extractor: the website was redesigned, the fleet noticed, and Nemotron rewrote its own selectors (version diff)">
+  <br><em>Self-healing: the restaurant redesigned its website, the fleet noticed, and the agent rewrote its own code — the diff between the old and the healed version.</em>
 </p>
 
 ## Why
@@ -211,6 +211,8 @@ made the cheap calls cheap and the code-writing calls smart.
 | <img src="docs/screenshots/library.png" alt="Library"> | <img src="docs/screenshots/fleet.png" alt="Fleet"> |
 | **Image menu** — read by Nemotron 3.5 Super VL, re-checked by fingerprint | **How it works** — model routing and the sandbox |
 | <img src="docs/screenshots/image-menu.png" alt="Image menu"> | <img src="docs/screenshots/how-it-works.png" alt="How it works"> |
+| **Measured** — every claim has its own benchmark | **Re-check** — re-scrape for $0, or compare with a fresh Nemotron reading |
+| <img src="docs/screenshots/measured.png" alt="Measured results"> | <img src="docs/screenshots/recheck.png" alt="Re-check an extractor"> |
 
 ## The sandbox
 
