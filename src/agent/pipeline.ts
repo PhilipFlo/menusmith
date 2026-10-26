@@ -1,7 +1,7 @@
 import { config, MODELS, modelName } from '../config.ts';
 import { domainOf, fetchPage, type Page } from '../html/fetch.ts';
 import { detectPlatform } from '../html/platform.ts';
-import { skeleton } from '../html/simplify.ts';
+import { detectPriceColumns, skeleton } from '../html/simplify.ts';
 import { jsonMenuLines, jsonSkeletonText } from '../html/jsonview.ts';
 import { Ledger, type ChatMessage } from '../llm/client.ts';
 import { candidatesFor, idForUrl, loadExtractor, saveExtractor, saveSnapshot } from '../library/store.ts';
@@ -11,7 +11,7 @@ import type { Emit, ExtractorMeta, MenuItem, RunResult, Score } from '../types.t
 import { findMenuPage, priceDensity } from './discover.ts';
 import { acquire, reacquire, type Acquired } from './acquire.ts';
 import { detectHardcoding, ESCALATE_AFTER, feedbackMessage, initialMessages, initialMessagesJson, writeCode } from './forge.ts';
-import { itemsHash, normName, scoreAgainstOracle } from './evaluate.ts';
+import { itemsHash, nameSimilarity, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
 import { arbitrate } from './judge.ts';
 import { readMenuImages } from './vision.ts';
@@ -28,6 +28,8 @@ export interface ForgeInput {
   noReuse?: boolean;
   /** Existing extractor to repair (self-heal): its code seeds the conversation. */
   repairOf?: { code: string; reason: string };
+  /** Dishes that must be in the output for a repair to pass (they are on the page and were lost). */
+  mustInclude?: string[];
   /** Don't follow links / call Tavily; treat `url` as the menu page. */
   noDiscover?: boolean;
   /** Allow the headless-browser path for JavaScript-built menus (default true). */
@@ -380,7 +382,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
           oracle: oracleItems,
           pathReport: jsonShapeReport(acq.payload),
         })
-      : initialMessages({ url: menuUrl, platform, skeleton: skeleton(acq.payload), oracle: oracleItems });
+      : initialMessages({ url: menuUrl, platform, skeleton: skeleton(acq.payload), oracle: oracleItems, priceColumns: detectPriceColumns(acq.payload) });
   if (input.repairOf) {
     messages.push({ role: 'assistant', content: '```javascript\n' + input.repairOf.code + '\n```' });
     messages.push({
@@ -432,6 +434,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       try {
         arbitrations++;
         const a = await arbitrate(disputedExtractor, disputedOracle, text, ledger, emit);
+        // Dishes a repair must recover are known to be real — never let a tie-break drop them.
+        for (const n of input.mustInclude ?? []) a.rejected.delete(normName(n));
         if (a.disputed) {
           const before = oracleItems.length;
           oracleItems = [...oracleItems.filter((i) => !a.rejected.has(normName(i.name))), ...a.accepted];
@@ -444,6 +448,14 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
         }
       } catch (e) {
         emit({ type: 'log', message: `Arbitration unavailable: ${(e as Error).message}` });
+      }
+    }
+    // A repair that doesn't bring back the dishes it was started for has not passed.
+    if (score && input.mustInclude?.length) {
+      const got = run.items.map((i) => normName(i.name));
+      const still = input.mustInclude.filter((n) => !got.some((g) => g === normName(n) || nameSimilarity(g, normName(n)) >= 0.8));
+      if (still.length) {
+        score = { ...score, pass: false, failures: [`still missing these dishes that are on the page: ${still.slice(0, 8).join(', ')}`, ...score.failures] };
       }
     }
     emit({

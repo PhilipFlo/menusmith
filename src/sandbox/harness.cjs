@@ -19,7 +19,7 @@
  */
 const vm = require('node:vm');
 const cheerio = require('cheerio');
-const { parsePrice, cleanText } = require('./helpers.cjs');
+const { parsePrice, cleanText, priceColumns } = require('./helpers.cjs');
 
 const CPU_TIMEOUT_MS = 4000;
 const MAX_ITEMS = 3000;
@@ -138,6 +138,7 @@ async function main() {
       ctx: Object.freeze({ url: String(input.url || '') }),
       parsePrice,
       cleanText,
+      priceColumns,
       __result: undefined,
     };
     let trace = null;

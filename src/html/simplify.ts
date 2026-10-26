@@ -238,3 +238,39 @@ export function skeleton(html: string, budget = 28_000): Skeleton {
   const out = wrap(render($, root, { keepRepeated: 1, maxText: 30 }, ''));
   return { rootPath, html: out.slice(0, budget) + '\n<!-- … skeleton truncated … -->', priceNodes: found?.priceNodes ?? 0, jsonLd, truncated: true };
 }
+
+const PRICE_LINE = /^(?:[$€£]|kr\.?|nok)?\s*\d{1,4}(?:[.,]\d{1,2})?(?:\s*\/\s*\d{1,4}(?:[.,]\d{1,2})?)?\s*(?:,-|kr\.?|nok|[$€£])?$/i;
+
+/**
+ * "Price column" layouts (Tilda zero-blocks and similar builders): one text block holds a
+ * whole column of prices separated by <br>, positioned next to a block with the dish names
+ * in the same order — there is no per-dish element. Returns how many such price columns
+ * the page has and the class of a container that holds them, or null.
+ */
+export function detectPriceColumns(html: string): { columns: number; container: string | null } | null {
+  const $ = cheerio.load(html);
+  let columns = 0;
+  let container: string | null = null;
+  $('div, p, td, span').each((_, el) => {
+    const inner = $(el).html() ?? '';
+    if (!/<br\s*\/?>/i.test(inner) || inner.length > 4000) return;
+    const lines = inner
+      .split(/<br\s*\/?>/i)
+      .map((l) => cheerio.load(`<x>${l}</x>`)('x').text().replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+    if (lines.length < 3 || !lines.every((l) => PRICE_LINE.test(l))) return;
+    // Count the innermost block only (its parents contain the same lines).
+    if ($(el).find('div, p, td, span').toArray().some((c) => /<br/i.test($(c).html() ?? ''))) return;
+    columns++;
+    if (!container) {
+      for (let p = $(el).parent(), depth = 0; p.length && depth < 8; p = p.parent(), depth++) {
+        const cls = (p.attr('class') || '').split(/\s+/).find((c) => /artboard|section|block|row|container/i.test(c));
+        if (cls) {
+          container = `.${cls}`;
+          break;
+        }
+      }
+    }
+  });
+  return columns >= 2 ? { columns, container } : null;
+}

@@ -198,7 +198,7 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
         model,
         messages: o.messages,
         max_tokens: o.maxTokens ?? 4096,
-        temperature: o.temperature ?? (o.thinking ? 0.6 : 0.2),
+        temperature: o.temperature ?? (process.env.MENUSMITH_TEMPERATURE ? Number(process.env.MENUSMITH_TEMPERATURE) : o.thinking ? 0.6 : 0.2), // env: benchmarks only
         top_p: 0.95,
         chat_template_kwargs: { enable_thinking: !!o.thinking },
         ...(useJsonMode ? { response_format: { type: 'json_object' as const } } : {}),
@@ -277,7 +277,9 @@ export async function chat(o: ChatOptions, ledger?: Ledger, emit?: Emit): Promis
     // replay: recorded responses only · record: reuse a recording when one exists, else call live and save.
     if (config.llmMode === 'replay' || (config.llmMode === 'record' && existsSync(file))) {
       if (!existsSync(file)) {
-        lastErr = new LlmError(`no recorded response for this request (cassette ${key}); run with MENUSMITH_LLM=record first`);
+        lastErr = new LlmError(
+          `this server runs in offline replay mode and has no recorded model answer for this website (cassette ${key}) — only the demo restaurants are recorded. Use a demo restaurant, or run with MENUSMITH_LLM=live`,
+        );
         continue; // maybe the fallback model was recorded
       }
       raw = JSON.parse(readFileSync(file, 'utf8'));

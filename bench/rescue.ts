@@ -32,13 +32,13 @@ async function main() {
   const res = JSON.parse(readFileSync(resultsFile, 'utf8')) as { runAt: string; summary: Record<string, unknown>; rows: Row[] };
   const sites = JSON.parse(readFileSync(sitesFile, 'utf8')) as { name: string; url: string; website?: string; city?: string }[];
   // --retry-unrecorded: only redo rescue attempts that ran in replay mode by mistake
-  // ("no recorded response …") — they never reached the model.
+  // ("no recorded response / model answer …") — they never reached the model.
   const unrecorded = process.argv.includes('--retry-unrecorded');
   const todo = res.rows.filter(
     (r) =>
       !r.ok &&
       RESCUABLE.has(r.category as string) &&
-      (!unrecorded || /no recorded response/.test(String((r.rescue as { reason?: string } | undefined)?.reason ?? ''))),
+      (!unrecorded || /no recorded (response|model answer)/.test(String((r.rescue as { reason?: string } | undefined)?.reason ?? ''))),
   );
   console.log(`Rescue pass: ${todo.length} site(s) that failed for a page/source reason, retried from the homepage\n`);
   const queue = [...todo];
