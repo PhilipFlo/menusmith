@@ -1,6 +1,7 @@
 import { config, MODELS, modelName } from '../config.ts';
 import { domainOf, fetchPage, type Page } from '../html/fetch.ts';
 import { detectPlatform } from '../html/platform.ts';
+import { renderPdfPages } from '../html/render.ts';
 import { detectPriceColumns, skeleton } from '../html/simplify.ts';
 import { jsonMenuLines, jsonSkeletonText } from '../html/jsonview.ts';
 import { Ledger, type ChatMessage } from '../llm/client.ts';
@@ -14,7 +15,7 @@ import { detectHardcoding, ESCALATE_AFTER, feedbackMessage, initialMessages, ini
 import { itemsHash, nameSimilarity, normName, scoreAgainstOracle } from './evaluate.ts';
 import { readMenu } from './oracle.ts';
 import { arbitrate } from './judge.ts';
-import { readMenuImages } from './vision.ts';
+import { readImage, readMenuImages } from './vision.ts';
 import { fetchPdf, looksLikePdfUrl, pdfText } from './document.ts';
 import { jsonShapeReport, selectorReport } from './debugger.ts';
 
@@ -86,6 +87,45 @@ export function groundOracle(items: MenuItem[], text: string): { kept: MenuItem[
   return { kept, dropped };
 }
 
+/**
+ * Read a PDF menu: the text layer first (cheap); if that yields no usable menu — designed
+ * placemats with letter-spaced, multi-column type, or scanned PDFs without text — render the
+ * pages in the browser and let Nemotron 3.5 Super VL read them as images.
+ */
+export async function readPdfMenu(
+  bytes: Uint8Array,
+  docUrl: string,
+  restaurant: string | null | undefined,
+  ledger: Ledger,
+  emit: Emit,
+): Promise<{ items: MenuItem[]; via: 'text' | 'vision'; pages: number }> {
+  let text = '';
+  let pages = 0;
+  try {
+    const t = await pdfText(bytes);
+    text = t.text;
+    pages = t.pages;
+    emit({ type: 'log', message: `PDF: ${t.pages} page(s), ${text.length.toLocaleString()} characters of text` });
+  } catch (e) {
+    emit({ type: 'log', message: `PDF text layer unreadable: ${(e as Error).message}` });
+  }
+  let items: MenuItem[] = [];
+  if (text.replace(/\s+/g, '').length >= 150) {
+    const o = await readMenu(text, { url: docUrl, restaurant }, ledger, emit);
+    items = groundOracle(o.items, text).kept;
+  }
+  if (items.length >= 3 || process.env.MENUSMITH_RENDER === 'off') return { items, via: 'text', pages };
+  emit({ type: 'log', message: 'The PDF’s text layer does not read as a menu — rendering its pages for Nemotron 3.5 Super VL' });
+  const imgs = await renderPdfPages(bytes, { maxPages: 4 });
+  const seen: MenuItem[] = [];
+  for (const [k, png] of imgs.entries()) {
+    const r = await readImage({ bytes: png, mime: 'image/png', url: `${docUrl}#page=${k + 1}` }, ledger, emit);
+    if (r.isMenu) seen.push(...r.items);
+    emit({ type: 'log', message: `Nemotron 3.5 Super VL read ${r.items.length} dishes from page ${k + 1}` });
+  }
+  return { items: seen, via: 'vision', pages: imgs.length };
+}
+
 export async function forge(input: ForgeInput, emit: Emit = noop): Promise<ForgeOutcome> {
   const t0 = Date.now();
   const ledger = input.ledger ?? new Ledger();
@@ -98,34 +138,28 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   const documentPath = async (docUrl: string, pageUrl: string): Promise<ForgeOutcome> => {
     emit({ type: 'step', step: 'document', status: 'start', detail: `Reading the PDF menu ${docUrl.split('/').pop()}` });
     let pdf: Awaited<ReturnType<typeof fetchPdf>>;
-    let text: string;
     try {
       pdf = await fetchPdf(docUrl);
-      const t = await pdfText(pdf.bytes);
-      text = t.text;
-      emit({ type: 'log', message: `PDF: ${t.pages} page(s), ${text.length.toLocaleString()} characters of text` });
     } catch (e) {
       emit({ type: 'step', step: 'document', status: 'fail', detail: (e as Error).message });
       return fail(`could not read the PDF: ${(e as Error).message}`);
     }
-    if (text.replace(/\s+/g, '').length < 150) {
-      emit({ type: 'step', step: 'document', status: 'fail', detail: 'the PDF has no text layer (scanned)' });
-      return fail('scanned PDF without a text layer');
-    }
     let items: MenuItem[];
+    let via: 'text' | 'vision' = 'text';
     try {
-      const o = await readMenu(text, { url: docUrl, restaurant: input.restaurant }, ledger, emit);
-      items = groundOracle(o.items, text).kept;
+      const r = await readPdfMenu(pdf.bytes, docUrl, input.restaurant, ledger, emit);
+      items = r.items;
+      via = r.via;
     } catch (e) {
       emit({ type: 'step', step: 'document', status: 'fail', detail: (e as Error).message });
-      return fail(`oracle failed: ${(e as Error).message}`);
+      return fail(`could not read the PDF menu: ${(e as Error).message}`);
     }
     if (items.length < 3) {
       emit({ type: 'step', step: 'document', status: 'fail', detail: 'no menu found in the PDF' });
       return fail('no menu with dishes found in the PDF');
     }
     emit({ type: 'oracle', items });
-    emit({ type: 'step', step: 'document', status: 'done', detail: `${items.length} dishes from the PDF` });
+    emit({ type: 'step', step: 'document', status: 'done', detail: `${items.length} dishes from the PDF${via === 'vision' ? ' (read as images by Nemotron 3.5 Super VL)' : ''}` });
     const domain = domainOf(pageUrl);
     const platform = detectPlatform('', pageUrl);
     // A direct PDF link often lives on a shared CDN (squarespace-cdn, wsimg, Drive…):
@@ -141,7 +175,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
         platform,
         source: { kind: 'document', request: { url: pageUrl, method: 'GET', document: { url: pdf.finalUrl, sha256: pdf.sha256 } } },
         createdAt: new Date().toISOString(),
-        model: MODELS.oracle[0]!,
+        model: via === 'vision' ? MODELS.vision[0]! : MODELS.oracle[0]!,
         rounds: 0,
         score: { precision: 1, recall: 1, f1: 1, pricedRatio: Math.round(priced * 1000) / 1000, oracleCount: items.length, extractorCount: items.length },
         tokens: { prompt: ledger.promptTokens, completion: ledger.completionTokens },

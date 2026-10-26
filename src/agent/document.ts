@@ -60,7 +60,7 @@ export function pdfText(bytes: Uint8Array, timeoutMs = Number(process.env.MENUSM
 /** PDF links on a page whose URL or link text suggests a menu. */
 export function menuPdfLinks(html: string, baseUrl: string, cheerio: typeof import('cheerio')): string[] {
   const $ = cheerio.load(html);
-  const out = new Set<string>();
+  const scored = new Map<string, number>();
   $('a[href]').each((_, el) => {
     const href = $(el).attr('href') || '';
     if (!looksLikePdfUrl(href)) return;
@@ -71,12 +71,18 @@ export function menuPdfLinks(html: string, baseUrl: string, cheerio: typeof impo
       /* malformed escape — use as is */
     }
     const hint = `${decoded} ${$(el).text()}`;
-    if (!/(meny|menu|mat|food|drikke|drink|lunsj|lunch|middag|dinner|carte|spisekart|takeaway)/i.test(hint)) return;
+    if (!/(meny|menu|mat|food|drikke|drink|lunsj|lunch|middag|dinner|carte|spisekart|takeaway|brunch|breakfast)/i.test(hint)) return;
+    // The main food menu first: a drinks list, wine list or catering sheet only if that's all.
+    let score = 0;
+    if (/(food|mat\b|dinner|middag|lunch|lunsj|brunch|breakfast|frokost|all.?day|main|placemat|a.?la.?carte|spisekart)/i.test(hint)) score += 3;
+    if (/(menu|meny)/i.test(hint)) score += 1;
+    if (/(drink|drikke|wine|vin\b|cocktail|bar\b|beer|øl\b|catering|allergen|kids|barn|dessert|happy.?hour|brochure)/i.test(hint)) score -= 2;
     try {
-      out.add(new URL(href, baseUrl).toString());
+      const u = new URL(href, baseUrl).toString();
+      scored.set(u, Math.max(scored.get(u) ?? -Infinity, score));
     } catch {
       /* ignore */
     }
   });
-  return [...out].slice(0, 3);
+  return [...scored].sort((a, b) => b[1] - a[1]).map(([u]) => u).slice(0, 3);
 }

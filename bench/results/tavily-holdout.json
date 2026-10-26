@@ -1,10 +1,10 @@
 {
-  "runAt": "2026-10-26T10:02:58.683Z",
+  "runAt": "2026-10-26T21:45:47.443Z",
   "summary": {
     "sites": 40,
-    "matched": 34,
-    "matchRate": 85,
-    "medianMs": 1406
+    "matched": 36,
+    "matchRate": 90,
+    "medianMs": 1480
   },
   "rows": [
     {
@@ -13,7 +13,7 @@
       "expected": "grinigolfcafe.no",
       "found": "grinigolfklubb.no",
       "match": false,
-      "ms": 2151
+      "ms": 1340
     },
     {
       "name": "Der Peppern Gror Aker Brygge",
@@ -21,7 +21,7 @@
       "expected": "derpepperngror.no",
       "found": "derpepperngror.no",
       "match": true,
-      "ms": 1566
+      "ms": 2294
     },
     {
       "name": "The Salmon",
@@ -29,7 +29,7 @@
       "expected": "thesalmon.com",
       "found": "thesalmon.com",
       "match": true,
-      "ms": 2323
+      "ms": 1480
     },
     {
       "name": "Pizza Plutselig DA",
@@ -37,7 +37,7 @@
       "expected": "pizzaplutselig.no",
       "found": "pizzaplutselig.no",
       "match": true,
-      "ms": 2062
+      "ms": 2748
     },
     {
       "name": "CASBAR",
@@ -45,7 +45,7 @@
       "expected": "casbar.no",
       "found": "casbar.no",
       "match": true,
-      "ms": 1951
+      "ms": 1395
     },
     {
       "name": "Festningen",
@@ -53,7 +53,7 @@
       "expected": "festningenrestaurant.no",
       "found": "festningenrestaurant.no",
       "match": true,
-      "ms": 2218
+      "ms": 3073
     },
     {
       "name": "Solsiden Restaurant",
@@ -61,7 +61,7 @@
       "expected": "solsiden.no",
       "found": "restaurants-us.com",
       "match": false,
-      "ms": 1325
+      "ms": 1857
     },
     {
       "name": "House of Sushi",
@@ -69,7 +69,7 @@
       "expected": "houseofsushi.no",
       "found": "sushihouse.no",
       "match": false,
-      "ms": 1649
+      "ms": 1428
     },
     {
       "name": "Frognerseteren Café & Restaurant",
@@ -77,15 +77,15 @@
       "expected": "frognerseteren.no",
       "found": "frognerseteren.no",
       "match": true,
-      "ms": 1156
+      "ms": 1429
     },
     {
       "name": "Vadio Restaurante & Bar",
       "city": "Oslo",
       "expected": "vadio-oslo.com",
-      "found": "grand.no",
-      "match": false,
-      "ms": 1182
+      "found": "vadio-oslo.com",
+      "match": true,
+      "ms": 1511
     },
     {
       "name": "Lutlaget L/L",
@@ -93,7 +93,7 @@
       "expected": "lutlaget.no",
       "found": "lutlaget.no",
       "match": true,
-      "ms": 1204
+      "ms": 1557
     },
     {
       "name": "Brasserie Opera",
@@ -101,7 +101,7 @@
       "expected": "brasserieopera.no",
       "found": "brasserieopera.no",
       "match": true,
-      "ms": 1643
+      "ms": 1358
     },
     {
       "name": "Lofoten Fiskerestaurant",
@@ -109,7 +109,7 @@
       "expected": "lofoten-fiskerestaurant.no",
       "found": "lofoten-fiskerestaurant.no",
       "match": true,
-      "ms": 1227
+      "ms": 1326
     },
     {
       "name": "Skansen",
@@ -117,7 +117,7 @@
       "expected": "cafeskansen.no",
       "found": "cafeskansen.no",
       "match": true,
-      "ms": 1560
+      "ms": 1613
     },
     {
       "name": "Vinderen Sushi",
@@ -125,7 +125,7 @@
       "expected": "vinderensushi.no",
       "found": "vinderensushi.no",
       "match": true,
-      "ms": 1479
+      "ms": 2928
     },
     {
       "name": "Kinnara Thai Restaurant",
@@ -133,7 +133,7 @@
       "expected": "kinnara.no",
       "found": "kinnara.no",
       "match": true,
-      "ms": 1398
+      "ms": 1034
     },
     {
       "name": "175°C K-fried",
@@ -141,7 +141,7 @@
       "expected": "175k-fried.no",
       "found": "175k-fried.no",
       "match": true,
-      "ms": 1088
+      "ms": 2163
     },
     {
       "name": "Pappabuene",
@@ -149,7 +149,7 @@
       "expected": "pappabuene.no",
       "found": "pappabuene.no",
       "match": true,
-      "ms": 1160
+      "ms": 1342
     },
     {
       "name": "Vineria Ventidue",
@@ -157,7 +157,7 @@
       "expected": "vineriaventidue.no",
       "found": "vineriaventidue.no",
       "match": true,
-      "ms": 1768
+      "ms": 2308
     },
     {
       "name": "FYR Bistronomi & Bar",
@@ -165,7 +165,7 @@
       "expected": "fyrbistronomi.no",
       "found": "fyrbistronomi.no",
       "match": true,
-      "ms": 1337
+      "ms": 1325
     },
     {
       "name": "Lille Saigon",
@@ -173,7 +173,7 @@
       "expected": "lillesaigon1.com",
       "found": "lillesaigon1.com",
       "match": true,
-      "ms": 1406
+      "ms": 1597
     },
     {
       "name": "Crispy Chicken House - Fast-Food vIA VILLAGE",
@@ -181,7 +181,7 @@
       "expected": "crispychickenhouse.com",
       "found": "crispychickenhouse.com",
       "match": true,
-      "ms": 1315
+      "ms": 2002
     },
     {
       "name": "Thorvald Pizza (Cue Pizzeria)",
@@ -189,7 +189,7 @@
       "expected": "cueoslo.no",
       "found": "cueoslo.no",
       "match": true,
-      "ms": 1600
+      "ms": 1197
     },
     {
       "name": "Håndbakt Tøyen",
@@ -197,7 +197,7 @@
       "expected": "handbakt.no",
       "found": "handbakt.no",
       "match": true,
-      "ms": 1155
+      "ms": 1538
     },
     {
       "name": "Kinabolle Ensjø",
@@ -205,7 +205,7 @@
       "expected": "kinabolle.no",
       "found": "kinabolle.no",
       "match": true,
-      "ms": 1132
+      "ms": 1378
     },
     {
       "name": "Bennys Burger",
@@ -213,7 +213,7 @@
       "expected": "ordera.no",
       "found": "ordera.no",
       "match": true,
-      "ms": 1307
+      "ms": 1367
     },
     {
       "name": "Tyrkisk kjøkken",
@@ -221,7 +221,7 @@
       "expected": "xn--tyrkiskkjkken-jnb.no",
       "found": "xn--tyrkiskkjkken-jnb.no",
       "match": true,
-      "ms": 1330
+      "ms": 1310
     },
     {
       "name": "Sushi og Thai Lambertseter",
@@ -229,7 +229,7 @@
       "expected": "sushi-thai.no",
       "found": "sushi-thai.no",
       "match": true,
-      "ms": 1377
+      "ms": 1827
     },
     {
       "name": "Istanbul Kebab/Restaurant avd. Trondheimsveien, Oslo",
@@ -237,7 +237,7 @@
       "expected": "istanbulkebab.no",
       "found": "istanbulkebab.no",
       "match": true,
-      "ms": 1247
+      "ms": 1309
     },
     {
       "name": "Koi Sushi Vollebekk",
@@ -245,7 +245,7 @@
       "expected": "ordera.no",
       "found": "koisushi.no",
       "match": false,
-      "ms": 1519
+      "ms": 2209
     },
     {
       "name": "Bun's Sørenga - Tex-Mex og Burger Bar",
@@ -253,7 +253,7 @@
       "expected": "buns.no",
       "found": "buns.no",
       "match": true,
-      "ms": 1078
+      "ms": 1196
     },
     {
       "name": "Hy's sushi & BOBA tea avd.Ensjø",
@@ -261,7 +261,7 @@
       "expected": "hysushi.no",
       "found": "hysushi.no",
       "match": true,
-      "ms": 1532
+      "ms": 1419
     },
     {
       "name": "Noods Norway",
@@ -269,7 +269,7 @@
       "expected": "noodsnorway.no",
       "found": "noodsnorway.no",
       "match": true,
-      "ms": 1995
+      "ms": 2197
     },
     {
       "name": "Eero",
@@ -277,7 +277,7 @@
       "expected": "eero.no",
       "found": "eero.no",
       "match": true,
-      "ms": 1312
+      "ms": 1531
     },
     {
       "name": "Prima Fila Restaurant",
@@ -285,15 +285,7 @@
       "expected": "primafila.no",
       "found": "primafila.no",
       "match": true,
-      "ms": 1477
-    },
-    {
-      "name": "JOE & THE JUICE",
-      "city": "Oslo",
-      "expected": "joejuice.com",
-      "found": "joeandthejuice.is",
-      "match": false,
-      "ms": 1417
+      "ms": 1412
     },
     {
       "name": "JOE & THE JUICE",
@@ -301,7 +293,15 @@
       "expected": "joejuice.com",
       "found": "joejuice.com",
       "match": true,
-      "ms": 1954
+      "ms": 1453
+    },
+    {
+      "name": "JOE & THE JUICE",
+      "city": "Oslo",
+      "expected": "joejuice.com",
+      "found": "joejuice.com",
+      "match": true,
+      "ms": 1948
     },
     {
       "name": "Castello Restaurant - Oslo",
@@ -309,7 +309,7 @@
       "expected": "castellorestaurant.no",
       "found": "castellorestaurant.no",
       "match": true,
-      "ms": 1516
+      "ms": 1528
     },
     {
       "name": "Døgnvill Burger Bjørvika",
@@ -317,7 +317,7 @@
       "expected": "dognvillburger.no",
       "found": "dognvillburger.no",
       "match": true,
-      "ms": 1240
+      "ms": 1442
     },
     {
       "name": "Hakuna Matata ( Lailbela ) Ethiopian Resturant",
@@ -325,7 +325,7 @@
       "expected": "oslohakunamatata.org",
       "found": "oslohakunamatata.org",
       "match": true,
-      "ms": 1100
+      "ms": 1354
     }
   ]
 }

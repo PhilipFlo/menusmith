@@ -8,7 +8,7 @@ import { pageText } from '../html/simplify.ts';
 import { Ledger } from '../llm/client.ts';
 import { writePersisted } from '../library/persist.ts';
 import { patchMeta, listExtractors, loadSnapshot, saveSnapshot, updateBaseline, updateDocumentSource, updateImageSource, type StoredExtractor } from '../library/store.ts';
-import { fetchPdf, pdfText } from '../agent/document.ts';
+import { fetchPdf } from '../agent/document.ts';
 import { fetchImage, findMenuImages, readMenuImages } from '../agent/vision.ts';
 import { renderPage } from '../html/render.ts';
 import { fetchPage } from '../html/fetch.ts';
@@ -16,7 +16,7 @@ import { runExtractor } from '../sandbox/runner.ts';
 import type { Emit, MenuItem } from '../types.ts';
 import { itemsHash, nameSimilarity, normName, PASS, samePrice, scoreAgainstOracle } from '../agent/evaluate.ts';
 import { readMenu } from '../agent/oracle.ts';
-import { forge, groundOracle } from '../agent/pipeline.ts';
+import { forge, groundOracle, readPdfMenu } from '../agent/pipeline.ts';
 import { arbitrate } from '../agent/judge.ts';
 
 /**
@@ -657,9 +657,8 @@ async function checkDocument(
   emit({ type: 'log', message: `[fleet] ${x.meta.id}: PDF changed — re-reading` });
   let items: MenuItem[];
   try {
-    const { text } = await pdfText(pdf.bytes);
-    const o = await readMenu(text, { url: stored.url, restaurant: x.meta.restaurant }, ledger, emit);
-    items = groundOracle(o.items, text).kept;
+    // Same reader as the forge: text layer, then the pages as images if the text doesn't read.
+    items = (await readPdfMenu(pdf.bytes, stored.url, x.meta.restaurant, ledger, emit)).items;
   } catch (e) {
     return done({ status: 'error', detail: `PDF changed but could not be re-read: ${(e as Error).message}`, items: prev.length, changes: [] });
   }

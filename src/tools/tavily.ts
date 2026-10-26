@@ -64,7 +64,7 @@ export async function tavilyMap(url: string, limit = 40): Promise<string[]> {
 
 /** Sites that list restaurants but are not the restaurant's own website. */
 export const AGGREGATORS =
-  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews)/i;
+  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|seamless|postmates|slicelife|menuwithprice|menupages|open-closed|nemtakeaway|osloarrangement|spisher|restaurantguru|menuism|sirved|zmenu|restaurantji|allmenus|b-cdn\.net|orderhouse\.io|tastesof|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews)/i;
 
 /** Country hints for the cities we know: boost local results ("Shanti, Oslo" is not shantiboston.com). */
 const CITY_COUNTRY: [RegExp, { country: string; tld: string }][] = [
@@ -77,9 +77,16 @@ const CITY_COUNTRY: [RegExp, { country: string; tld: string }][] = [
 /** Find the restaurant's own website from its name (+ city). */
 export async function findOfficialSite(restaurant: string, city?: string): Promise<{ url: string; title: string } | null> {
   const where = city ? CITY_COUNTRY.find(([re]) => re.test(city))?.[1] : undefined;
-  const results = await tavilySearch(`${restaurant}${city ? ' ' + city : ''} restaurant official website menu`, 10, where?.country);
+  // Two phrasings, ranked together: "official site" finds chains' own domains (a "menu" query
+  // attracts menu-price fan sites and delivery apps); the menu phrasing finds small local
+  // restaurants whose own site barely ranks for "official".
+  const q = `${restaurant}${city ? ' ' + city : ''}`;
+  const [a, b] = await Promise.all([
+    tavilySearch(`${q} official site`, 10, where?.country),
+    tavilySearch(`${q} restaurant official website menu`, 10, where?.country).catch(() => [] as TavilyResult[]),
+  ]);
+  const results = [...new Map([...a, ...b].map((r) => [r.url, r])).values()];
   const own = results.filter((r) => !AGGREGATORS.test(r.url));
-  // Prefer a domain that contains the restaurant's name ("villaparadiso.no" for "Villa Paradiso").
   const squash = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g, '');
   // The brand is the part before a branch/location suffix ("Peppes Pizza - Grorud Senter",
   // "Grytelokket Avd. Torshov"); its first word matters most.
@@ -106,7 +113,30 @@ export async function findOfficialSite(restaurant: string, city?: string): Promi
     if (where && host(r.url).endsWith(`.${where.tld}`)) p++;
     return p;
   };
-  const rank = (r: TavilyResult) => 2 * nameScore(r.url) + placeScore(r);
+  // Not the restaurant's own site: menu-price fan sites, side subdomains, staging domains, and
+  // a foreign branch (shakeshack.co.uk for New York).
+  const penalty = (u: string) => {
+    const h = host(u);
+    let p = 0;
+    if (/menu|price/i.test(h.split('.').slice(0, -1).join('.'))) p += 4;
+    if (/^(careers|jobs|shop|store|gift|giftcards|blog|press|investors?|dev|staging|locations?)\./i.test(h)) p += 4;
+    const tld = h.split('.').pop()!;
+    if (where && where.tld === 'com' && tld.length === 2 && tld !== 'us') p += 2;
+    if (where && where.tld !== 'com' && tld.length === 2 && tld !== where.tld) p += 2;
+    return p;
+  };
+  const rank = (r: TavilyResult) => 2 * nameScore(r.url) + placeScore(r) - penalty(r.url);
   const best = [...own].sort((a, b) => rank(b) - rank(a) || b.score - a.score)[0];
-  return best ? { url: best.url, title: best.title } : null;
+  if (!best) return null;
+  // On that website: its menu page if search found one, else a page for this city, else home.
+  const same = own.filter((r) => host(r.url) === host(best.url));
+  // The main menu page: the shortest menu path (/menu, not /menu/not-so-secret-menu).
+  const menuPage = same
+    .filter((r) => /\/(menus?|meny|food|eat)(\/|$|-)/i.test(new URL(r.url).pathname))
+    .sort((x, y) => new URL(x.url).pathname.length - new URL(y.url).pathname.length)[0];
+  const cityPage = city ? same.find((r) => squash(new URL(r.url).pathname).includes(squash(city))) : undefined;
+  const pick = menuPage ?? cityPage;
+  if (pick) return { url: pick.url, title: pick.title };
+  const u = new URL(best.url);
+  return { url: `${u.protocol}//${u.host}/`, title: best.title };
 }

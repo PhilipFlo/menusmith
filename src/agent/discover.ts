@@ -47,6 +47,8 @@ export function externalMenuLinks(html: string, baseUrl: string): { url: string;
       return;
     }
     if (!/^https?:$/.test(u.protocol) || u.hostname.replace(/^www\./, '') === base.hostname.replace(/^www\./, '')) return;
+    // Gift cards, jobs, reservations etc. on an ordering platform are not the menu.
+    if (/(gift|e-?card|career|job|reserv|book(ing)?-?a-?table|login|account|sign.?in|newsletter|merch|subscribe|donat)/i.test(`${u.pathname} ${text}`)) return;
     const known = ORDERING_HOSTS.test(u.hostname);
     const says = MENU_WORDS.test(text) || /bestill|order|takeaway|take away/i.test(text);
     if (!known && !says) return;

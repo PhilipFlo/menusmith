@@ -374,10 +374,26 @@ function SuccessCard({ state }: { state: ForgeState }) {
   );
 }
 
+/** Plain-language "why, and what to try next" for the common ways a forge stops. */
+function nextStep(reason: string): string | null {
+  if (/HTTP 40[1356]|HTTP 429|blocked/i.test(reason))
+    return 'This website blocks automated visitors. Menusmith respects that and does not try to get around it — try another restaurant.';
+  if (/no menu with dishes found|too few menu items/i.test(reason))
+    return 'No menu was found at this address. Try the URL of the page that shows the dishes and prices, or just type the restaurant’s name and city.';
+  if (/could not load|timed out|unreachable|ENOTFOUND|HTTP 404|HTTP 5\d\d/i.test(reason))
+    return 'The website could not be loaded right now. Check the address, or try again in a minute.';
+  if (/no passing extractor/i.test(reason))
+    return 'The agent wrote code that extracts most of the menu (below), but it did not agree closely enough with Nemotron’s own reading to be trusted, so nothing was committed.';
+  if (/budget|busy|too many/i.test(reason)) return 'The public demo is rate-limited to keep it free — try again in a little while.';
+  return null;
+}
+
 function FailureCard({ state }: { state: ForgeState }) {
   const reason = state.summary?.reason || state.result?.reason || state.error || 'The agent stopped before finishing.';
   const best = bestTest(state.tests);
   const keyHint = /api key|401|unauthor|NEBIUS/i.test(reason + (state.error ?? ''));
+  const hint = keyHint ? null : nextStep(reason);
+  const draft = state.result?.items ?? [];
   return (
     <section className="result-card is-fail" aria-label="Result">
       <div className="result-head">
@@ -385,6 +401,7 @@ function FailureCard({ state }: { state: ForgeState }) {
         <div>
           <h2 className="result-title">No extractor committed</h2>
           <p className="result-reason">{reason}</p>
+          {hint && <p className="small">{hint}</p>}
           {state.error && state.error !== reason && <ErrorNote>{state.error}</ErrorNote>}
           {keyHint && (
             <p className="small muted">
@@ -402,6 +419,7 @@ function FailureCard({ state }: { state: ForgeState }) {
           <p className="small muted">Open round {best.round} below to see its code and what it missed.</p>
         </div>
       )}
+      {draft.length > 0 && <ItemsTable items={draft} caption="Best attempt — not committed (shown for transparency)" />}
     </section>
   );
 }

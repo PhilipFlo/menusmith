@@ -46,4 +46,4 @@ export function detectPlatform(html: string, url = ''): Platform {
  * the path so two restaurants on the same host never share one.
  */
 export const ORDERING_HOSTS =
-  /(foodbooking\.com|ordera\.no|winorder\.no|ninito\.com|favrit\.com|order\.online|gloriafood\.com|mealkeyway\.com|toasttab\.com|square\.site|clover(online)?\.com|chownow\.com|menufy\.com|orderyoyo\.com|flipdish\.(com|menu)|munu\.shop|qopla\.com|weorder|onlinebestilling|bestillmat|mealo|trivec|caspeco)/i;
+  /(foodbooking\.com|ordera\.no|winorder\.no|ninito\.com|favrit\.com|order\.online|gloriafood\.com|mealkeyway\.com|toasttab\.com|square\.site|clover(online)?\.com|chownow\.com|menufy\.com|orderyoyo\.com|flipdish\.(com|menu)|munu\.shop|qopla\.com|weorder|onlinebestilling|bestillmat|mealo|trivec|caspeco|popmenu\.com|getbento\.com|olo\.com|ordering\.app|slicelife\.com|spoton\.com|owner\.com|orders\.co|beyondmenu\.com|menusifu|hungerrush|ezcater\.com|(explore)?tock\.com)/i;

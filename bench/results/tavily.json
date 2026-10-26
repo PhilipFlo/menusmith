@@ -1,19 +1,19 @@
 {
-  "runAt": "2026-10-26T10:01:47.913Z",
+  "runAt": "2026-10-26T21:44:40.130Z",
   "summary": {
     "sites": 40,
     "matched": 32,
     "matchRate": 80,
-    "medianMs": 124
+    "medianMs": 1513
   },
   "rows": [
     {
       "name": "Grotten øl- & vinbar",
       "city": "Oslo",
       "expected": "thonhotels.no",
-      "found": "thonhotels.com",
-      "match": false,
-      "ms": 488
+      "found": "thonhotels.no",
+      "match": true,
+      "ms": 1714
     },
     {
       "name": "Aji",
@@ -21,7 +21,7 @@
       "expected": "ajispiseri.no",
       "found": "ajispiseri.no",
       "match": true,
-      "ms": 336
+      "ms": 1654
     },
     {
       "name": "Damaskus Huset restaurant",
@@ -29,7 +29,7 @@
       "expected": "beacons.ai",
       "found": "restaurants-info.com",
       "match": false,
-      "ms": 171
+      "ms": 1263
     },
     {
       "name": "Afghan House Oslo",
@@ -37,7 +37,7 @@
       "expected": "winorder.no",
       "found": "winorder.no",
       "match": true,
-      "ms": 117
+      "ms": 1560
     },
     {
       "name": "Grytelokket Avd. Torshov",
@@ -45,7 +45,7 @@
       "expected": "grytelokket.no",
       "found": "grytelokket.no",
       "match": true,
-      "ms": 175
+      "ms": 1077
     },
     {
       "name": "Pizzabakeren Lambertseter",
@@ -53,7 +53,7 @@
       "expected": "pizzabakeren.no",
       "found": "pizzabakeren.no",
       "match": true,
-      "ms": 116
+      "ms": 1203
     },
     {
       "name": "Flamenco Pizza Ammerud Oslo",
@@ -61,7 +61,7 @@
       "expected": "winorder.no",
       "found": "winorder.no",
       "match": true,
-      "ms": 127
+      "ms": 1278
     },
     {
       "name": "Saigon Express Sagene",
@@ -69,7 +69,7 @@
       "expected": "ordera.no",
       "found": "saigonexpress.no",
       "match": false,
-      "ms": 115
+      "ms": 1082
     },
     {
       "name": "DIGG Burger Grønland",
@@ -77,7 +77,7 @@
       "expected": "diggburger.com",
       "found": "diggburger.com",
       "match": true,
-      "ms": 151
+      "ms": 3135
     },
     {
       "name": "Hidden Leaf",
@@ -85,7 +85,7 @@
       "expected": "winorder.no",
       "found": "hiddenleafoslo.no",
       "match": false,
-      "ms": 118
+      "ms": 1526
     },
     {
       "name": "Peppes Pizza - Grorud Senter",
@@ -93,7 +93,7 @@
       "expected": "peppes.no",
       "found": "peppes.no",
       "match": true,
-      "ms": 189
+      "ms": 1626
     },
     {
       "name": "Los Tacos Torshov",
@@ -101,15 +101,15 @@
       "expected": "lostacos.no",
       "found": "lostacos.no",
       "match": true,
-      "ms": 1245
+      "ms": 1657
     },
     {
       "name": "Clarion Hotel The Hub",
       "city": "Oslo",
       "expected": "strawberry.no",
-      "found": "strawberryhotels.com",
+      "found": "oslonhotel.com",
       "match": false,
-      "ms": 129
+      "ms": 2243
     },
     {
       "name": "Sumo Restaurant Bjørvika",
@@ -117,7 +117,7 @@
       "expected": "sumorestaurant.no",
       "found": "sumorestaurant.no",
       "match": true,
-      "ms": 124
+      "ms": 1609
     },
     {
       "name": "Listen to Delhi",
@@ -125,7 +125,7 @@
       "expected": "listentodelhi.no",
       "found": "listentodelhi.no",
       "match": true,
-      "ms": 123
+      "ms": 1422
     },
     {
       "name": "Pizza Pancetta GREFSEN",
@@ -133,7 +133,7 @@
       "expected": "pancettapizza.no",
       "found": "pancettapizza.no",
       "match": true,
-      "ms": 118
+      "ms": 2102
     },
     {
       "name": "Domino's Pizza Lambertseter",
@@ -141,7 +141,7 @@
       "expected": "dominos.no",
       "found": "dominos.no",
       "match": true,
-      "ms": 122
+      "ms": 2242
     },
     {
       "name": "Kammis Grill Frogner",
@@ -149,7 +149,7 @@
       "expected": "winorder.no",
       "found": "winorder.no",
       "match": true,
-      "ms": 2143
+      "ms": 1648
     },
     {
       "name": "AKI SUSHI WOK (Sofienberg, Oslo)",
@@ -157,7 +157,7 @@
       "expected": "ordera.no",
       "found": "ordera.no",
       "match": true,
-      "ms": 125
+      "ms": 1408
     },
     {
       "name": "Pizzabakeren Nesodden",
@@ -165,7 +165,7 @@
       "expected": "pizzabakeren.no",
       "found": "pizzabakeren.no",
       "match": true,
-      "ms": 156
+      "ms": 1144
     },
     {
       "name": "Izakaya by Vladimir Pak",
@@ -173,7 +173,7 @@
       "expected": "omakasegroup.no",
       "found": "omakasegroup.no",
       "match": true,
-      "ms": 123
+      "ms": 1049
     },
     {
       "name": "Réal mat",
@@ -181,7 +181,7 @@
       "expected": "st1.no",
       "found": "realmat.no",
       "match": false,
-      "ms": 115
+      "ms": 2291
     },
     {
       "name": "Peppes Pizza - Ensjø",
@@ -189,7 +189,7 @@
       "expected": "peppes.no",
       "found": "peppes.no",
       "match": true,
-      "ms": 121
+      "ms": 1986
     },
     {
       "name": "Golden Mountain",
@@ -197,7 +197,7 @@
       "expected": "goldenmountain.no",
       "found": "goldenmountain.no",
       "match": true,
-      "ms": 120
+      "ms": 2293
     },
     {
       "name": "Domino's Pizza Pilestredet",
@@ -205,7 +205,7 @@
       "expected": "dominos.no",
       "found": "dominos.no",
       "match": true,
-      "ms": 135
+      "ms": 1383
     },
     {
       "name": "Pele Pele",
@@ -213,7 +213,7 @@
       "expected": "pelepele.no",
       "found": "pelepele.no",
       "match": true,
-      "ms": 123
+      "ms": 1298
     },
     {
       "name": "Raffiné",
@@ -221,7 +221,7 @@
       "expected": "raffine.no",
       "found": "raffine.no",
       "match": true,
-      "ms": 123
+      "ms": 1283
     },
     {
       "name": "Noa Asian Food",
@@ -229,7 +229,7 @@
       "expected": "ordera.no",
       "found": "aorder.no",
       "match": false,
-      "ms": 114
+      "ms": 1515
     },
     {
       "name": "Holmenkollen Restaurant",
@@ -237,7 +237,7 @@
       "expected": "holmenkollenrestaurant.no",
       "found": "holmenkollenrestaurant.no",
       "match": true,
-      "ms": 120
+      "ms": 1550
     },
     {
       "name": "Vettakollen Pizzeria",
@@ -245,7 +245,7 @@
       "expected": "vettakollenpizzeria.no",
       "found": "vettakollenpizzeria.no",
       "match": true,
-      "ms": 118
+      "ms": 1386
     },
     {
       "name": "Sabi Sushi Manglerud",
@@ -253,7 +253,7 @@
       "expected": "sabi.no",
       "found": "sabi.no",
       "match": true,
-      "ms": 124
+      "ms": 1262
     },
     {
       "name": "Honsan Restaurant",
@@ -261,7 +261,7 @@
       "expected": "honsan.no",
       "found": "honsan.no",
       "match": true,
-      "ms": 112
+      "ms": 1331
     },
     {
       "name": "New Delhi",
@@ -269,7 +269,7 @@
       "expected": "newdelhi.no",
       "found": "newdelhi.no",
       "match": true,
-      "ms": 125
+      "ms": 1433
     },
     {
       "name": "Campo de' Fiori",
@@ -277,15 +277,15 @@
       "expected": "campo.no",
       "found": "campo.no",
       "match": true,
-      "ms": 118
+      "ms": 1348
     },
     {
       "name": "Sushi hjørnet Adamstuen",
       "city": "Oslo",
       "expected": "sushihjornet.no",
-      "found": "sushihjornet.no",
-      "match": true,
-      "ms": 142
+      "found": "sushiadamstuen.no",
+      "match": false,
+      "ms": 1513
     },
     {
       "name": "Alshahba Restaurant Oslo",
@@ -293,7 +293,7 @@
       "expected": "alshahba.no",
       "found": "alshahba.no",
       "match": true,
-      "ms": 125
+      "ms": 1547
     },
     {
       "name": "The Wild Rover",
@@ -301,7 +301,7 @@
       "expected": "thewildrover.no",
       "found": "thewildroverpub.com",
       "match": false,
-      "ms": 1128
+      "ms": 1381
     },
     {
       "name": "PIREN - et glass og en bit",
@@ -309,7 +309,7 @@
       "expected": "piren.no",
       "found": "piren.no",
       "match": true,
-      "ms": 119
+      "ms": 1177
     },
     {
       "name": "Spiseriet",
@@ -317,7 +317,7 @@
       "expected": "spiseriet-ogk.no",
       "found": "spiseriet-ogk.no",
       "match": true,
-      "ms": 122
+      "ms": 1045
     },
     {
       "name": "Shanti Indian Cuisine",
@@ -325,7 +325,7 @@
       "expected": "shantioslo.no",
       "found": "shantioslo.no",
       "match": true,
-      "ms": 138
+      "ms": 1807
     }
   ]
 }

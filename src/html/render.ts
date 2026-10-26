@@ -103,6 +103,15 @@ export function countMenuObjects(value: unknown, depth = 0): number {
   return n;
 }
 
+function localeFor(url: string): string {
+  try {
+    const tld = new URL(url).hostname.split('.').pop()!.toLowerCase();
+    return ({ no: 'nb-NO', se: 'sv-SE', dk: 'da-DK', fi: 'fi-FI', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', uk: 'en-GB' } as Record<string, string>)[tld] ?? 'en-US';
+  } catch {
+    return 'en-US';
+  }
+}
+
 /** Third-party scripts that never carry a menu but cost CPU (analytics, ads, chat widgets). */
 const TRACKERS =
   /(googletagmanager|google-analytics|googleadservices|doubleclick|facebook\.net|connect\.facebook|hotjar|clarity\.ms|segment\.(io|com)|mixpanel|intercom|crisp\.chat|tiktok|snap\.licdn|bat\.bing|cookiebot|onetrust|trustarc|sentry\.io|newrelic|nr-data)/i;
@@ -126,7 +135,8 @@ async function renderOnce(url: string, opts: { timeoutMs?: number }): Promise<Re
   const ctx = await b.newContext({
     userAgent:
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
-    locale: 'nb-NO',
+    // Present as a local visitor: Nordic sites in their language, everything else as en-US.
+    locale: localeFor(url),
     viewport: LOWMEM ? { width: 1024, height: 768 } : { width: 1280, height: 900 },
   });
   // Hard ceiling for the whole render: closing the context makes every pending page
@@ -238,4 +248,66 @@ async function renderOnce(url: string, opts: { timeoutMs?: number }): Promise<Re
     clearTimeout(watchdog);
     await ctx.close().catch(() => {});
   }
+}
+
+/**
+ * Render the first pages of a PDF to PNG images in the headless browser (pdf.js), so a vision
+ * model can read designed or scanned menus whose text layer is unusable. The PDF bytes are
+ * handed to an isolated blank page; nothing is fetched from the network.
+ */
+export async function renderPdfPages(bytes: Uint8Array, opts: { maxPages?: number; scale?: number } = {}): Promise<Buffer[]> {
+  const run = async () => {
+    const { readFileSync } = await import('node:fs');
+    const { createRequire } = await import('node:module');
+    const req = createRequire(import.meta.url);
+    const lib = readFileSync(req.resolve('pdfjs-dist/build/pdf.min.mjs'), 'utf8');
+    const worker = readFileSync(req.resolve('pdfjs-dist/build/pdf.worker.min.mjs'), 'utf8');
+    const b = await browser();
+    const ctx = await b.newContext({ viewport: { width: 800, height: 600 } });
+    const watchdog = setTimeout(() => void ctx.close().catch(() => {}), RENDER_LIMIT_MS);
+    try {
+      const page = await ctx.newPage();
+      // Serve pdf.js from a fake local origin; block everything else.
+      await page.route('**/*', (route) => {
+        const u = route.request().url();
+        if (u === 'https://menusmith.local/') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><body></body>' });
+        if (u === 'https://menusmith.local/pdf.mjs') return route.fulfill({ contentType: 'text/javascript', body: lib });
+        if (u === 'https://menusmith.local/pdf.worker.mjs') return route.fulfill({ contentType: 'text/javascript', body: worker });
+        return route.abort();
+      });
+      await page.goto('https://menusmith.local/');
+      const pngs = (await page.evaluate(
+        async ({ b64, maxPages, scale }) => {
+          const pdfjs = await import('https://menusmith.local/pdf.mjs' as string);
+          pdfjs.GlobalWorkerOptions.workerSrc = 'https://menusmith.local/pdf.worker.mjs';
+          const data = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          const doc = await pdfjs.getDocument({ data, isEvalSupported: false, disableFontFace: false }).promise;
+          const out: string[] = [];
+          for (let p = 1; p <= Math.min(doc.numPages, maxPages); p++) {
+            const pg = await doc.getPage(p);
+            const vp = pg.getViewport({ scale });
+            // Keep images within what the vision model reads well.
+            const k = Math.min(1, 2000 / Math.max(vp.width, vp.height));
+            const v = pg.getViewport({ scale: scale * k });
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.ceil(v.width);
+            canvas.height = Math.ceil(v.height);
+            await pg.render({ canvasContext: canvas.getContext('2d')!, viewport: v }).promise;
+            out.push(canvas.toDataURL('image/png').split(',')[1]!);
+          }
+          await doc.destroy();
+          return out;
+        },
+        { b64: Buffer.from(bytes).toString('base64'), maxPages: opts.maxPages ?? 4, scale: opts.scale ?? 2 },
+      )) as string[];
+      return pngs.map((s) => Buffer.from(s, 'base64'));
+    } finally {
+      clearTimeout(watchdog);
+      await ctx.close().catch(() => {});
+    }
+  };
+  if (!LOWMEM) return run();
+  const turn = renderQueue.then(run).finally(() => closeBrowser());
+  renderQueue = turn.catch(() => {});
+  return turn;
 }
