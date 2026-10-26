@@ -137,3 +137,15 @@ describe('price-column layouts (Tilda zero-blocks)', () => {
     expect(t).not.toMatch(/^\$ 41$/m); // the loose price column is gone
   });
 });
+
+describe('price-column pairing stays cheap on hostile pages', () => {
+  it('a page with thousands of <br> price blocks is parsed quickly and left alone', async () => {
+    const { pageText } = await import('../src/html/simplify.ts');
+    const block = '<div><div>$ 1<br>$ 2<br>$ 3</div><div>A<br>B<br>C</div></div>';
+    const page = `<html><body>${block.repeat(3000)}</body></html>`;
+    const t0 = Date.now();
+    const text = pageText(page);
+    expect(Date.now() - t0).toBeLessThan(5000);
+    expect(text).not.toContain('A — $ 1'); // over the work limit: not rewritten
+  });
+});

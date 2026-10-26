@@ -100,18 +100,27 @@ function normName(s) {
 const PRICE_LINE = /^(?:[$€£]|kr\.?|nok)?\s*\d{1,4}(?:[.,]\d{1,2})?(?:\s*\/\s*\d{1,4}(?:[.,]\d{1,2})?)?\s*(?:,-|kr\.?|nok|[$€£])?$/i;
 const BLOCKS = 'div, p, td, span, h1, h2, h3, h4, h5, h6';
 
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+function decodeEntities(t) {
+  return t.replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,8});/gi, (m, e) => {
+    if (e[0] !== '#') return ENTITIES[e.toLowerCase()] ?? m;
+    const n = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+    return n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : m;
+  });
+}
+
 /** The lines of an element, split on <br> (tags stripped). Empty lines dropped unless keepEmpty. */
 function brLines($, el, keepEmpty) {
   const html = $(el).html() || '';
-  const lines = html.split(/<br\s*\/?>/i).map((l) => cleanText($('<x>' + l + '</x>').text()));
+  const lines = html.split(/<br\s*\/?>/i).map((l) => cleanText(decodeEntities(l.replace(/<[^>]*>/g, ''))));
   return keepEmpty ? lines : lines.filter(Boolean);
 }
 
-/** Paragraphs of a <br>-separated block: runs of non-empty lines between blank lines. */
-function brParagraphs($, el) {
+/** Paragraphs of a list of lines: runs of non-empty lines between blank lines. */
+function toParagraphs(lines) {
   const out = [];
   let cur = [];
-  for (const l of brLines($, el, true)) {
+  for (const l of lines) {
     if (l) cur.push(l);
     else if (cur.length) {
       out.push(cur);
@@ -124,39 +133,68 @@ function brParagraphs($, el) {
 
 /** A footnote under a column ("*add chicken +10$ …") is not a dish. */
 const FOOTNOTE = /^[*†‡※]/;
+// Work limits: this also runs on every page the reader sees, including untrusted ones.
+const MAX_BLOCKS = 1500;
+const MAX_PRICE_BLOCKS = 120;
 
 /**
  * "Price column" layouts (Tilda zero-blocks and similar builders): a block holding a column
  * of prices (one per <br> line) sits next to a block holding the dish names in the same
  * order — one dish per line, or per paragraph (name line, description lines, blank line).
  * Returns each matched pair of blocks with its entries and prices.
+ *
+ * Linear in page size: it starts from the <br> elements, so only blocks that actually hold
+ * line breaks are ever serialised.
  */
 function pairPriceColumns($) {
-  const pairs = [];
-  const isLeaf = (el) => !$(el).find(BLOCKS).toArray().some((c) => brLines($, c).length > 1);
-  const textBlocks = $(BLOCKS)
-    .toArray()
-    .filter((el) => isLeaf(el) && cleanText($(el).text()));
-  const order = new Map(textBlocks.map((el, i) => [el, i]));
-  const priceBlocks = textBlocks.filter((el) => {
-    const ls = brLines($, el);
+  const brs = $('br').toArray();
+  if (brs.length < 4) return [];
+  // Blocks that directly hold line breaks (through inline wrappers like <strong>).
+  const holders = new Set();
+  for (const br of brs) {
+    const b = $(br).closest(BLOCKS)[0];
+    if (b) holders.add(b);
+    if (holders.size > MAX_BLOCKS) return [];
+  }
+  // Keep the innermost ones: a holder that contains another holder mixes two columns.
+  const outer = new Set();
+  for (const h of holders) for (let p = h.parent; p; p = p.parent) if (holders.has(p)) outer.add(p);
+  const leaves = [...holders].filter((h) => !outer.has(h));
+  const info = new Map();
+  for (const el of leaves) {
+    const all = brLines($, el, true);
+    info.set(el, { all, lines: all.filter(Boolean) });
+  }
+  const order = new Map(leaves.map((el, i) => [el, i]));
+  // Ancestor (up to 8 levels) → leaves inside it, for scope lookups without re-scanning.
+  const within = new Map();
+  for (const el of leaves) {
+    let p = el.parent;
+    for (let d = 0; d < 8 && p; d++, p = p.parent) {
+      if (!within.has(p)) within.set(p, []);
+      within.get(p).push(el);
+    }
+  }
+  const priceBlocks = leaves.filter((el) => {
+    const ls = info.get(el).lines;
     return ls.length >= 2 && ls.every((l) => PRICE_LINE.test(l));
   });
+  if (priceBlocks.length > MAX_PRICE_BLOCKS) return [];
+  const pairs = [];
   const used = new Set();
   for (const pb of priceBlocks) {
-    const prices = brLines($, pb);
+    const prices = info.get(pb).lines;
     // Smallest ancestor that also holds a matching name block.
     let best = null;
     let found = null;
-    let scope = $(pb).parent();
-    for (let depth = 0; depth < 6 && scope.length && !best; depth++, scope = scope.parent()) {
-      const cands = scope
-        .find(BLOCKS)
-        .toArray()
-        .filter((el) => el !== pb && order.has(el) && !used.has(el))
+    let scope = pb.parent;
+    for (let depth = 0; depth < 6 && scope && !best; depth++, scope = scope.parent) {
+      const cands = (within.get(scope) || [])
+        .filter((el) => el !== pb && !used.has(el))
         .map((el) => {
-          const lines = brLines($, el).filter((l) => !FOOTNOTE.test(l));
-          const paras = brParagraphs($, el).filter((p) => !FOOTNOTE.test(p[0]));
+          const { all, lines: raw } = info.get(el);
+          const lines = raw.filter((l) => !FOOTNOTE.test(l));
+          const paras = toParagraphs(all).filter((p) => !FOOTNOTE.test(p[0]));
           const entries = lines.length === prices.length ? lines.map((l) => [l]) : paras.length === prices.length ? paras : null;
           return { el, lines, entries };
         })
@@ -170,24 +208,15 @@ function pairPriceColumns($) {
     }
     if (!best) continue;
     used.add(best.el);
-    // Section: the short single-line title inside the same container (builders like Tilda
-    // place it anywhere in the markup); else the nearest preceding single-line block.
-    const isTitle = (ls) => ls.length === 1 && !PRICE_LINE.test(ls[0]) && !FOOTNOTE.test(ls[0]) && ls[0].length <= 40;
-    let section = null;
-    const titles = found
-      .find(BLOCKS)
-      .toArray()
-      .filter((el) => order.has(el) && el !== best.el && el !== pb && isTitle(brLines($, el)));
-    // Nested wrappers repeat the same text — count distinct titles.
-    const distinct = [...new Set(titles.map((el) => brLines($, el)[0]))];
-    if (distinct.length === 1) section = distinct[0];
-    for (let i = order.get(best.el) - 1; !section && i >= 0 && i >= order.get(best.el) - 6; i--) {
-      const ls = brLines($, textBlocks[i]);
-      if (ls.length === 1 && !PRICE_LINE.test(ls[0]) && ls[0].length <= 40) {
-        section = ls[0];
-        break;
-      }
+    // Section: the one short single-line title inside the same container (builders like Tilda
+    // place it anywhere in the markup). Nested wrappers repeat the same text — count distinct.
+    const titles = new Set();
+    for (const el of $(found).find(BLOCKS).toArray().slice(0, 300)) {
+      if (el === best.el || el === pb || info.has(el) || $(el).find(BLOCKS).length) continue;
+      const t = cleanText($(el).text());
+      if (t && t.length <= 40 && !PRICE_LINE.test(t) && !FOOTNOTE.test(t)) titles.add(t);
     }
+    const section = titles.size === 1 ? [...titles][0] : null;
     pairs.push({ nameEl: best.el, priceEl: pb, section, entries: best.entries, prices });
   }
   return pairs;
