@@ -378,8 +378,8 @@ function SuccessCard({ state }: { state: ForgeState }) {
 function nextStep(reason: string): string | null {
   if (/HTTP 40[1356]|HTTP 429|blocked/i.test(reason))
     return 'This website blocks automated visitors. Menusmith respects that and does not try to get around it — try another restaurant.';
-  if (/no menu with dishes found|too few menu items/i.test(reason))
-    return 'No menu was found at this address. Try the URL of the page that shows the dishes and prices, or just type the restaurant’s name and city.';
+  if (/no menu with dishes found|too few menu items|menu images could not be read/i.test(reason))
+    return 'No menu with prices was found on this website. Many chains only show prices inside a location-specific ordering app (pick a store, then order) — try a single restaurant’s own site, the URL of the page that lists dishes and prices, or just type the name and city.';
   if (/could not load|timed out|unreachable|ENOTFOUND|HTTP 404|HTTP 5\d\d/i.test(reason))
     return 'The website could not be loaded right now. Check the address, or try again in a minute.';
   if (/no passing extractor/i.test(reason))
