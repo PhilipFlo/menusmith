@@ -123,6 +123,7 @@ export const api = {
   fleetHistory: () => getJson<FleetReport[]>('/api/fleet/history'),
   fixtures: () => getJson<Fixture[]>('/api/fixtures'),
   bench: () => getJson<unknown>('/api/bench'),
+  measured: () => getJson<Measured>('/api/bench/measured'),
   rescrape: (id: string) => getJson<CheckResult>(`/api/library/${encodeURIComponent(id)}/rescrape`, { method: 'POST' }),
   audit: (id: string) => getJson<CheckResult>(`/api/library/${encodeURIComponent(id)}/audit`, { method: 'POST' }),
   redesign: (slug: string, on: boolean) =>
@@ -132,3 +133,12 @@ export const api = {
       body: JSON.stringify({ on }),
     }),
 };
+
+type Summary = Record<string, number> | null;
+export interface Measured {
+  heal: Summary;
+  variance: Summary;
+  tavily: Summary;
+  tavilyHoldout: Summary;
+  precision: Summary;
+}

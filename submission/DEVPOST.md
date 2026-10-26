@@ -55,8 +55,9 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
   the homepage — 79 from the stored menu link alone.
 - **59%** of written extractors pass on the **first attempt**; average F1 **0.976** against a fresh
   Nemotron reading of the page (self-consistency; against nearBite's independently scraped menus,
-  which merge several pages per site: precision 0.74, recall 0.63 — half of the mismatches are the same
-  dish written differently or re-priced since, see `bench/precision.ts`); **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
+  which merge several pages per site: precision 0.74, recall 0.63 — 42% of the
+  dishes counted against precision come from menu sections nearBite never stored, see
+  `bench/precision.ts`); **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
 - **10/10 perfect** (F1 1.0) against ground truth on our fictional fixture sites.
 - **Self-healing measured, not just demoed:** we redesigned all 10 fixture websites (new markup plus
   real price and dish changes). The fleet detected and rewrote the extractor on **10/10**, and every
@@ -66,9 +67,17 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
 - **Start from just a name:** Tavily search plus our ranking finds a restaurant's official website
   from name + city for **85%** of held-out restaurants.
 - Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,
-  **18 PDF menus** and **image menus** (Nemotron 3.5 Super VL), all re-checked for free.
+  **19 PDF menus** and **image menus** (Nemotron 3.5 Super VL), all re-checked for free.
 - Running publicly on a **free** host (512 MB / 0.1 CPU) with a durable token-gated store, a
   daily model-spend cap and SSRF protection — total model spend for the whole project, including every benchmark run, under $10.
+
+## Beyond menus
+Restaurant menus are our test bed, not the limit. The same loop — read once with an LLM, compile a
+small extractor, verify it against the reading, re-run it for free, heal it when the source
+changes, and re-check that nothing is silently dropped — fits any structured data that lives on
+thousands of slightly different websites: retail and grocery prices for inflation baskets, rental
+listings, job postings, public-sector tenders, product specs. Wherever a time series must be cheap
+to refresh and must not invent changes, the model belongs in the build step.
 
 ## What we learned
 Putting the LLM in the *build* step instead of the *run* step changes the economics: the expensive

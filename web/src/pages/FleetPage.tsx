@@ -336,6 +336,10 @@ export function ChangesList({ changes }: { changes: PriceChange[] }) {
 }
 
 function RedesignDemo({ disabled }: { disabled: boolean }) {
+  const [heal, setHeal] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    api.measured().then((m) => setHeal(m.heal)).catch(() => {});
+  }, []);
   const { data, error, loading, setData } = useLoad(api.fixtures);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -360,6 +364,12 @@ function RedesignDemo({ disabled }: { disabled: boolean }) {
         <li>Run the fleet.</li>
         <li>Watch the agent notice its extractor broke — and heal its own code.</li>
       </ol>
+      {heal && (
+        <p className="small muted">
+          Measured on all {heal.sites} demo sites (<code>bench/heal.ts</code>): {heal.healed}/{heal.sites} healed, F1 {Number(heal.avgF1AfterRedesign).toFixed(2)} against the true redesigned menu,
+          median ${Number(heal.medianHealCostUsd).toFixed(3)} and {Math.round(Number(heal.medianHealSeconds))} s per repair.
+        </p>
+      )}
       {loading && !data && <Spinner label="Loading demo sites…" />}
       {(error || err) && <ErrorNote>{error || err}</ErrorNote>}
       {data && data.length === 0 && <p className="small muted">No demo sites are installed on this server.</p>}

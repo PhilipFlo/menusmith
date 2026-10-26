@@ -44,6 +44,12 @@ to re-read every menu, every month — has three problems:
 Menusmith moves the LLM to where it's worth it — **writing and repairing code** — and out of the
 hot path.
 
+**Beyond menus.** Menus are the test bed, not the limit: the same loop (read once, compile an
+extractor, verify, re-run for free, heal on change, check for silent misses) fits any structured
+data spread over thousands of slightly different websites — grocery prices for inflation baskets,
+rental listings, job postings, tenders, product specs. Wherever a time series must be cheap to
+refresh and must not invent changes, the model belongs in the build step.
+
 ## How it works
 
 ```mermaid
@@ -106,7 +112,7 @@ flowchart LR
 
 ## Results
 
-**Ground truth — 10 fictional restaurant sites** (`fixtures/sites`, true menus known): average F1 **1** against the truth, 10/10 perfect, 10/10 deterministic.
+**Ground truth — 10 fictional restaurant sites** (`fixtures/sites`, true menus known): average F1 **1.0** against the truth, 10/10 perfect, 10/10 deterministic.
 
 **Self-healing, measured** (`bench/heal.ts`): each fixture site gets a fresh extractor, then its
 website is **redesigned** (new markup *and* real price/dish changes). The nightly fleet noticed and
@@ -137,12 +143,11 @@ Remaining failures after the rescue pass: no-html-menu (JS/PDF/image) 11 · extr
 
 _Recall against nearBite is lower by design: nearBite merges several pages of a site, Menusmith extracts one menu page._
 
-_Where precision against nearBite goes_ (`bench/precision.ts`, 1,441 extracted dishes on 43 sites
-that nearBite's stored menu doesn't match exactly): **50%** are the same dish written differently
-or re-priced since nearBite scraped it (nearBite keeps menu numbers — “102.Teriyaki Salmon” vs
-“Teriyaki Salmon”), **29%** come from menu sections nearBite never stored, **7%** are drinks and
-add-ons, and **15%** are unexplained — that last group includes real extractor mistakes (a
-description glued onto a dish name, a missing price)._
+_Where precision against nearBite goes_ (`bench/precision.ts` — exactly the 1,030 dishes counted
+against precision on the 44 sites with a stored reference): **42%** come from menu sections
+nearBite never stored (e.g. it kept only the dinner menu), **19%** are the same dish at a different
+price (re-priced since nearBite scraped it, or our error), **12%** are drinks and add-ons, **1%**
+duplicates, and **26%** are unexplained — that group includes real extractor mistakes._
 
 All numbers above are generated from `bench/results/*.json` by `npx tsx bench/report.ts` — one
 benchmark run over all 120 sites (Oct 23, 2026), plus one rescue pass that restarts

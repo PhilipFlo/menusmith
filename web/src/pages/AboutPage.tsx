@@ -1,4 +1,4 @@
-import { api, type Health } from '../api.ts';
+import { api, type Health, type Measured } from '../api.ts';
 import { ModelChip, Panel } from '../components/ui.tsx';
 import { useLoad } from '../controllers.ts';
 import { href } from '../router.ts';
@@ -28,6 +28,7 @@ const SERVICES = [
 
 export function AboutPage({ health }: { health: Health | null }) {
   const bench = useLoad(api.bench);
+  const measured = useLoad(api.measured);
   return (
     <div className="about">
       <header className="page-head">
@@ -130,6 +131,7 @@ export function AboutPage({ health }: { health: Health | null }) {
         </ul>
       </Panel>
 
+      {measured.data != null && <MeasuredView m={measured.data} />}
       {bench.data != null && <BenchView data={bench.data} />}
 
       <div className="cta-row">
@@ -256,27 +258,54 @@ function renderValue(v: unknown): string {
   return JSON.stringify(v);
 }
 
+/** The focused benchmarks: each one tests a single claim (see bench/*.ts). */
+function MeasuredView({ m }: { m: Measured }) {
+  const tiles: [string, string, string][] = [];
+  const v = m.variance;
+  if (v) tiles.push(['Same page, read 3×', `LLM identical on ${v.llmAllThreeIdentical}/${v.sites} · extractor ${v.extractorIdentical}/${v.sites}`, `Dish counts from the LLM moved by a median ${Math.round(Number(v.medianLlmCountSpreadPct))}% between readings of the identical page.`]);
+  const h = m.heal;
+  if (h) tiles.push(['Website redesigns healed', `${h.healed}/${h.sites} · F1 ${Number(h.avgF1AfterRedesign).toFixed(2)} vs. truth`, `Each fixture site was redesigned (new markup, real price changes); median repair $${Number(h.medianHealCostUsd).toFixed(3)} in ${Math.round(Number(h.medianHealSeconds))} s.`]);
+  const t = m.tavilyHoldout ?? m.tavily;
+  if (t) tiles.push(['Name → official website', `${t.matchRate}% (${t.matched}/${t.sites})`, 'Tavily search plus brand/city/country ranking, on restaurants not used for tuning.']);
+  const p = m.precision;
+  if (p) tiles.push(['Precision vs. nearBite, explained', `${p.avgPrecision} · ${Math.round(Number(p.pctSectionNearBiteDoesNotHave))}% of misses are sections nearBite lacks`, `Of the dishes counted against precision: ${Math.round(Number(p.pctSectionNearBiteDoesNotHave))}% are from menu sections nearBite never stored, ${Math.round(Number(p.pctRepriced))}% re-priced, ${Math.round(Number(p.pctUnexplained))}% unexplained.`]);
+  if (!tiles.length) return null;
+  return (
+    <Panel title="Measured" subtitle="Each claim has its own benchmark in bench/ — numbers are read from bench/results, not typed by hand.">
+      <dl className="facts facts-grid">
+        {tiles.map(([k, val, hint]) => (
+          <div key={k} title={hint}>
+            <dt>{k}</dt>
+            <dd className="num">{val}</dd>
+            <dd className="small muted">{hint}</dd>
+          </div>
+        ))}
+      </dl>
+    </Panel>
+  );
+}
+
 function BenchView({ data }: { data: unknown }) {
   if (typeof data !== 'object' || data === null) return null;
   const d = data as { summary?: Record<string, unknown>; rows?: unknown };
   const sm = (d.summary && typeof d.summary === 'object' ? d.summary : {}) as Record<string, unknown>;
   const rescue = (sm.rescue && typeof sm.rescue === 'object' ? sm.rescue : {}) as Record<string, unknown>;
+  const byMode = (rescue.byMode && typeof rescue.byMode === 'object' ? rescue.byMode : {}) as Record<string, unknown>;
   if (typeof sm.sites === 'number' && Array.isArray(d.rows)) {
     const rowsR = d.rows as Record<string, unknown>[];
     const tiles: [string, string][] = [
       ['Working extractor, from the homepage', String(rescue.successFromHomepageIncludingRescue ?? '—')],
       ['…from the stored menu link alone', `${sm.succeeded}/${sm.sites} (${sm.successRate}%)`],
-      ['Sites with a text menu', `${sm.successRateOnHtmlMenus}%`],
       ['Pass on the first attempt', `${sm.firstTryPassRate}% of written extractors`],
       ['Average F1 vs. the reading', String(sm.avgF1Oracle)],
       ['Deterministic re-runs', `${sm.deterministicRate}% (${sm.deterministicMeasured ?? ''})`],
       ['Median re-run', `${sm.medianRerunMs} ms · $0`],
-      ['PDF / image menus read', `${sm.pdfMenus ?? 0} / ${sm.imageMenus ?? 0}`],
+      ['PDF / image menus read', `${Number(sm.pdfMenus ?? 0) + Number(byMode['document (rescue)'] ?? 0)} / ${Number(sm.imageMenus ?? 0) + Number(byMode['vision (rescue)'] ?? 0)}`],
     ];
     const label = (r: Record<string, unknown>) =>
       r.ok ? `${r.mode}${r.sourceKind ? ' · ' + r.sourceKind : ''}` : (r.rescue as { ok?: boolean; mode?: string } | undefined)?.ok ? `rescued · ${(r.rescue as { mode?: string }).mode}` : String(r.category ?? 'failed');
     return (
-      <Panel title="Benchmark — 120 real restaurant websites" subtitle="One clean run of the final code across Oslo and Palo Alto, plus a homepage rescue pass. Failures are listed, not hidden.">
+      <Panel title="Benchmark — 120 real restaurant websites" subtitle="Benchmark run of Oct 23, 2026 across Oslo and Palo Alto, plus a homepage rescue pass. Failures are listed, not hidden.">
         <dl className="facts facts-grid">
           {tiles.map(([k, v]) => (
             <div key={k}>

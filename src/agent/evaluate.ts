@@ -15,7 +15,7 @@ export const PASS = {
 };
 
 /** Lists are kept long enough for arbitration; prompts and the UI slice them further. */
-const MAX_LISTED = 150;
+const MAX_LISTED_DEFAULT = 150;
 
 function tokens(s: string): Set<string> {
   return new Set(s.split(' ').filter((t) => t.length > 1));
@@ -54,8 +54,9 @@ export function scoreAgainstOracle(
   oracle: MenuItem[],
   extracted: MenuItem[],
   pageText = '',
-  opts: { rejected?: Set<string> } = {},
+  opts: { rejected?: Set<string>; /** list every item, not the first few (analysis) */ uncapped?: boolean } = {},
 ): Score {
+  const MAX_LISTED = opts.uncapped ? Infinity : MAX_LISTED_DEFAULT;
   const page = normName(pageText);
   const o = oracle.map((it) => ({ it, n: normName(it.name), used: false }));
   const e = extracted.map((it) => ({ it, n: normName(it.name) }));

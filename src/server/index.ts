@@ -291,6 +291,19 @@ app.get('/api/bench', (c) => {
   return existsSync(f) ? c.json(JSON.parse(readFileSync(f, 'utf8'))) : c.json(null);
 });
 
+/** Summaries of the focused benchmarks (self-heal, LLM noise, Tavily, precision). */
+app.get('/api/bench/measured', (c) => {
+  const summary = (name: string) => {
+    const f = resolve(ROOT, 'bench/results', `${name}.json`);
+    try {
+      return existsSync(f) ? ((JSON.parse(readFileSync(f, 'utf8')) as { summary?: unknown }).summary ?? null) : null;
+    } catch {
+      return null;
+    }
+  };
+  return c.json({ heal: summary('heal'), variance: summary('variance'), tavily: summary('tavily'), tavilyHoldout: summary('tavily-holdout'), precision: summary('precision') });
+});
+
 // ---- static web app ---------------------------------------------------------------
 // Checked per request, so a build made after the server started is picked up.
 const dist = resolve(ROOT, 'web/dist');
