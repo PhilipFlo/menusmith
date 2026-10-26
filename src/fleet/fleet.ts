@@ -654,9 +654,12 @@ async function checkDocument(
 function summarise(changes: PriceChange[]): string {
   if (!changes.length) return 'no item-level changes';
   const p = changes.filter((c) => c.kind === 'price').length;
-  const a = changes.filter((c) => c.kind === 'added').length;
-  const r = changes.filter((c) => c.kind === 'removed').length;
-  return [p && `${p} price change(s)`, a && `${a} added`, r && `${r} removed`].filter(Boolean).join(', ');
+  // A removed + added pair with the same name is a dish that moved to another section.
+  const added = new Set(changes.filter((c) => c.kind === 'added').map((c) => normName(c.name)));
+  const moved = changes.filter((c) => c.kind === 'removed' && added.has(normName(c.name))).length;
+  const a = changes.filter((c) => c.kind === 'added').length - moved;
+  const r = changes.filter((c) => c.kind === 'removed').length - moved;
+  return [p && `${p} price change(s)`, a && `${a} added`, r && `${r} removed`, moved && `${moved} moved to another section`].filter(Boolean).join(', ');
 }
 
 /** Check one extractor (the "Re-scrape now" / "Check against Nemotron" buttons). */
