@@ -47,6 +47,11 @@ export function pageText(html: string): string {
   $(DROP).remove();
   $('script[type="application/ld+json"]').remove();
   linearizePriceColumns($);
+  // Free-positioned pages: read in visual rows (like the PDF reader), not in markup order.
+  if ($('[data-ms-xy]').length >= 30) {
+    const rows = (sandboxHelpers.visualRows as (q: cheerio.CheerioAPI) => { line: string }[])($);
+    if (rows.length) return rows.map((r) => r.line).join('\n');
+  }
   const out: string[] = [];
   let line = '';
   const flush = () => {

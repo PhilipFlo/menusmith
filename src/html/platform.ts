@@ -39,3 +39,11 @@ export function detectPlatform(html: string, url = ''): Platform {
   if (/cdn\.shopify\.com|Shopify\.theme/i.test(h)) return 'shopify';
   return 'unknown';
 }
+
+/**
+ * Hosted ordering systems: many restaurants share one host (foodbooking.com/api/fb/<id>,
+ * ordera.no …). Restaurants link to them for their menu, and an extractor's id must include
+ * the path so two restaurants on the same host never share one.
+ */
+export const ORDERING_HOSTS =
+  /(foodbooking\.com|ordera\.no|winorder\.no|ninito\.com|favrit\.com|order\.online|gloriafood\.com|mealkeyway\.com|toasttab\.com|square\.site|clover(online)?\.com|chownow\.com|menufy\.com|orderyoyo\.com|flipdish\.(com|menu)|munu\.shop|qopla\.com|weorder|onlinebestilling|bestillmat|mealo|trivec|caspeco)/i;

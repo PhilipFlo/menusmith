@@ -3,7 +3,7 @@ import { renderPage, type CapturedJson } from '../html/render.ts';
 import { safeFetch } from '../html/netguard.ts';
 import { pageText } from '../html/simplify.ts';
 import type { Emit, SourceKind, SourceRequest } from '../types.ts';
-import { menuLinks, priceDensity } from './discover.ts';
+import { externalMenuLinks, menuLinks, priceDensity } from './discover.ts';
 import { findMenuImages } from './vision.ts';
 import { menuPdfLinks } from './document.ts';
 import * as cheerio from 'cheerio';
@@ -79,18 +79,34 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
   emit({ type: 'step', step: 'render', status: 'start', detail: 'Menu not in the HTML — rendering with a headless browser and watching its API calls' });
   let r = await renderPage(start.finalUrl);
   let domPrices = priceDensity(r.html);
-  // The rendered page may still only link to the menu.
-  if (domPrices < STATIC_OK && !r.json.length) {
-    // Each render costs minutes on a 0.1-CPU host: follow only the best link there.
-    for (const l of menuLinks(r.html, r.finalUrl).slice(0, process.env.MENUSMITH_RENDER_LOWMEM === '1' ? 1 : 3)) {
+  // Every page we render, so a menu published as images or a PDF on a linked page is found too.
+  const visited: Awaited<ReturnType<typeof renderPage>>[] = [r];
+  const lowmem = process.env.MENUSMITH_RENDER_LOWMEM === '1';
+  const follow = async (links: { url: string }[], max: number) => {
+    for (const l of links.slice(0, max)) {
       const r2 = await renderPage(l.url).catch(() => null);
       if (!r2) continue;
+      visited.push(r2);
       const d2 = priceDensity(r2.html);
       if (d2 > domPrices || r2.json.length) {
         r = r2;
         domPrices = d2;
-        if (d2 >= STATIC_OK || r2.json.length) break;
+        if (d2 >= STATIC_OK || r2.json.length) return true;
       }
+      if (findMenuImages(r2.html, r2.finalUrl).length || menuPdfLinks(r2.html, r2.finalUrl, cheerio).length) return true;
+    }
+    return false;
+  };
+  // The rendered page may still only link to the menu. Each render costs minutes on a 0.1-CPU
+  // host: follow only the best link there.
+  if (domPrices < STATIC_OK && !r.json.length) {
+    const found = await follow(menuLinks(r.html, r.finalUrl), lowmem ? 1 : 3);
+    // No menu on the restaurant's own pages: it may live on a hosted ordering site
+    // ("Meny & bestill takeaway" → foodbooking.com, ordera.no …).
+    if (!found && domPrices < STATIC_OK && !r.json.length) {
+      const ext = externalMenuLinks(r.html, r.finalUrl);
+      if (ext.length) emit({ type: 'log', message: `The menu seems to live on another site: ${ext[0]!.url.slice(0, 80)}` });
+      await follow(ext, 1);
     }
   }
   const text = pageText(r.html);
@@ -109,15 +125,17 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
   }
   // No text menu and no menu API — maybe the menu is a PDF or published as pictures.
   if (domPrices < 5) {
-    const pdfs = [...new Set([...menuPdfLinks(r.html, r.finalUrl, cheerio), ...menuPdfLinks(start.html, start.finalUrl, cheerio)])];
+    const pdfs = [...new Set([...visited.flatMap((v) => menuPdfLinks(v.html, v.finalUrl, cheerio)), ...menuPdfLinks(start.html, start.finalUrl, cheerio)])];
     if (pdfs.length) {
       emit({ type: 'step', step: 'render', status: 'done', detail: `The menu is a PDF: ${pdfs[0]!.split('/').pop()}` });
       return { kind: 'document', url: r.finalUrl, payload: pdfs[0]!, html: r.html, text, request: { url: pdfs[0]!, method: 'GET' }, note: `PDF menu ${pdfs[0]}` };
     }
   }
   if (domPrices < 5) {
-    const imgs = findMenuImages(r.html, r.finalUrl);
-    if (imgs.length) {
+    const withImages = visited.find((v) => findMenuImages(v.html, v.finalUrl).length);
+    const imgs = withImages ? findMenuImages(withImages.html, withImages.finalUrl) : [];
+    if (withImages && imgs.length) {
+      r = withImages;
       emit({ type: 'step', step: 'render', status: 'done', detail: `The menu is published as ${imgs.length} image(s)` });
       return {
         kind: 'image',

@@ -17,7 +17,7 @@ export const CONTRACT = `Write ONE JavaScript function with exactly this signatu
 - ctx.url is the page URL.
 - Two helper globals exist: parsePrice(str) -> number|null (handles "189,-", "kr 1 290", "$12.50", "1.290,00"; skips dish numbering like "17." and quantities like "2 stk" / "33 cl"), cleanText(str) -> trimmed single-spaced string. Call parsePrice on the PRICE element's own text when one exists, not on a container that also holds the dish name or number.
 - Return an array of {section, name, description, price}: section = heading the dish is under (string or null), name = dish name (string), description = string or null, price = number or null (use parsePrice; when several prices are shown, the first).
-- Plain synchronous ES2020. No require/import, no fetch, no async, no eval, no Function constructor, no globals other than $, ctx, parsePrice, cleanText (and priceColumns, see LAYOUT NOTE when present). Never throw: guard against missing elements.`;
+- Plain synchronous ES2020. No require/import, no fetch, no async, no eval, no Function constructor, no globals other than $, ctx, parsePrice, cleanText (and priceColumns / visualRows / visualDishes, see LAYOUT NOTE when present). Never throw: guard against missing elements.`;
 
 export const CONTRACT_JSON = `Write ONE JavaScript function with exactly this signature:
 
@@ -93,12 +93,19 @@ export function initialMessages(input: {
   skeleton: Skeleton;
   oracle: MenuItem[];
   priceColumns?: { columns: number; container: string | null } | null;
+  /** The renderer recorded text-box positions (data-ms-xy): a free-positioned page. */
+  positioned?: boolean;
 }): ChatMessage[] {
   const { skeleton: sk } = input;
   const pc = input.priceColumns;
-  const layoutNote = pc
-    ? `\nLAYOUT NOTE: this page has no element per dish. It lays the menu out in side-by-side text blocks: ${pc.columns} blocks each hold a whole column of PRICES (one per line, lines separated by <br>), and a neighbouring block holds the DISH NAMES in the same order. A tested helper global does exactly this: priceColumns($) returns [{section, name, description, price}] for every such pair on the page — start from it (you may fix sections, filter non-dishes, or add items it can't see, e.g. prices written inline). Otherwise pair them yourself: for each container${pc.container ? ` (e.g. \`${pc.container}\`)` : ''}, find the price block and the name block, split both on <br> line breaks, drop empty lines, and zip the k-th name with the k-th price. If the name block also contains description lines, keep only the lines that line up with prices. Do this for EVERY container on the page — the HTML below shows only part of it.\n`
+  const positionNote = input.positioned
+    ? `\nLAYOUT NOTE: this page places every text box by screen position (a Canva-style site) — the markup has no element per dish, and siblings are in no useful order. Each text box carries data-ms-xy="x,y" (its position on the rendered page). A tested helper global visualRows($) returns the page's text grouped into visual rows in reading order: [{y, cells: [{x, text}], line}]. A dish's name and its price(s) are usually in the SAME row (name left, price right), with description lines in the following rows. A second tested helper, visualDishes($), already does the usual parse and returns [{section, name, description, price}] (dishes in several columns side by side are handled) — start from it, then fix what the reading shows it gets wrong (e.g. drop non-dish rows like addresses or phone numbers). If you parse rows yourself: for each row whose cells include a price, the name is the left-most non-price cell; attach the next non-price rows as the description until the next priced row; section headings are rows without prices that are followed by priced rows. Use parsePrice on price cells; when a row has two prices (sizes), take the first.\n`
     : '';
+  const layoutNote =
+    positionNote ||
+    (pc
+    ? `\nLAYOUT NOTE: this page has no element per dish. It lays the menu out in side-by-side text blocks: ${pc.columns} blocks each hold a whole column of PRICES (one per line, lines separated by <br>), and a neighbouring block holds the DISH NAMES in the same order. A tested helper global does exactly this: priceColumns($) returns [{section, name, description, price}] for every such pair on the page — start from it (you may fix sections, filter non-dishes, or add items it can't see, e.g. prices written inline). Otherwise pair them yourself: for each container${pc.container ? ` (e.g. \`${pc.container}\`)` : ''}, find the price block and the name block, split both on <br> line breaks, drop empty lines, and zip the k-th name with the k-th price. If the name block also contains description lines, keep only the lines that line up with prices. Do this for EVERY container on the page — the HTML below shows only part of it.\n`
+    : '');
   const user = `${CONTRACT}
 
 PAGE: ${input.url}

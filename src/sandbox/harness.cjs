@@ -19,7 +19,7 @@
  */
 const vm = require('node:vm');
 const cheerio = require('cheerio');
-const { parsePrice, cleanText, priceColumns } = require('./helpers.cjs');
+const { parsePrice, cleanText, priceColumns, visualRows, visualDishes } = require('./helpers.cjs');
 
 const CPU_TIMEOUT_MS = 4000;
 const MAX_ITEMS = 3000;
@@ -139,12 +139,17 @@ async function main() {
       parsePrice,
       cleanText,
       priceColumns,
+      visualRows,
+      visualDishes,
       __result: undefined,
     };
     let trace = null;
     if (isJson) sandbox.data = JSON.parse(input.json || 'null');
     else {
       const $ = cheerio.load(input.html || '');
+      // CSS never carries menu content, but builders (Squarespace) put <style> blocks inside
+      // content sections, where $(el).text() would pick the CSS up as text.
+      $('style').remove();
       trace = instrument($);
       sandbox.$ = $;
     }

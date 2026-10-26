@@ -382,7 +382,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
           oracle: oracleItems,
           pathReport: jsonShapeReport(acq.payload),
         })
-      : initialMessages({ url: menuUrl, platform, skeleton: skeleton(acq.payload, undefined, oracleItems.map((i) => i.name)), oracle: oracleItems, priceColumns: detectPriceColumns(acq.payload) });
+      : initialMessages({ url: menuUrl, platform, skeleton: skeleton(acq.payload, undefined, oracleItems.map((i) => i.name)), oracle: oracleItems, priceColumns: detectPriceColumns(acq.payload), positioned: (acq.payload.match(/data-ms-xy=/g) || []).length >= 30 });
   if (input.repairOf) {
     messages.push({ role: 'assistant', content: '```javascript\n' + input.repairOf.code + '\n```' });
     messages.push({
@@ -397,6 +397,35 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   let stagnant = 0;
   let arbitrations = 0;
   let roundsUsed = 0;
+
+  // Layouts with a tested parser (price columns, free-positioned pages): try the parser as-is
+  // first — zero tokens, and the same deterministic code the model would build on. It is
+  // committed only if it passes against the reading like any written extractor.
+  if (mode === 'html' && !input.repairOf) {
+    const helperCode = (acq.payload.match(/data-ms-xy=/g) || []).length >= 30
+      ? 'function extract($, ctx) {\n  // Free-positioned page: dishes rebuilt from the visual rows (tested helper).\n  return visualDishes($);\n}'
+      : detectPriceColumns(acq.payload)
+        ? 'function extract($, ctx) {\n  // Names and prices in side-by-side columns: paired by position (tested helper).\n  return priceColumns($);\n}'
+        : null;
+    if (helperCode) {
+      const run = await runExtractor(helperCode, acq.payload, menuUrl, mode);
+      const score = run.ok ? scoreAgainstOracle(oracleItems, run.items, text) : null;
+      emit({ type: 'log', message: `Layout parser alone: ${run.items.length} items${score ? `, f1 ${score.f1}` : ''}${score?.pass ? ' — passes' : ' — the model takes over'}` });
+      if (score?.pass) {
+        emit({ type: 'step', step: 'test', status: 'done', detail: `PASS f1=${score.f1} (${score.extractorCount}/${score.oracleCount}) — layout parser, no code generation needed` });
+        const r = await finalize(helperCode, score, run, 0, 'layout-parser', 'forged');
+        if (r) return r;
+      } else if (score) {
+        // Also a candidate for the near-miss second reading at the end.
+        best = { score, code: helperCode, run }; // nothing scored before this point
+        messages.push({
+          role: 'user',
+          content: `Note: the layout helper alone returned ${run.items.length} items (f1 ${score.f1}). ${score.failures.slice(0, 2).join('; ')}. Start from its output and fix what it gets wrong rather than parsing from scratch.`,
+        });
+      }
+    }
+  }
+
   for (let round = 1; round <= maxRounds; round++) {
     roundsUsed = round;
     emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1
@@ -498,7 +527,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   // A near miss is often the reading's fault, not the code's (one reading is noisy — see
   // bench/variance.ts). Before giving up, pay for one more independent reading and grade the
   // best code against it; it passes only if it clears the same bar there.
-  if (best && best.score.f1 >= 0.85 && !input.mustInclude?.length) {
+  if (best && best.score.f1 >= 0.75 && !input.mustInclude?.length) {
     try {
       emit({ type: 'log', message: `Near miss (f1 ${best.score.f1}) — asking Nemotron for a second, independent reading of the menu` });
       const o2 = await readMenu(text, { url: menuUrl, restaurant: input.restaurant }, ledger, emit);

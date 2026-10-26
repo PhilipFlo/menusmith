@@ -205,6 +205,30 @@ async function renderOnce(url: string, opts: { timeoutMs?: number }): Promise<Re
     // Response bodies of long-lived requests (SSE, long-polling) never complete —
     // never wait more than a few seconds for captured bodies.
     await Promise.race([Promise.allSettled(pending), new Promise((r) => setTimeout(r, 5000))]);
+    // Free-positioned pages (Canva-style sites: every text box placed by a CSS transform) carry
+    // no structure linking a dish to its price — only the layout does. Record each text box's
+    // position so the reader and the code can rebuild rows (bounded; skipped on normal pages).
+    await page
+      .evaluate(() => {
+        const all = Array.from(document.body?.querySelectorAll('*') ?? []).slice(0, 30_000) as HTMLElement[];
+        let positioned = 0;
+        for (const el of all) {
+          const st = el.style;
+          if (st && (st.transform.includes('translate') || st.position === 'absolute')) positioned++;
+        }
+        if (positioned < 30) return;
+        let n = 0;
+        for (const el of all) {
+          if (n >= 5000) break;
+          const own = Array.from(el.childNodes).some((c) => c.nodeType === 3 && (c.textContent || '').trim());
+          if (!own) continue;
+          const r = el.getBoundingClientRect();
+          if (!r.width || !r.height) continue;
+          el.setAttribute('data-ms-xy', `${Math.round(r.left + window.scrollX)},${Math.round(r.top + window.scrollY)}`);
+          n++;
+        }
+      })
+      .catch(() => {});
     let html = await page.content();
     if (html.length > MAX_HTML) html = html.slice(0, MAX_HTML);
     json.sort((a, b) => b.menuObjects - a.menuObjects);

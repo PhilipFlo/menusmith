@@ -1,3 +1,4 @@
+import { ORDERING_HOSTS } from '../html/platform.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config } from '../config.ts';
@@ -23,7 +24,7 @@ export function idForDomain(domain: string): string {
  * identifies the restaurant, so it becomes part of the id.
  */
 export function idForUrl(url: string, domain: string, platform: string): string {
-  const shared = !['wordpress', 'squarespace', 'wix', 'webflow', 'shopify', 'unknown'].includes(platform);
+  const shared = !['wordpress', 'squarespace', 'wix', 'webflow', 'shopify', 'unknown'].includes(platform) || ORDERING_HOSTS.test(domain);
   if (!shared) return idForDomain(domain);
   let path = '';
   try {

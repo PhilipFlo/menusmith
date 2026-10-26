@@ -263,4 +263,85 @@ function priceColumns($) {
   return out;
 }
 
-module.exports = { parsePrice, cleanText, normName, priceColumns, pairPriceColumns };
+/**
+ * Free-positioned pages (Canva-style sites): the renderer records each text box's position as
+ * data-ms-xy="x,y". Returns the page's text in reading order, grouped into visual rows:
+ * [{y, cells: [{x, text}], line}] — a dish's name and its price(s) usually share a row.
+ * Empty on pages without positions.
+ */
+function visualRows($) {
+  const cells = [];
+  for (const el of $('[data-ms-xy]').toArray().slice(0, 5000)) {
+    const xy = String($(el).attr('data-ms-xy') || '').split(',').map(Number);
+    if (xy.length !== 2 || !xy.every(Number.isFinite)) continue;
+    // Own text only: nested boxes carry their own positions.
+    const text = cleanText((el.children || []).filter((c) => c.type === 'text').map((c) => c.data).join(' '));
+    if (text) cells.push({ x: xy[0], y: xy[1], text });
+  }
+  cells.sort((a, b) => a.y - b.y || a.x - b.x);
+  const rows = [];
+  for (const c of cells) {
+    const row = rows[rows.length - 1];
+    if (row && c.y - row.y <= 8) row.cells.push(c);
+    else rows.push({ y: c.y, cells: [c] });
+  }
+  for (const r of rows) {
+    r.cells.sort((a, b) => a.x - b.x);
+    r.line = r.cells.map((c) => c.text).join(' | ');
+  }
+  return rows;
+}
+
+/**
+ * Dishes from a free-positioned page (see visualRows): in a row, a non-price cell starts a dish
+ * and the price cells after it are its prices (first = the price); rows without prices below
+ * a dish, in the same column (x within 40 px), are its description; a single short row without
+ * prices directly above priced rows is a section heading. Handles menus laid out in several
+ * columns side by side. [{section, name, description, price}]
+ */
+function visualDishes($) {
+  const isPrice = (t) => PRICE_LINE.test(t);
+  const rows = visualRows($);
+  const out = [];
+  let section = null;
+  let open = []; // dishes from the latest priced row, by x
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].cells;
+    const priced = cells.some((c) => isPrice(c.text));
+    if (priced) {
+      open = [];
+      let cur = null;
+      for (let k = 0; k < cells.length; k++) {
+        const c = cells[k];
+        if (isPrice(c.text)) {
+          if (cur && cur.price === null) cur.price = parsePrice(c.text);
+          continue;
+        }
+        // A non-price cell followed directly by another one is a heading on the dishes' row.
+        const next = cells[k + 1];
+        if (next && !isPrice(next.text) && c.text.length <= 40) {
+          section = c.text;
+          for (const d of out) if (d.price === null && d.name === c.text) d.price = undefined;
+          continue;
+        }
+        cur = { section, name: c.text, description: null, price: null, x: c.x };
+        out.push(cur);
+        open.push(cur);
+      }
+      continue;
+    }
+    const nextPriced = rows[i + 1] && rows[i + 1].cells.some((c) => isPrice(c.text));
+    if (cells.length === 1 && cells[0].text.length <= 40 && nextPriced) {
+      section = cells[0].text;
+      open = [];
+      continue;
+    }
+    for (const c of cells) {
+      const d = open.find((o) => Math.abs(o.x - c.x) <= 40);
+      if (d) d.description = d.description ? `${d.description} ${c.text}` : c.text;
+    }
+  }
+  return out.filter((d) => d.price !== null && d.price !== undefined).map(({ x, ...d }) => d);
+}
+
+module.exports = { parsePrice, cleanText, normName, priceColumns, pairPriceColumns, visualRows, visualDishes };

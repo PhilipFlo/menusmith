@@ -172,3 +172,48 @@ describe('price-column pairing stays cheap on hostile pages', () => {
     expect(text).not.toContain('A — $ 1'); // over the work limit: not rewritten
   });
 });
+
+describe('free-positioned pages (Canva-style)', () => {
+  // Every text box is placed by position only; the renderer records it as data-ms-xy.
+  const box = (x: number, y: number, t: string) => `<div data-ms-xy="${x},${y}"><p>${t}</p></div>`.replace('<p>', '').replace('</p>', '');
+  const page =
+    '<body>' +
+    [
+      box(600, 10, 'Pizza'), // heading alone on its row? no — sits with dishes below
+      box(10, 100, 'Pancetta Classics'),
+      box(200, 100, '1 - Margherita'),
+      box(400, 100, '145'),
+      box(450, 100, '235'),
+      box(600, 100, '2 - Capricciosa'),
+      box(800, 100, '155'),
+      box(850, 100, '245'),
+      box(200, 120, 'Ost og tomatsaus'),
+      box(600, 121, 'Skinke og champignon'),
+      box(200, 200, '3 - Hawaii'),
+      box(400, 200, '165'),
+    ].join('') +
+    '</body>';
+  const { visualRows, visualDishes } = require('../src/sandbox/helpers.cjs') as {
+    visualRows: ($: unknown) => { line: string }[];
+    visualDishes: ($: unknown) => { section: string | null; name: string; description: string | null; price: number | null }[];
+  };
+  it('groups boxes into rows by position, left to right', async () => {
+    const cheerio = await import('cheerio');
+    const rows = visualRows(cheerio.load(page));
+    expect(rows[1]!.line).toBe('Pancetta Classics | 1 - Margherita | 145 | 235 | 2 - Capricciosa | 155 | 245');
+    expect(rows[2]!.line).toBe('Ost og tomatsaus | Skinke og champignon'); // 1 px apart = same row
+  });
+  it('rebuilds dishes across side-by-side columns, with descriptions from the same column', async () => {
+    const cheerio = await import('cheerio');
+    const d = visualDishes(cheerio.load(page));
+    expect(d.map((x) => [x.section, x.name, x.price, x.description])).toEqual([
+      ['Pancetta Classics', '1 - Margherita', 145, 'Ost og tomatsaus'],
+      ['Pancetta Classics', '2 - Capricciosa', 155, 'Skinke og champignon'],
+      ['Pancetta Classics', '3 - Hawaii', 165, null],
+    ]);
+  });
+  it('pages without recorded positions are unaffected', async () => {
+    const cheerio = await import('cheerio');
+    expect(visualRows(cheerio.load('<body><p>Pizza 129,-</p></body>'))).toEqual([]);
+  });
+});

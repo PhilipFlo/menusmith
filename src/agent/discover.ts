@@ -1,3 +1,4 @@
+import { ORDERING_HOSTS } from '../html/platform.ts';
 import * as cheerio from 'cheerio';
 import { z } from 'zod';
 import { chat, type Ledger } from '../llm/client.ts';
@@ -21,6 +22,44 @@ export function priceDensity(html: string): number {
 }
 
 /** Same-site links whose text or URL suggests a menu. */
+/**
+ * Links to ANOTHER site that carry the menu — a hosted ordering system, or any link whose text
+ * says menu/order (e.g. "Meny & bestill takeaway"). Used only when the restaurant's own pages
+ * have no menu.
+ */
+export function externalMenuLinks(html: string, baseUrl: string): { url: string; text: string }[] {
+  const $ = cheerio.load(html);
+  let base: URL;
+  try {
+    base = new URL(baseUrl);
+  } catch {
+    return [];
+  }
+  const seen = new Set<string>();
+  const out: { url: string; text: string; score: number }[] = [];
+  $('a[href]').each((_, a) => {
+    const href = $(a).attr('href') || '';
+    const text = $(a).text().replace(/\s+/g, ' ').trim().slice(0, 60);
+    let u: URL;
+    try {
+      u = new URL(href, base);
+    } catch {
+      return;
+    }
+    if (!/^https?:$/.test(u.protocol) || u.hostname.replace(/^www\./, '') === base.hostname.replace(/^www\./, '')) return;
+    const known = ORDERING_HOSTS.test(u.hostname);
+    const says = MENU_WORDS.test(text) || /bestill|order|takeaway|take away/i.test(text);
+    if (!known && !says) return;
+    if (/(facebook|instagram|google|tripadvisor|wolt|foodora|ubereats|doordash|grubhub|yelp)\./i.test(u.hostname)) return;
+    u.hash = '';
+    const key = u.toString();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ url: key, text, score: (known ? 2 : 0) + (says ? 1 : 0) });
+  });
+  return out.sort((a, b) => b.score - a.score).map(({ url, text }) => ({ url, text }));
+}
+
 export function menuLinks(html: string, baseUrl: string): { url: string; text: string }[] {
   const $ = cheerio.load(html);
   let base: URL;
