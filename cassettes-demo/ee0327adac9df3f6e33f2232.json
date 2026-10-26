@@ -3,7 +3,7 @@
   "model": "nvidia/nemotron-3-super-120b-a12b",
   "promptTokens": 1860,
   "completionTokens": 979,
-  "ms": 4642,
+  "ms": 4172,
   "label": "oracle (2nd read)",
   "preview": "Page URL: fixture://sushi-koi/\n\nPAGE TEXT:\nFri levering over kr 500 i Trondheim sentrum · Hent selv: 10 % rabatt\nHjem\nMeny\nBestill bord\nSelskap\nGavekort\nOm oss\n"
 }

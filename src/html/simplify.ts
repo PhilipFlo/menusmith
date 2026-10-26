@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { createRequire } from 'node:module';
 import type { AnyNode, Element } from 'domhandler';
 
 /**
@@ -9,6 +10,9 @@ import type { AnyNode, Element } from 'domhandler';
  */
 
 const DROP = 'script:not([type="application/ld+json"]), style, noscript, svg, iframe, canvas, video, audio, picture source, link, meta, template';
+// The same pairing code the sandbox exposes to extractors as priceColumns($).
+const sandboxHelpers = createRequire(import.meta.url)('../sandbox/helpers.cjs') as Record<string, unknown>;
+
 const BLOCK = new Set([
   'p', 'div', 'section', 'article', 'li', 'ul', 'ol', 'dl', 'dt', 'dd', 'tr', 'table', 'tbody', 'thead',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'footer', 'main', 'nav', 'aside', 'br', 'hr', 'figure', 'figcaption', 'form',
@@ -19,11 +23,30 @@ const KEEP_ATTRS = new Set(['class', 'id', 'itemprop', 'itemtype', 'role', 'data
 export const PRICE_RE =
   /(?:(?:kr\.?|nok|sek|dkk|usd|eur|\$|€|£)\s?\d{1,3}(?:[ .,]\d{3})*(?:[.,]\d{1,2})?)|(?:\b\d{1,3}(?:[ .]\d{3})*(?:[.,]\d{1,2})?\s?(?:,-|\.-|kr\b|nok\b|usd\b|eur\b|€|\$))|(?:\b\d{1,4}[.,]\d{2}\b)/i;
 
+/**
+ * Price-column layouts put every name in one block and every price in another, so plain
+ * text reads "name, name, name … $7, $10, $8" and a reader has to guess the pairing. Rewrite
+ * such pairs in reading order — "NAME — $7" then its description — the way the PDF reader
+ * rebuilds rows from positions. The reader still reads and judges the whole page.
+ */
+function linearizePriceColumns($: cheerio.CheerioAPI): number {
+  if (!/<br/i.test($.html())) return 0;
+  const pairs = (sandboxHelpers.pairPriceColumns as (q: cheerio.CheerioAPI) => { nameEl: Element; priceEl: Element; entries: string[][]; prices: string[] }[])($);
+  if (pairs.length < 2) return 0;
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  for (const p of pairs) {
+    $(p.nameEl).html(p.entries.map((e, k) => `<div>${esc(e[0]!)} — ${esc(p.prices[k]!)}</div>${e.length > 1 ? `<div>${esc(e.slice(1).join(' '))}</div>` : ''}`).join(''));
+    $(p.priceEl).remove();
+  }
+  return pairs.length;
+}
+
 /** Readable text, one block per line, for the oracle. */
 export function pageText(html: string): string {
   const $ = cheerio.load(html);
   $(DROP).remove();
   $('script[type="application/ld+json"]').remove();
+  linearizePriceColumns($);
   const out: string[] = [];
   let line = '';
   const flush = () => {
@@ -258,7 +281,7 @@ export function detectPriceColumns(html: string): { columns: number; container: 
       .split(/<br\s*\/?>/i)
       .map((l) => cheerio.load(`<x>${l}</x>`)('x').text().replace(/\s+/g, ' ').trim())
       .filter(Boolean);
-    if (lines.length < 3 || !lines.every((l) => PRICE_LINE.test(l))) return;
+    if (lines.length < 2 || !lines.every((l) => PRICE_LINE.test(l))) return;
     // Count the innermost block only (its parents contain the same lines).
     if ($(el).find('div, p, td, span').toArray().some((c) => /<br/i.test($(c).html() ?? ''))) return;
     columns++;

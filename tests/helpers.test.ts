@@ -101,3 +101,39 @@ describe('parsePrice skips numbering and quantities (benchmark findings)', () =>
     expect(parsePrice(input)).toBe(expected);
   });
 });
+
+describe('price-column layouts (Tilda zero-blocks)', () => {
+  // Names in one block, prices in a neighbouring block, paired only by order.
+  const page = `<html><body>
+    <div class="t396__artboard"><div class="tn-elem"><div class="tn-atom">Seafood</div></div>
+      <div class="tn-elem"><div class="tn-atom">SPANISH OCTOPUS<br>Grilled octopus, baby potatoes,<br>tomato sauce<br><br>BRANZINO<br>Branzino fillet<br><br>*add salad +5$</div></div>
+      <div class="tn-elem"><div class="tn-atom"><strong>$ 34</strong><br><br><strong>$ 41</strong></div></div></div>
+    <div class="t396__artboard"><div class="tn-elem"><div class="tn-atom">Sides</div></div>
+      <div class="tn-elem"><div class="tn-atom">FRENCH FRIES<br><br>STEAMED RICE<br><br>GRILLED ASPARAGUS</div></div>
+      <div class="tn-elem"><div class="tn-atom">$ 7<br><br>$ 8<br><br>$ 9</div></div></div>
+  </body></html>`;
+  const { priceColumns } = require('../src/sandbox/helpers.cjs') as { priceColumns: ($: unknown) => { section: string | null; name: string; description: string | null; price: number | null }[] };
+
+  it('pairs each name (one per paragraph or line) with the price in the same position', async () => {
+    const cheerio = await import('cheerio');
+    const items = priceColumns(cheerio.load(page));
+    expect(items.map((i) => [i.name, i.price])).toEqual([
+      ['SPANISH OCTOPUS', 34],
+      ['BRANZINO', 41],
+      ['FRENCH FRIES', 7],
+      ['STEAMED RICE', 8],
+      ['GRILLED ASPARAGUS', 9],
+    ]);
+    expect(items[0]!.description).toBe('Grilled octopus, baby potatoes, tomato sauce');
+    expect(items[0]!.section).toBe('Seafood');
+  });
+
+  it('page text for the reader puts every dish next to its own price', async () => {
+    const { pageText, detectPriceColumns } = await import('../src/html/simplify.ts');
+    expect(detectPriceColumns(page)?.columns).toBe(2);
+    const t = pageText(page);
+    expect(t).toContain('SPANISH OCTOPUS — $ 34');
+    expect(t).toContain('STEAMED RICE — $ 8');
+    expect(t).not.toMatch(/^\$ 41$/m); // the loose price column is gone
+  });
+});

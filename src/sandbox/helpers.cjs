@@ -122,13 +122,17 @@ function brParagraphs($, el) {
   return out;
 }
 
+/** A footnote under a column ("*add chicken +10$ …") is not a dish. */
+const FOOTNOTE = /^[*†‡※]/;
+
 /**
  * "Price column" layouts (Tilda zero-blocks and similar builders): a block holding a column
  * of prices (one per <br> line) sits next to a block holding the dish names in the same
- * order. Pairs them up: returns [{section, name, description, price}] for the whole page.
+ * order — one dish per line, or per paragraph (name line, description lines, blank line).
+ * Returns each matched pair of blocks with its entries and prices.
  */
-function priceColumns($) {
-  const out = [];
+function pairPriceColumns($) {
+  const pairs = [];
   const isLeaf = (el) => !$(el).find(BLOCKS).toArray().some((c) => brLines($, c).length > 1);
   const textBlocks = $(BLOCKS)
     .toArray()
@@ -142,19 +146,16 @@ function priceColumns($) {
   for (const pb of priceBlocks) {
     const prices = brLines($, pb);
     // Smallest ancestor that also holds a matching name block.
-    let names = null;
-    let nameEl = null;
+    let best = null;
     let scope = $(pb).parent();
-    for (let depth = 0; depth < 6 && scope.length && !nameEl; depth++, scope = scope.parent()) {
-      // A name block lists one dish per line, or one dish per paragraph (name line, then its
-      // description lines, then a blank line) — either way, one entry per price, in order.
+    for (let depth = 0; depth < 6 && scope.length && !best; depth++, scope = scope.parent()) {
       const cands = scope
         .find(BLOCKS)
         .toArray()
         .filter((el) => el !== pb && order.has(el) && !used.has(el))
         .map((el) => {
-          const lines = brLines($, el);
-          const paras = brParagraphs($, el);
+          const lines = brLines($, el).filter((l) => !FOOTNOTE.test(l));
+          const paras = brParagraphs($, el).filter((p) => !FOOTNOTE.test(p[0]));
           const entries = lines.length === prices.length ? lines.map((l) => [l]) : paras.length === prices.length ? paras : null;
           return { el, lines, entries };
         })
@@ -162,28 +163,36 @@ function priceColumns($) {
       if (cands.length) {
         // Nearest in document order to the price block.
         cands.sort((a, b) => Math.abs(order.get(a.el) - order.get(pb)) - Math.abs(order.get(b.el) - order.get(pb)));
-        nameEl = cands[0].el;
-        names = cands[0].entries;
+        best = cands[0];
       }
     }
-    if (!nameEl) continue;
-    used.add(nameEl);
-    // Section: nearest preceding single-line block in the same scope that isn't a price.
+    if (!best) continue;
+    used.add(best.el);
+    // Section: nearest preceding single-line block that isn't a price.
     let section = null;
-    for (let i = order.get(nameEl) - 1; i >= 0 && i >= order.get(nameEl) - 6; i--) {
+    for (let i = order.get(best.el) - 1; i >= 0 && i >= order.get(best.el) - 6; i--) {
       const ls = brLines($, textBlocks[i]);
       if (ls.length === 1 && !PRICE_LINE.test(ls[0]) && ls[0].length <= 40) {
         section = ls[0];
         break;
       }
     }
-    names.forEach((entry, k) => {
+    pairs.push({ nameEl: best.el, priceEl: pb, section, entries: best.entries, prices });
+  }
+  return pairs;
+}
+
+/** Every dish in a price-column layout: [{section, name, description, price}]. */
+function priceColumns($) {
+  const out = [];
+  for (const p of pairPriceColumns($)) {
+    p.entries.forEach((entry, k) => {
       const name = entry[0];
       if (/:$/.test(name)) return; // "Monday:" — opening hours, not dishes
-      out.push({ section, name, description: entry.slice(1).join(' ') || null, price: parsePrice(prices[k]) });
+      out.push({ section: p.section, name, description: entry.slice(1).join(' ') || null, price: parsePrice(p.prices[k]) });
     });
   }
   return out;
 }
 
-module.exports = { parsePrice, cleanText, normName, priceColumns };
+module.exports = { parsePrice, cleanText, normName, priceColumns, pairPriceColumns };
