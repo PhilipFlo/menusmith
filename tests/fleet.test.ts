@@ -64,3 +64,13 @@ describe('coverage check: removed vs. silently missed', () => {
     expect(stillListed([d('Ayran', 30)], [d('Ayran', 30)], [{ name: 'Ayran', price: 30 }])).toEqual([]);
   });
 });
+
+describe('section moves', () => {
+  it('a dish that moved to another section shows up as removed+added in the diff, but keeps its name', () => {
+    const d = diffItems([item('Fries', 7, 'Desserts')], [item('Fries', 7, 'Sides')]);
+    expect(d.map((x) => x.kind).sort()).toEqual(['added', 'removed']);
+    // checkOne only counts a removal when the name is gone from the output entirely.
+    const names = new Set(['fries']);
+    expect(d.filter((c) => c.kind === 'removed' && !names.has(c.name.toLowerCase())).length).toBe(0);
+  });
+});

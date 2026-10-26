@@ -466,13 +466,15 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
   if (!broken && !suspicious) {
     // Plausible output that differs from last time → probably the menu itself changed.
     const changes = diffItems(prev, run.items);
-    const removed = changes.filter((c) => c.kind === 'removed').length;
+    // A dish that only moved to another section (a renamed heading) is not a removal.
+    const stillThere = new Set(run.items.map((i) => normName(i.name)));
+    const removed = changes.filter((c) => c.kind === 'removed' && !stillThere.has(normName(c.name))).length;
     // Dishes that "disappeared" may really be dishes the code now silently misses —
     // verify removals against a fresh reading before recording them.
     if (removed > 0 || auditDue()) {
       if (auditMode !== 'never' && canSpend) {
         try {
-          const vanished = changes.filter((c) => c.kind === 'removed').map((c) => ({ name: c.name, price: c.oldPrice }));
+          const vanished = changes.filter((c) => c.kind === 'removed' && !stillThere.has(normName(c.name))).map((c) => ({ name: c.name, price: c.oldPrice }));
           const { audit, oracle } = await coverageAudit(x, run.items, sourceText(src, mode), ledger, emit, vanished);
           if (!audit.conclusive) {
             if (removed > 0)
