@@ -68,7 +68,7 @@
       }
     },
     "rescue": {
-      "attempted": 3,
+      "attempted": 25,
       "rescued": 4,
       "successFromStoredMenuUrl": "79/120 (65.8%)",
       "successFromHomepageIncludingRescue": "83/120 (69.2%)",

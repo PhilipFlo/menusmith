@@ -85,7 +85,7 @@ async function main() {
     stillFailing[c] = (stillFailing[c] || 0) + 1;
   }
   res.summary.rescue = {
-    attempted: todo.length,
+    attempted: res.rows.filter((r) => r.rescue).length,
     rescued,
     successFromStoredMenuUrl: `${okDirect}/${n} (${Math.round((okDirect / n) * 1000) / 10}%)`,
     successFromHomepageIncludingRescue: `${okDirect + rescued}/${n} (${Math.round(((okDirect + rescued) / n) * 1000) / 10}%)`,
