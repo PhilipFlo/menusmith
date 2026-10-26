@@ -30,7 +30,7 @@ export const PRICE_RE =
  * rebuilds rows from positions. The reader still reads and judges the whole page.
  */
 function linearizePriceColumns($: cheerio.CheerioAPI): number {
-  if (!/<br/i.test($.html())) return 0;
+  if ($('br').length < 4) return 0;
   const pairs = (sandboxHelpers.pairPriceColumns as (q: cheerio.CheerioAPI) => { nameEl: Element; priceEl: Element; entries: string[][]; prices: string[] }[])($);
   if (pairs.length < 2) return 0;
   const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -54,21 +54,31 @@ export function pageText(html: string): string {
     if (t) out.push(t);
     line = '';
   };
-  const walk = (node: AnyNode) => {
+  // Iterative walk (an explicit stack): untrusted pages can nest thousands of levels deep.
+  const body = $('body')[0] || $.root()[0];
+  type Step = { node: AnyNode } | { close: true };
+  const stack: Step[] = body ? [...(body as Element).children].reverse().map((node) => ({ node })) : [];
+  while (stack.length) {
+    const step = stack.pop()!;
+    if ('close' in step) {
+      flush();
+      continue;
+    }
+    const node = step.node;
     if (node.type === 'text') {
       line += ' ' + (node as unknown as { data: string }).data;
-      return;
+      continue;
     }
-    if (node.type !== 'tag') return;
+    if (node.type !== 'tag') continue;
     const el = node as Element;
     const block = BLOCK.has(el.tagName);
-    if (block) flush();
+    if (block) {
+      flush();
+      stack.push({ close: true });
+    }
     if (el.tagName === 'td' || el.tagName === 'th') line += ' | ';
-    for (const c of el.children) walk(c);
-    if (block) flush();
-  };
-  const body = $('body')[0] || $.root()[0];
-  if (body) for (const c of (body as Element).children) walk(c);
+    for (let i = el.children.length - 1; i >= 0; i--) stack.push({ node: el.children[i]! });
+  }
   flush();
   // Collapse runs of duplicate lines (sticky headers, repeated nav).
   return out.filter((l, i) => l !== out[i - 1]).join('\n');

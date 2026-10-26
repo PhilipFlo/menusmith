@@ -133,9 +133,14 @@ function toParagraphs(lines) {
 
 /** A footnote under a column ("*add chicken +10$ …") is not a dish. */
 const FOOTNOTE = /^[*†‡※]/;
-// Work limits: this also runs on every page the reader sees, including untrusted ones.
+// Work limits: this also runs on every page the reader sees, including untrusted ones, so
+// every loop is bounded and nothing re-scans the document.
+const MAX_BRS = 20000;
 const MAX_BLOCKS = 1500;
 const MAX_PRICE_BLOCKS = 120;
+const MAX_DEPTH = 400; // deeper documents are not menus (and deep serialisation overflows)
+const BLOCK_TAGS = new Set(['div', 'p', 'td', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+const isBlock = (n) => n && n.type === 'tag' && BLOCK_TAGS.has(n.name);
 
 /**
  * "Price column" layouts (Tilda zero-blocks and similar builders): a block holding a column
@@ -143,78 +148,101 @@ const MAX_PRICE_BLOCKS = 120;
  * order — one dish per line, or per paragraph (name line, description lines, blank line).
  * Returns each matched pair of blocks with its entries and prices.
  *
- * Linear in page size: it starts from the <br> elements, so only blocks that actually hold
- * line breaks are ever serialised.
+ * Linear in page size: it starts from the <br> elements, serialises only the blocks that
+ * hold them (which never nest), and looks a price block's partners up by line count.
  */
 function pairPriceColumns($) {
   const brs = $('br').toArray();
-  if (brs.length < 4) return [];
+  if (brs.length < 4 || brs.length > MAX_BRS) return [];
   // Blocks that directly hold line breaks (through inline wrappers like <strong>).
+  const holderOf = new Map(); // br's parent → its block (cached: many brs share a parent)
   const holders = new Set();
   for (const br of brs) {
-    const b = $(br).closest(BLOCKS)[0];
-    if (b) holders.add(b);
+    const parent = br.parent;
+    if (!parent) continue;
+    if (!holderOf.has(parent)) {
+      let b = parent;
+      for (let d = 0; b && !isBlock(b) && d < 12; d++) b = b.parent;
+      holderOf.set(parent, isBlock(b) ? b : null);
+    }
+    const h = holderOf.get(parent);
+    if (h) holders.add(h);
     if (holders.size > MAX_BLOCKS) return [];
   }
-  // Keep the innermost ones: a holder that contains another holder mixes two columns.
+  // Ancestor chains (bounded) — also guards against pathologically deep documents.
+  const chain = new Map();
+  for (const h of holders) {
+    const anc = [];
+    let depth = 0;
+    for (let p = h.parent; p; p = p.parent) {
+      if (++depth > MAX_DEPTH) return [];
+      if (anc.length < 8) anc.push(p);
+    }
+    chain.set(h, anc);
+  }
+  // Keep the innermost holders: one that contains another mixes two columns.
   const outer = new Set();
-  for (const h of holders) for (let p = h.parent; p; p = p.parent) if (holders.has(p)) outer.add(p);
+  for (const h of holders) for (const a of chain.get(h)) if (holders.has(a)) outer.add(a);
   const leaves = [...holders].filter((h) => !outer.has(h));
+  const order = new Map(leaves.map((el, i) => [el, i]));
   const info = new Map();
+  const byCount = new Map(); // line or paragraph count → leaves
+  const index = (n, el) => {
+    if (!byCount.has(n)) byCount.set(n, new Set());
+    byCount.get(n).add(el);
+  };
   for (const el of leaves) {
     const all = brLines($, el, true);
-    info.set(el, { all, lines: all.filter(Boolean) });
-  }
-  const order = new Map(leaves.map((el, i) => [el, i]));
-  // Ancestor (up to 8 levels) → leaves inside it, for scope lookups without re-scanning.
-  const within = new Map();
-  for (const el of leaves) {
-    let p = el.parent;
-    for (let d = 0; d < 8 && p; d++, p = p.parent) {
-      if (!within.has(p)) within.set(p, []);
-      within.get(p).push(el);
+    const raw = all.filter(Boolean);
+    const lines = raw.filter((l) => !FOOTNOTE.test(l));
+    const paras = toParagraphs(all).filter((p) => !FOOTNOTE.test(p[0]));
+    const allPrices = raw.length > 0 && raw.every((l) => PRICE_LINE.test(l));
+    info.set(el, { raw, lines, paras, allPrices });
+    if (!allPrices) {
+      index(lines.length, el);
+      index(paras.length, el);
     }
   }
-  const priceBlocks = leaves.filter((el) => {
-    const ls = info.get(el).lines;
-    return ls.length >= 2 && ls.every((l) => PRICE_LINE.test(l));
-  });
+  const priceBlocks = leaves.filter((el) => info.get(el).allPrices && info.get(el).raw.length >= 2);
   if (priceBlocks.length > MAX_PRICE_BLOCKS) return [];
   const pairs = [];
   const used = new Set();
   for (const pb of priceBlocks) {
-    const prices = info.get(pb).lines;
-    // Smallest ancestor that also holds a matching name block.
+    const prices = info.get(pb).raw;
+    const pbAnc = chain.get(pb).slice(0, 6);
+    // Only leaves with the right number of entries can be the name column.
     let best = null;
-    let found = null;
-    let scope = pb.parent;
-    for (let depth = 0; depth < 6 && scope && !best; depth++, scope = scope.parent) {
-      const cands = (within.get(scope) || [])
-        .filter((el) => el !== pb && !used.has(el))
-        .map((el) => {
-          const { all, lines: raw } = info.get(el);
-          const lines = raw.filter((l) => !FOOTNOTE.test(l));
-          const paras = toParagraphs(all).filter((p) => !FOOTNOTE.test(p[0]));
-          const entries = lines.length === prices.length ? lines.map((l) => [l]) : paras.length === prices.length ? paras : null;
-          return { el, lines, entries };
-        })
-        .filter((c) => c.entries && !c.lines.every((l) => PRICE_LINE.test(l)));
-      if (cands.length) {
-        // Nearest in document order to the price block.
-        cands.sort((a, b) => Math.abs(order.get(a.el) - order.get(pb)) - Math.abs(order.get(b.el) - order.get(pb)));
-        best = cands[0];
-        found = scope;
+    let bestLevel = Infinity;
+    for (const el of byCount.get(prices.length) || []) {
+      if (used.has(el)) continue;
+      const { lines, paras } = info.get(el);
+      const entries = lines.length === prices.length ? lines.map((l) => [l]) : paras.length === prices.length ? paras : null;
+      if (!entries) continue;
+      // Smallest shared container (level along the price block's ancestors), then nearest.
+      const anc = chain.get(el);
+      const level = pbAnc.findIndex((a) => anc.includes(a));
+      if (level < 0) continue;
+      const dist = Math.abs(order.get(el) - order.get(pb));
+      if (level < bestLevel || (level === bestLevel && dist < best.dist)) {
+        best = { el, entries, dist };
+        bestLevel = level;
       }
     }
     if (!best) continue;
     used.add(best.el);
     // Section: the one short single-line title inside the same container (builders like Tilda
-    // place it anywhere in the markup). Nested wrappers repeat the same text — count distinct.
+    // place it anywhere in the markup). Bounded walk; nested wrappers repeat the same text.
     const titles = new Set();
-    for (const el of $(found).find(BLOCKS).toArray().slice(0, 300)) {
-      if (el === best.el || el === pb || info.has(el) || $(el).find(BLOCKS).length) continue;
-      const t = cleanText($(el).text());
-      if (t && t.length <= 40 && !PRICE_LINE.test(t) && !FOOTNOTE.test(t)) titles.add(t);
+    const stack = [pbAnc[bestLevel]];
+    for (let visited = 0; stack.length && visited < 400; visited++) {
+      const n = stack.pop();
+      const kids = (n.children || []).filter((c) => c.type === 'tag');
+      if (n !== pbAnc[bestLevel] && isBlock(n) && !info.has(n) && !kids.some(isBlock)) {
+        const t = cleanText($(n).text());
+        if (t && t.length <= 40 && !PRICE_LINE.test(t) && !FOOTNOTE.test(t)) titles.add(t);
+        continue;
+      }
+      for (const c of kids) if (!info.has(c)) stack.push(c);
     }
     const section = titles.size === 1 ? [...titles][0] : null;
     pairs.push({ nameEl: best.el, priceEl: pb, section, entries: best.entries, prices });

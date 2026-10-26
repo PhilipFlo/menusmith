@@ -139,6 +139,29 @@ describe('price-column layouts (Tilda zero-blocks)', () => {
 });
 
 describe('price-column pairing stays cheap on hostile pages', () => {
+  // Found by review: each of these took 10–70 s with the first implementation.
+  const timed = async (html: string) => {
+    const { pageText, detectPriceColumns } = await import('../src/html/simplify.ts');
+    const t0 = Date.now();
+    pageText(html);
+    detectPriceColumns(html);
+    return Date.now() - t0;
+  };
+  it('a deep wrapper chain with many blocks and many pairs', async () => {
+    let pairs = '';
+    for (let i = 0; i < 120; i++) pairs += `<div>$7<br>$8</div><div>A${i}<br>B${i}</div>`;
+    const html = `<body><div>${'<div>'.repeat(300)}${'<p>x</p>'.repeat(5000)}${'</div>'.repeat(300)}${pairs}</div></body>`;
+    expect(await timed(html)).toBeLessThan(3000);
+  });
+  it('thousands of line breaks inside deeply nested inline tags', async () => {
+    const html = `<body><div>${'<b>'.repeat(2000)}${'x<br>'.repeat(20000)}${'</b>'.repeat(2000)}</div></body>`;
+    expect(await timed(html)).toBeLessThan(3000);
+  });
+  it('page text survives 5,000 levels of nesting', async () => {
+    const { pageText } = await import('../src/html/simplify.ts');
+    const html = `<body>${'<div>'.repeat(5000)}Pizza 129,-${'</div>'.repeat(5000)}</body>`;
+    expect(pageText(html)).toContain('Pizza 129,-');
+  });
   it('a page with thousands of <br> price blocks is parsed quickly and left alone', async () => {
     const { pageText } = await import('../src/html/simplify.ts');
     const block = '<div><div>$ 1<br>$ 2<br>$ 3</div><div>A<br>B<br>C</div></div>';
