@@ -147,6 +147,7 @@ function pairPriceColumns($) {
     const prices = brLines($, pb);
     // Smallest ancestor that also holds a matching name block.
     let best = null;
+    let found = null;
     let scope = $(pb).parent();
     for (let depth = 0; depth < 6 && scope.length && !best; depth++, scope = scope.parent()) {
       const cands = scope
@@ -164,13 +165,23 @@ function pairPriceColumns($) {
         // Nearest in document order to the price block.
         cands.sort((a, b) => Math.abs(order.get(a.el) - order.get(pb)) - Math.abs(order.get(b.el) - order.get(pb)));
         best = cands[0];
+        found = scope;
       }
     }
     if (!best) continue;
     used.add(best.el);
-    // Section: nearest preceding single-line block that isn't a price.
+    // Section: the short single-line title inside the same container (builders like Tilda
+    // place it anywhere in the markup); else the nearest preceding single-line block.
+    const isTitle = (ls) => ls.length === 1 && !PRICE_LINE.test(ls[0]) && !FOOTNOTE.test(ls[0]) && ls[0].length <= 40;
     let section = null;
-    for (let i = order.get(best.el) - 1; i >= 0 && i >= order.get(best.el) - 6; i--) {
+    const titles = found
+      .find(BLOCKS)
+      .toArray()
+      .filter((el) => order.has(el) && el !== best.el && el !== pb && isTitle(brLines($, el)));
+    // Nested wrappers repeat the same text — count distinct titles.
+    const distinct = [...new Set(titles.map((el) => brLines($, el)[0]))];
+    if (distinct.length === 1) section = distinct[0];
+    for (let i = order.get(best.el) - 1; !section && i >= 0 && i >= order.get(best.el) - 6; i--) {
       const ls = brLines($, textBlocks[i]);
       if (ls.length === 1 && !PRICE_LINE.test(ls[0]) && ls[0].length <= 40) {
         section = ls[0];

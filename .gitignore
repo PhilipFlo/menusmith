@@ -28,4 +28,5 @@ bench/results/*
 !bench/results/variance-t0.json
 !bench/results/precision.json
 submission/clips/
+submission/clips-v2/
 submission/CHECKLIST.md

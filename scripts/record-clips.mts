@@ -1,11 +1,12 @@
 // Record demo-video clips of the real app with Playwright (WebM, 1440×900).
 // Start the server first (see the command in submission/VIDEO-SCRIPT.md), then:
-//   npx tsx scripts/record-clips.mts [clip …]     clips: forge api heal image tour
+//   npx tsx scripts/record-clips.mts [clip …]     clips: forge api heal image tilda recheck tour
+// CLIPS_OUT picks the output folder (default submission/clips).
 import { mkdirSync, renameSync } from 'node:fs';
 import { chromium, type Page } from 'playwright';
 
 const BASE = process.env.CLIPS_BASE || 'http://localhost:8796';
-const OUT = 'submission/clips';
+const OUT = process.env.CLIPS_OUT || 'submission/clips';
 const W = 1440;
 const H = 900;
 mkdirSync(OUT, { recursive: true });
@@ -102,6 +103,32 @@ const clips: Record<string, (p: Page) => Promise<void>> = {
     await slowScroll(p, 900);
     await pause(p, 2500);
   },
+  // A Tilda site: names and prices in separate blocks — paired by layout, passes first try.
+  async tilda(p) {
+    await forge(p, 'https://miaoceanfront.com/');
+    await slowScroll(p, 900);
+    await pause(p, 2500);
+  },
+  // A script that quietly drops 2 dishes (prepared in the video library): the free re-scrape
+  // refuses to record the "removal", the Nemotron check finds the dishes on the page and heals.
+  async recheck(p) {
+    await p.goto(`${BASE}/#/library/kebab-kongen-fixture`);
+    await pause(p, 2000);
+    const panel = p.getByText('Re-check this menu');
+    await panel.scrollIntoViewIfNeeded();
+    await p.mouse.wheel(0, 200);
+    await pause(p, 1500);
+    await p.getByRole('button', { name: /Re-scrape now/ }).click();
+    await p.locator('.recheck-result').waitFor({ timeout: 60_000 });
+    await pause(p, 4500);
+    await p.getByRole('button', { name: /Check against Nemotron/ }).click();
+    await p.getByText('Compared with a fresh Nemotron reading').waitFor({ timeout: 5 * 60_000 });
+    await pause(p, 1500);
+    await p.locator('.recheck-result').scrollIntoViewIfNeeded();
+    await pause(p, 5000);
+    await slowScroll(p, 400);
+    await pause(p, 2500);
+  },
   // Library and how it works.
   async tour(p) {
     await p.goto(`${BASE}/#/library`);
@@ -112,6 +139,11 @@ const clips: Record<string, (p: Page) => Promise<void>> = {
     await pause(p, 2500);
     await slowScroll(p, 1800, 30);
     await pause(p, 1500);
+    const measured = p.getByRole('heading', { name: 'Measured', exact: true });
+    if (await measured.count()) {
+      await measured.scrollIntoViewIfNeeded();
+      await pause(p, 5500);
+    }
     const bench = p.getByRole('heading', { name: /Benchmark/ });
     if (await bench.count()) {
       await bench.scrollIntoViewIfNeeded();
