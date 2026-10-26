@@ -123,7 +123,7 @@ platform).
 | Metric | Result |
 |---|---|
 | Extractor committed, starting from the stored menu URL | **79/120 (65.8%)** |
-| …including the homepage rescue pass (discovery + vision) | **82/120 (68.3%)** |
+| …including the homepage rescue pass (discovery + vision) | **83/120 (69.2%)** |
 | Passed on the first attempt | 59.3% of forged extractors |
 | Adopted from the library (zero new code) | 5 sites |
 | Deterministic on re-run (3 runs, identical output) | 100% (78/78 measured) |
@@ -131,11 +131,18 @@ platform).
 | Median re-run time | 170 ms, **$0** |
 | Precision vs. nearBite's independently scraped menus | 0.737 |
 | Same page read 3× — LLM vs. extractor (22 sites) | LLM identical on 5/22 · extractor identical on **22/22** |
-| Source mix of successes | json: 9 · html: 34 · rendered: 18 · image: 2 · document: 19 |
+| Source mix of successes | json: 9 · html: 34 · rendered: 19 · image: 2 · document: 19 |
 
-Remaining failures after the rescue pass: no-html-menu (JS/PDF/image) 12 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.
+Remaining failures after the rescue pass: no-html-menu (JS/PDF/image) 11 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.
 
 _Recall against nearBite is lower by design: nearBite merges several pages of a site, Menusmith extracts one menu page._
+
+_Where precision against nearBite goes_ (`bench/precision.ts`, 1,441 extracted dishes on 43 sites
+that nearBite's stored menu doesn't match exactly): **50%** are the same dish written differently
+or re-priced since nearBite scraped it (nearBite keeps menu numbers — “102.Teriyaki Salmon” vs
+“Teriyaki Salmon”), **29%** come from menu sections nearBite never stored, **7%** are drinks and
+add-ons, and **15%** are unexplained — that last group includes real extractor mistakes (a
+description glued onto a dish name, a missing price)._
 
 All numbers above are generated from `bench/results/*.json` by `npx tsx bench/report.ts` — one
 benchmark run over all 120 sites (Oct 23, 2026), plus one rescue pass that restarts
@@ -231,6 +238,7 @@ npm run demo                                      # full loop + self-heal, repla
 - `bench/heal.ts` — redesigns every fixture site and measures whether the fleet heals it (vs truth).
 - `bench/tavily.ts` — name + city → official website, with a held-out set (`--offset 40`).
 - `bench/variance.ts` — reads the same page 3× with the LLM vs runs the extractor 3×.
+- `bench/precision.ts` — sorts dishes that nearBite's reference doesn't match into causes (offline).
 - `bench/run.ts` — real restaurant websites. Our evaluation set comes from nearBite (private
   data; only per-site metrics are published in `bench/results/`).
 

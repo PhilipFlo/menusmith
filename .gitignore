@@ -23,5 +23,6 @@ bench/results/*
 !bench/results/tavily.json
 !bench/results/tavily-holdout.json
 !bench/results/variance.json
+!bench/results/precision.json
 submission/clips/
 submission/CHECKLIST.md

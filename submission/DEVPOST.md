@@ -51,11 +51,12 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
   half a cent.
 
 ## Accomplishments
-- **82 of 120 real restaurant websites** (Oslo + Palo Alto) get a working extractor starting from
+- **83 of 120 real restaurant websites** (Oslo + Palo Alto) get a working extractor starting from
   the homepage — 79 from the stored menu link alone.
 - **59%** of written extractors pass on the **first attempt**; average F1 **0.976** against a fresh
   Nemotron reading of the page (self-consistency; against nearBite's independently scraped menus,
-  which merge several pages per site: precision 0.74, recall 0.63); **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
+  which merge several pages per site: precision 0.74, recall 0.63 — half of the mismatches are the same
+  dish written differently or re-priced since, see `bench/precision.ts`); **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
 - **10/10 perfect** (F1 1.0) against ground truth on our fictional fixture sites.
 - **Self-healing measured, not just demoed:** we redesigned all 10 fixture websites (new markup plus
   real price and dish changes). The fleet detected and rewrote the extractor on **10/10**, and every

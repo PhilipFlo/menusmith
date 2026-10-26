@@ -68,30 +68,28 @@
       }
     },
     "rescue": {
-      "attempted": 25,
-      "rescued": 3,
+      "attempted": 3,
+      "rescued": 4,
       "successFromStoredMenuUrl": "79/120 (65.8%)",
-      "successFromHomepageIncludingRescue": "82/120 (68.3%)",
+      "successFromHomepageIncludingRescue": "83/120 (69.2%)",
       "byMode": {
         "forged": 54,
         "reused": 5,
         "vision": 2,
         "document": 18,
-        "forged (rescue)": 2,
+        "forged (rescue)": 3,
         "document (rescue)": 1
       },
       "stillFailing": {
-        "after rescue: oracle failed": 2,
+        "after rescue: no menu with dishes found on the page (it may be a PDF, an image, or rendered by JavaScript)": 7,
         "extractor-not-converged": 15,
         "after rescue: too few menu items to build a reliable extractor": 3,
-        "after rescue: no menu with dishes found on the page (it may be a PDF, an image, or rendered by JavaScript)": 5,
         "llm-error": 1,
         "after rescue: HTTP 404 from http": 1,
         "after rescue: HTTP 429 from https": 4,
         "after rescue: HTTP 406 from https": 1,
         "after rescue: HTTP 403 from https": 3,
         "after rescue: no menu with dishes found in the PDF": 1,
-        "after rescue: code generation failed": 1,
         "after rescue: no passing extractor after 5 rounds (best f1 0.869)": 1
       }
     }
@@ -126,12 +124,12 @@
         "from": "https://www.thonhotels.no/hoteller/norge/oslo/thon-hotel-slottsparken/grotten-ol-og-vinbar/",
         "ok": false,
         "mode": null,
-        "reason": "oracle failed: no recorded response for this request (cassette 69ee2998b11768919ebde9f2); run with MENUSMITH_LLM=record first",
+        "reason": "no menu with dishes found on the page (it may be a PDF, an image, or rendered by JavaScript)",
         "rounds": 0,
         "items": 0,
         "sourceKind": null,
-        "costUsd": 0,
-        "ms": 15422
+        "costUsd": 0.00436,
+        "ms": 14593
       }
     },
     {
@@ -3084,14 +3082,14 @@
       "id": null,
       "rescue": {
         "from": "https://www.wholefoodsmarket.com/eateries/market-sandwich-menu?utm_source=google&utm_medium=organic&utm_campaign=listings",
-        "ok": false,
-        "mode": null,
-        "reason": "code generation failed: no recorded response for this request (cassette 9daa1f028b6b850763cd5b9f); run with MENUSMITH_LLM=record first",
-        "rounds": 1,
-        "items": 0,
-        "sourceKind": null,
-        "costUsd": 0.00195,
-        "ms": 27807
+        "ok": true,
+        "mode": "forged",
+        "reason": null,
+        "rounds": 3,
+        "items": 9,
+        "sourceKind": "rendered",
+        "costUsd": 0.03365,
+        "ms": 69192
       }
     },
     {
@@ -3155,12 +3153,12 @@
         "from": "https://order.online/business/darbar-5",
         "ok": false,
         "mode": null,
-        "reason": "oracle failed: no recorded response for this request (cassette e6a5eb1a4c46b471a563aabe); run with MENUSMITH_LLM=record first",
+        "reason": "no menu with dishes found on the page (it may be a PDF, an image, or rendered by JavaScript)",
         "rounds": 0,
         "items": 0,
         "sourceKind": null,
-        "costUsd": 0,
-        "ms": 22044
+        "costUsd": 0.00042,
+        "ms": 24843
       }
     },
     {
