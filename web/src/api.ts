@@ -10,6 +10,7 @@ export interface Health {
   llmMode: 'live' | 'record' | 'replay' | string;
   /** False on hosts without a headless browser (e.g. the free-tier slim image). */
   browser?: boolean;
+  slowBrowser?: boolean;
   /** True when the library is mirrored to a durable store. */
   store?: boolean;
   nebius: boolean;

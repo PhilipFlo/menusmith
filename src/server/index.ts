@@ -84,6 +84,7 @@ app.get('/api/health', (c) =>
     nebius: !!config.nebiusApiKey,
     tavily: !!config.tavilyApiKey,
     browser: process.env.MENUSMITH_RENDER !== 'off',
+    slowBrowser: process.env.MENUSMITH_RENDER_LOWMEM === '1' || undefined,
     store: storeEnabled(),
     budget: { dailyUsd: DAILY_BUDGET_USD, leftUsd: Math.max(0, Math.round(budgetLeft() * 100) / 100) },
     models: Object.fromEntries(Object.entries(MODELS).map(([k, v]) => [k, v[0]])),

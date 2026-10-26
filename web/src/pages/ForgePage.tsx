@@ -147,6 +147,12 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
           </div>
         </form>
         {health && health.llmMode === 'replay' && <p className="small muted hero-note">Replay mode: model calls are served from recorded cassettes.</p>}
+        {health && health.browser && health.slowBrowser && (
+          <p className="small muted hero-note">
+            Menus that only appear after JavaScript runs are rendered in a real headless browser. On this free server (0.1 CPU) that step alone can take
+            2–4 minutes — the steps below keep updating while it works. The first request after a quiet spell also takes a minute to wake the server.
+          </p>
+        )}
         {health && health.browser === false && (
           <p className="small muted hero-note">
             This free-tier demo runs without a headless browser: menus in the page HTML, menu PDFs and menu images all work; menus that only appear after

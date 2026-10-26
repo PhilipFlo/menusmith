@@ -13,7 +13,7 @@ agent heals its own code.
 > **Live demo: https://menusmith.onrender.com** (free tier — the first request after a quiet spell takes ~1 min to wake up) · Demo video: _(link)_
 
 > **Judges — a 2-minute tour.** Open the live demo (allow ~1 min to wake up) →
-> **Fleet** → in *“Demo: simulate a website redesign”* flip a restaurant → **Run fleet now** →
+> **Fleet** → in *“Demo: simulate a website redesign”* flip **Fjord Burger** → **Run fleet now** →
 > open the healed extractor and its **version diff**. On any extractor page, **Re-scrape now** ($0) and **Check against
 > Nemotron** show the coverage check. On **Live Forge**, *“Just a name”* starts from a restaurant
 > name only (Tavily finds the website). Offline, no key: `npm ci && npm run demo`.

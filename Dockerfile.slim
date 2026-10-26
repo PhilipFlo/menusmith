@@ -1,7 +1,8 @@
-# Slim image for small / free hosts (e.g. Render free: 512 MB RAM, 0.1 CPU).
-# No Chromium: menus that only exist after JavaScript runs are skipped; server HTML,
-# captured-API (JSON) re-runs, PDF menus and image menus all work. The full image
-# (Dockerfile) adds the headless browser for Nebius AI Cloud or any bigger host.
+# Image for small / free hosts (e.g. Render free: 512 MB RAM, 0.1 CPU).
+# Includes Chromium's small headless shell in low-memory mode (one render at a time, closed
+# after each render): JavaScript-built menus work here too — measured at 512 MB / 0.1 CPU,
+# peak ~400 MB, 2–4 minutes per JavaScript site. The full image (Dockerfile) is the faster
+# option for bigger hosts.
 FROM node:22-slim
 
 WORKDIR /app
@@ -9,14 +10,16 @@ ENV NODE_ENV=production \
     PORT=8790 \
     MENUSMITH_LLM=live \
     MENUSMITH_STORE_SYNC=1 \
-    MENUSMITH_RENDER=off \
+    MENUSMITH_RENDER_LOWMEM=1 \
     MENUSMITH_MAX_CONCURRENT=1 \
     MENUSMITH_FLEET_CONCURRENCY=1 \
     MENUSMITH_SANDBOX_TIMEOUT_MS=60000 \
-    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev --no-audit --no-fund
+RUN npm ci --include=dev --no-audit --no-fund \
+ && npx playwright install --with-deps --only-shell chromium \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 RUN npm run build && rm -rf .env .cache bench/private

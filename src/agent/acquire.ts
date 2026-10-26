@@ -81,7 +81,8 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
   let domPrices = priceDensity(r.html);
   // The rendered page may still only link to the menu.
   if (domPrices < STATIC_OK && !r.json.length) {
-    for (const l of menuLinks(r.html, r.finalUrl).slice(0, 3)) {
+    // Each render costs minutes on a 0.1-CPU host: follow only the best link there.
+    for (const l of menuLinks(r.html, r.finalUrl).slice(0, process.env.MENUSMITH_RENDER_LOWMEM === '1' ? 1 : 3)) {
       const r2 = await renderPage(l.url).catch(() => null);
       if (!r2) continue;
       const d2 = priceDensity(r2.html);

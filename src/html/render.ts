@@ -32,11 +32,32 @@ export interface Rendered {
   ms: number;
 }
 
+/**
+ * Low-memory mode for small hosts (MENUSMITH_RENDER_LOWMEM=1, e.g. Render free: 512 MB):
+ * one render at a time, Chromium flags that keep it small, and the browser is closed after
+ * every render so nothing stays resident between visitors.
+ */
+const LOWMEM = process.env.MENUSMITH_RENDER_LOWMEM === '1';
+const LOWMEM_ARGS = [
+  '--disable-dev-shm-usage',
+  '--disable-gpu',
+  '--disable-extensions',
+  '--disable-background-networking',
+  '--disable-component-update',
+  '--disable-default-apps',
+  '--disable-sync',
+  '--mute-audio',
+  '--no-first-run',
+  '--renderer-process-limit=1',
+  '--js-flags=--max-old-space-size=160',
+];
+let renderQueue: Promise<unknown> = Promise.resolve();
+
 let browserPromise: Promise<Browser> | null = null;
 async function browser(): Promise<Browser> {
   if (!browserPromise) {
     const p = import('playwright').then(async ({ chromium }) => {
-      const b = await chromium.launch({ headless: true });
+      const b = await chromium.launch({ headless: true, args: LOWMEM ? LOWMEM_ARGS : [] });
       // A crashed or closed browser must not poison every later render.
       b.on('disconnected', () => {
         if (browserPromise === p) browserPromise = null;
@@ -82,11 +103,23 @@ export function countMenuObjects(value: unknown, depth = 0): number {
   return n;
 }
 
+/** Third-party scripts that never carry a menu but cost CPU (analytics, ads, chat widgets). */
+const TRACKERS =
+  /(googletagmanager|google-analytics|googleadservices|doubleclick|facebook\.net|connect\.facebook|hotjar|clarity\.ms|segment\.(io|com)|mixpanel|intercom|crisp\.chat|tiktok|snap\.licdn|bat\.bing|cookiebot|onetrust|trustarc|sentry\.io|newrelic|nr-data)/i;
+
 const MAX_JSON = 4 * 1024 * 1024;
 const MAX_HTML = 6 * 1024 * 1024;
-const RENDER_LIMIT_MS = 60_000;
+// A 0.1-CPU host needs ~20 s just to load a React bundle — give small hosts more time.
+const RENDER_LIMIT_MS = LOWMEM ? 240_000 : 60_000;
 
 export async function renderPage(url: string, opts: { timeoutMs?: number } = {}): Promise<Rendered> {
+  if (!LOWMEM) return renderOnce(url, opts);
+  const turn = renderQueue.then(() => renderOnce(url, opts)).finally(() => closeBrowser());
+  renderQueue = turn.catch(() => {});
+  return turn;
+}
+
+async function renderOnce(url: string, opts: { timeoutMs?: number }): Promise<Rendered> {
   const t0 = Date.now();
   await assertPublicUrl(url);
   const b = await browser();
@@ -94,11 +127,11 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
     userAgent:
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
     locale: 'nb-NO',
-    viewport: { width: 1280, height: 900 },
+    viewport: LOWMEM ? { width: 1024, height: 768 } : { width: 1280, height: 900 },
   });
   // Hard ceiling for the whole render: closing the context makes every pending page
   // operation reject, so nothing here can hang a caller indefinitely.
-  const watchdog = setTimeout(() => void ctx.close().catch(() => {}), opts.timeoutMs ? opts.timeoutMs + 30_000 : RENDER_LIMIT_MS);
+  const watchdog = setTimeout(() => void ctx.close().catch(() => {}), Math.max(RENDER_LIMIT_MS, (opts.timeoutMs ?? 0) + 30_000));
   try {
     const page = await ctx.newPage();
     let blocked: string | null = null;
@@ -111,6 +144,7 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
       const t = req.resourceType();
       // Never let the page reach private/internal addresses (SSRF), nor download heavy media.
       if (isBlockedUrlSync(req.url())) return route.abort('blockedbyclient');
+      if (TRACKERS.test(req.url())) return route.abort();
       return t === 'image' || t === 'media' || t === 'font' ? route.abort() : route.continue();
     });
     const json: CapturedJson[] = [];
@@ -139,9 +173,25 @@ export async function renderPage(url: string, opts: { timeoutMs?: number } = {})
         })(),
       );
     });
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: opts.timeoutMs ?? 30_000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: opts.timeoutMs ?? (LOWMEM ? 90_000 : 30_000) });
     if (isBlockedUrlSync(page.url())) throw new Error(`refusing to render a private address (${page.url()})`);
     await page.waitForLoadState('networkidle', { timeout: 12_000 }).catch(() => {});
+    // On a slow CPU the app may still be executing after the network went quiet: wait until
+    // price-like text has appeared and stopped growing (bounded), instead of guessing a delay.
+    await page
+      .waitForFunction(
+        () => {
+          const w = window as unknown as { __ms?: { n: number; same: number } };
+          // textContent, not innerText: innerText forces a layout pass, which is costly on a slow CPU.
+          const n = (document.body?.textContent?.match(/\d{1,4}(?:[.,]\d{1,2})?\s?(?:,-|kr|nok|\$|€|£)|(?:kr|nok|\$|€|£)\s?\d{1,4}/gi) || []).length;
+          const prev = w.__ms ?? { n: -1, same: 0 };
+          w.__ms = { n, same: n === prev.n ? prev.same + 1 : 0 };
+          return n >= 3 && w.__ms.same >= 2; // prices present and stable for ~2 polls
+        },
+        undefined,
+        { timeout: LOWMEM ? 60_000 : 15_000, polling: LOWMEM ? 2500 : 1000 },
+      )
+      .catch(() => {});
     // Trigger lazy-loaded sections.
     await page
       .evaluate(async () => {

@@ -239,7 +239,48 @@ export interface Skeleton {
  * Compact HTML of the menu region for code generation. Tries progressively harder
  * compression until it fits the character budget.
  */
-export function skeleton(html: string, budget = 28_000): Skeleton {
+/**
+ * Locate the menu by its dish names when prices don't give it away (bare numbers like "235",
+ * prices in separate widgets): the smallest element that holds most of the names a reading
+ * found. Linear: each matched name walks up its ancestors once.
+ */
+export function findRootByNames($: cheerio.CheerioAPI, names: string[]): Element | null {
+  const norm = (t: string) => t.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9æøå]+/g, ' ').trim();
+  const wanted = [...new Set(names.map(norm).filter((n) => n.length >= 4))].slice(0, 300);
+  if (wanted.length < 5) return null;
+  const hits = new Map<string, Element>();
+  const body = ($('body')[0] || $.root()[0]) as Element | undefined;
+  const stack: AnyNode[] = body ? [...body.children] : [];
+  let visited = 0;
+  while (stack.length && visited++ < 200_000 && hits.size < wanted.length) {
+    const n = stack.pop()!;
+    if (n.type === 'text') {
+      const t = norm((n as unknown as { data: string }).data);
+      if (t.length < 4 || !n.parent) continue;
+      for (const w of wanted) if (!hits.has(w) && t.includes(w)) hits.set(w, n.parent as Element);
+    } else if (n.type === 'tag') for (const c of (n as Element).children) stack.push(c);
+  }
+  if (hits.size < Math.max(5, wanted.length * 0.5)) return null;
+  const count = new Map<Element, number>();
+  const depth = new Map<Element, number>();
+  for (const el of hits.values()) {
+    let d = 0;
+    for (let p: Element | null = el; p && p.type === 'tag'; p = p.parent as Element | null, d++) {
+      count.set(p, (count.get(p) ?? 0) + 1);
+      if (!depth.has(p)) {
+        let k = 0;
+        for (let q = p.parent; q; q = q.parent) k++;
+        depth.set(p, k);
+      }
+    }
+  }
+  const need = Math.ceil(hits.size * 0.8);
+  let best: Element | null = null;
+  for (const [el, c] of count) if (c >= need && (!best || depth.get(el)! > depth.get(best)!)) best = el;
+  return best;
+}
+
+export function skeleton(html: string, budget = 28_000, names: string[] = []): Skeleton {
   const $ = cheerio.load(html);
   $(DROP).remove();
   $('*')
@@ -249,7 +290,12 @@ export function skeleton(html: string, budget = 28_000): Skeleton {
   const jsonLd = menuJsonLd(html);
   $('script[type="application/ld+json"]').remove();
 
-  const found = findMenuRoot($);
+  let found = findMenuRoot($);
+  // Few recognisable prices: fall back to where the reading's dish names are.
+  if ((!found || found.priceNodes < 5) && names.length) {
+    const byNames = findRootByNames($, names);
+    if (byNames) found = { root: byNames, priceNodes: found?.priceNodes ?? 0 };
+  }
   const root = (found?.root || $('body')[0] || $.root()[0]) as Element;
   const rootPath = found ? cssPath($, found.root) : 'body';
 
