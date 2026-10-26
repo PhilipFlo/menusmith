@@ -1,13 +1,16 @@
 {
-  "runAt": "2026-10-26T10:11:12.847Z",
+  "runAt": "2026-10-26T10:28:32.455Z",
   "summary": {
-    "sites": 3,
-    "extractorIdentical": 3,
-    "llmAllThreeIdentical": 1,
-    "llmSitesWithCountChange": 2,
-    "avgLlmCountSpreadPct": 8.87,
-    "avgLlmMinJaccard": 0.77,
-    "avgLlmPriceFlipPct": 7
+    "sites": 22,
+    "extractorIdentical": 22,
+    "llmAllThreeIdentical": 5,
+    "llmSitesWithCountChange": 17,
+    "avgLlmCountSpreadPct": 9.85,
+    "avgLlmMinJaccard": 0.89,
+    "avgLlmPriceFlipPct": 0.03,
+    "medianLlmCountSpreadPct": 5.1,
+    "maxLlmCountSpreadPctExcludingEmptyRead": 17.9,
+    "sitesWithAnEmptyRead": 1
   },
   "rows": [
     {
@@ -15,14 +18,14 @@
       "extractorItems": 92,
       "extractorIdentical": true,
       "llmCounts": [
+        92,
         84,
-        93,
-        87
+        89
       ],
-      "llmCountSpreadPct": 9.7,
+      "llmCountSpreadPct": 8.7,
       "llmIdenticalNameSets": false,
-      "llmMinJaccard": 0.851,
-      "llmPriceFlipPct": 19.2
+      "llmMinJaccard": 0.873,
+      "llmPriceFlipPct": 0
     },
     {
       "site": "eero.no",
@@ -30,13 +33,13 @@
       "extractorIdentical": true,
       "llmCounts": [
         64,
-        77,
-        74
+        65,
+        78
       ],
-      "llmCountSpreadPct": 16.9,
+      "llmCountSpreadPct": 17.9,
       "llmIdenticalNameSets": false,
-      "llmMinJaccard": 0.453,
-      "llmPriceFlipPct": 1.8
+      "llmMinJaccard": 0.645,
+      "llmPriceFlipPct": 0
     },
     {
       "site": "frognerseteren.no",
@@ -50,6 +53,272 @@
       "llmCountSpreadPct": 0,
       "llmIdenticalNameSets": true,
       "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "cafeskansen.no",
+      "extractorItems": 115,
+      "extractorIdentical": true,
+      "llmCounts": [
+        128,
+        127,
+        127
+      ],
+      "llmCountSpreadPct": 0.8,
+      "llmIdenticalNameSets": true,
+      "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "newdelhi.no",
+      "extractorItems": 154,
+      "extractorIdentical": true,
+      "llmCounts": [
+        97,
+        96,
+        96
+      ],
+      "llmCountSpreadPct": 1,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.989,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "izakayabyvladimirpak.omakasegroup.no",
+      "extractorItems": 67,
+      "extractorIdentical": true,
+      "llmCounts": [
+        64,
+        63,
+        69
+      ],
+      "llmCountSpreadPct": 8.7,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.883,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "goldenmountain.no",
+      "extractorItems": 57,
+      "extractorIdentical": true,
+      "llmCounts": [
+        42,
+        50,
+        43
+      ],
+      "llmCountSpreadPct": 16,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.867,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "starbirdchicken.com",
+      "extractorItems": 19,
+      "extractorIdentical": true,
+      "llmCounts": [
+        19,
+        22,
+        22
+      ],
+      "llmCountSpreadPct": 13.6,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.95,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "bistromaxine.com",
+      "extractorItems": 10,
+      "extractorIdentical": true,
+      "llmCounts": [
+        10,
+        10,
+        10
+      ],
+      "llmCountSpreadPct": 0,
+      "llmIdenticalNameSets": true,
+      "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "akerbrygge.derpepperngror.no",
+      "extractorItems": 120,
+      "extractorIdentical": true,
+      "llmCounts": [
+        129,
+        133,
+        122
+      ],
+      "llmCountSpreadPct": 8.3,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.992,
+      "llmPriceFlipPct": 0.7
+    },
+    {
+      "site": "treehouseatstanford.com",
+      "extractorItems": 207,
+      "extractorIdentical": true,
+      "llmCounts": [
+        253,
+        245,
+        233
+      ],
+      "llmCountSpreadPct": 7.9,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.857,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "tea-time.com",
+      "extractorItems": 15,
+      "extractorIdentical": true,
+      "llmCounts": [
+        16,
+        14,
+        16
+      ],
+      "llmCountSpreadPct": 12.5,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.857,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "yayoi-us.com",
+      "extractorItems": 110,
+      "extractorIdentical": true,
+      "llmCounts": [
+        111,
+        111,
+        112
+      ],
+      "llmCountSpreadPct": 0.9,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.991,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "therosepa.com",
+      "extractorItems": 177,
+      "extractorIdentical": true,
+      "llmCounts": [
+        170,
+        170,
+        170
+      ],
+      "llmCountSpreadPct": 0,
+      "llmIdenticalNameSets": true,
+      "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "paloaltocreamery.com",
+      "extractorItems": 210,
+      "extractorIdentical": true,
+      "llmCounts": [
+        222,
+        226,
+        219
+      ],
+      "llmCountSpreadPct": 3.1,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.949,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "cafeborrone.com",
+      "extractorItems": 92,
+      "extractorIdentical": true,
+      "llmCounts": [
+        102,
+        94,
+        95
+      ],
+      "llmCountSpreadPct": 7.8,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.949,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "italicorestaurant.com",
+      "extractorItems": 101,
+      "extractorIdentical": true,
+      "llmCounts": [
+        101,
+        101,
+        100
+      ],
+      "llmCountSpreadPct": 1,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.971,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "cohostanford.com",
+      "extractorItems": 209,
+      "extractorIdentical": true,
+      "llmCounts": [
+        209,
+        211,
+        225
+      ],
+      "llmCountSpreadPct": 7.1,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.914,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "bluebottlecoffee.com",
+      "extractorItems": 9,
+      "extractorIdentical": true,
+      "llmCounts": [
+        9,
+        9,
+        9
+      ],
+      "llmCountSpreadPct": 0,
+      "llmIdenticalNameSets": true,
+      "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "oslohakunamatata.org",
+      "extractorItems": 15,
+      "extractorIdentical": true,
+      "llmCounts": [
+        16,
+        16,
+        16
+      ],
+      "llmCountSpreadPct": 0,
+      "llmIdenticalNameSets": true,
+      "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "castellorestaurant.no",
+      "extractorItems": 70,
+      "extractorIdentical": true,
+      "llmCounts": [
+        0,
+        73,
+        79
+      ],
+      "llmCountSpreadPct": 100,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0,
+      "llmPriceFlipPct": 0
+    },
+    {
+      "site": "istanbulkebab.no",
+      "extractorItems": 77,
+      "extractorIdentical": true,
+      "llmCounts": [
+        79,
+        79,
+        80
+      ],
+      "llmCountSpreadPct": 1.3,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.988,
       "llmPriceFlipPct": 0
     }
   ]

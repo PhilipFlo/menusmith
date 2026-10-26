@@ -100,6 +100,8 @@ const summary = {
   llmAllThreeIdentical: rows.filter((r) => r.llmIdenticalNameSets && (r.llmCountSpreadPct as number) === 0 && (r.llmPriceFlipPct as number) === 0).length,
   llmSitesWithCountChange: rows.filter((r) => (r.llmCountSpreadPct as number) > 0).length,
   avgLlmCountSpreadPct: avg('llmCountSpreadPct'),
+  medianLlmCountSpreadPct: [...rows.map((r) => r.llmCountSpreadPct as number)].sort((a, b) => a - b)[Math.floor(n / 2)] ?? 0,
+  sitesWithAnEmptyRead: rows.filter((r) => (r.llmCounts as number[]).includes(0)).length,
   avgLlmMinJaccard: avg('llmMinJaccard'),
   avgLlmPriceFlipPct: avg('llmPriceFlipPct'),
 };

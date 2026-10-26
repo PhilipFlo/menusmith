@@ -33,8 +33,11 @@ Palo Alto: **1,036 restaurants and 78,682 dishes** scraped from restaurants' own
 to re-read every menu, every month — has three problems:
 
 1. **Cost and speed.** Every re-scrape pays for a full LLM reading of every page.
-2. **Noise.** LLM extraction is not deterministic: on the same page our item counts wobble
-   ±2–5% from run to run. In a price *time series*, that noise looks like menu changes.
+2. **Noise.** LLM extraction is not deterministic. We measured it (`bench/variance.ts`): reading
+   the *identical* page three times with Nemotron gave the same dish list on only **5 of 22** real
+   sites; dish counts moved by a median **5%** and up to 18%, and one reading of one site came back
+   empty. The written extractors returned identical output on **22/22**. In a price *time
+   series*, that noise looks like menu changes.
 3. **Half the web is JavaScript.** Ordering systems and site builders ship an empty HTML shell
    and load the menu from an API.
 
@@ -127,6 +130,7 @@ platform).
 | Median one-time cost per site | $0.0109 |
 | Median re-run time | 170 ms, **$0** |
 | Precision vs. nearBite's independently scraped menus | 0.737 |
+| Same page read 3× — LLM vs. extractor (22 sites) | LLM identical on 5/22 · extractor identical on **22/22** |
 | Source mix of successes | json: 9 · html: 34 · rendered: 18 · image: 2 · document: 19 |
 
 Remaining failures after the rescue pass: no-html-menu (JS/PDF/image) 12 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.

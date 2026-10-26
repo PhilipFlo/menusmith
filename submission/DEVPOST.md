@@ -7,8 +7,9 @@
 ## Inspiration
 We built nearBite, a dish-level restaurant search for Oslo and Palo Alto, on 78,682 dishes scraped
 from restaurants' own websites. Keeping it fresh meant asking an LLM to re-read every menu every
-month: costly, slow, and non-deterministic — the same page read twice gave item counts that
-differed by 2–5%, which shows up as fake "menu changes" in a price time series.
+month: costly, slow, and non-deterministic — reading the identical page three times gave the same
+dish list on only 5 of 22 sites we measured (counts swing a median 5%, up to 18%), which shows up
+as fake "menu changes" in a price time series.
 
 ## What it does
 Menusmith is a team of NVIDIA Nemotron agents that turns a restaurant website into a permanent,
@@ -59,6 +60,8 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
 - **Self-healing measured, not just demoed:** we redesigned all 10 fixture websites (new markup plus
   real price and dish changes). The fleet detected and rewrote the extractor on **10/10**, and every
   healed extractor scores **F1 1.0 against the true new menu** — median repair **$0.005 and 10 s**.
+- **Measured the premise:** reading the same page 3× with the LLM gave the same dish list on only
+  5 of 22 real sites (median 5% count swing, one empty reading); the extractors: 22/22 identical.
 - **Start from just a name:** Tavily search plus our ranking finds a restaurant's official website
   from name + city for **85%** of held-out restaurants.
 - Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,
