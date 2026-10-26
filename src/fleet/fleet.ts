@@ -768,10 +768,24 @@ export async function runFleet(
   return report;
 }
 
+/**
+ * Reports listed in state/hidden-fleet-runs.json are kept but not shown: runs that should
+ * never have reached the shared store (replayed local demos), with the reason recorded.
+ */
+function hiddenRuns(): Set<string> {
+  try {
+    const f = resolve(config.libraryDir, 'state', 'hidden-fleet-runs.json');
+    return new Set((JSON.parse(readFileSync(f, 'utf8')) as { runs: string[] }).runs);
+  } catch {
+    return new Set();
+  }
+}
+
 export function fleetHistory(limit = 30): FleetReport[] {
   if (!existsSync(reportDir())) return [];
+  const hidden = hiddenRuns();
   return readdirSync(reportDir())
-    .filter((f) => f.endsWith('.json'))
+    .filter((f) => f.endsWith('.json') && !hidden.has(f))
     .sort()
     .reverse()
     .slice(0, limit)

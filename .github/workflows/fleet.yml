@@ -35,5 +35,6 @@ jobs:
           MENUSMITH_STORE_KEY: ${{ secrets.MENUSMITH_STORE_KEY }}
           MENUSMITH_STORE_TOKEN: ${{ secrets.MENUSMITH_STORE_TOKEN }}
           MENUSMITH_LLM: live
+          MENUSMITH_STORE_SYNC: '1'
           # Hard ceiling for one heal; --max-usd caps the whole nightly run.
           MENUSMITH_MAX_JOB_USD: '0.3'

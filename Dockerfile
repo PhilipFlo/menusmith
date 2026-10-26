@@ -8,6 +8,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8790 \
     MENUSMITH_LLM=live \
+    MENUSMITH_STORE_SYNC=1 \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 COPY package.json package-lock.json ./

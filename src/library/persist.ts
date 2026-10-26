@@ -16,7 +16,12 @@ import { config } from '../config.ts';
 const URL_ = process.env.MENUSMITH_STORE_URL || '';
 const KEY = process.env.MENUSMITH_STORE_KEY || '';
 const TOKEN = process.env.MENUSMITH_STORE_TOKEN || '';
-export const storeEnabled = () => !!(URL_ && KEY && TOKEN);
+/**
+ * Writing to the shared store is opt-in (MENUSMITH_STORE_SYNC=1, set only in the deployed
+ * images and the nightly job) and only in live mode: a local script, test or replayed demo
+ * that happens to have the variables in .env must never change the public library.
+ */
+export const storeEnabled = () => !!(URL_ && KEY && TOKEN) && process.env.MENUSMITH_STORE_SYNC === '1' && config.llmMode === 'live';
 
 const table = () => `${URL_.replace(/\/$/, '')}/rest/v1/menusmith_files`;
 const headers = (extra: Record<string, string> = {}) => ({

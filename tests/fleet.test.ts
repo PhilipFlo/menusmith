@@ -74,3 +74,22 @@ describe('section moves', () => {
     expect([...lostNames(prev, [item('Pizza', 159, 'Dinner'), item('Salad', 99, 'Lunch')])]).toEqual(['pizza']);
   });
 });
+
+describe('shared store safety', () => {
+  // Spawned processes, so the module reads exactly the environment we give it.
+  const check = async (env: Record<string, string>) => {
+    const { execFileSync } = await import('node:child_process');
+    const base = { PATH: process.env.PATH!, HOME: process.env.HOME!, MENUSMITH_STORE_URL: 'https://example.invalid', MENUSMITH_STORE_KEY: 'k', MENUSMITH_STORE_TOKEN: 't' };
+    return execFileSync('npx', ['tsx', '-e', "import('./src/library/persist.ts').then((m) => process.stdout.write(String(m.storeEnabled())))"], { env: { ...base, ...env }, encoding: 'utf8' });
+  };
+  it('a local run with the store variables in .env does not write to the shared store', async () => {
+    expect(await check({ MENUSMITH_LLM: 'live' })).toBe('false');
+  });
+  it('a replayed or recorded run never writes, even when sync is switched on', async () => {
+    expect(await check({ MENUSMITH_LLM: 'replay', MENUSMITH_STORE_SYNC: '1' })).toBe('false');
+    expect(await check({ MENUSMITH_LLM: 'record', MENUSMITH_STORE_SYNC: '1' })).toBe('false');
+  });
+  it('the deployed server and the nightly job (live + sync) do write', async () => {
+    expect(await check({ MENUSMITH_LLM: 'live', MENUSMITH_STORE_SYNC: '1' })).toBe('true');
+  });
+});
