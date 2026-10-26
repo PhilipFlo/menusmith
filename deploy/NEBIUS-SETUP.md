@@ -41,8 +41,8 @@ Models are called on **Nebius Token Factory** from both.
      --type network_ssd --size-gibibytes 10 --format json | jq -r ".metadata.id"
    ```
 
-Then tell Claude the region, the registry id (without `registry-`), the subnet id and the
-filesystem id — the rest is scripted.
+Note the region, the registry id (without `registry-`), the subnet id and the filesystem id —
+`deploy/nebius.sh` takes them as environment variables; the rest is scripted.
 
 ## Deploy (scripted)
 

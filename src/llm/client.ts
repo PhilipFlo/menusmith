@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import OpenAI from 'openai';
-import { config, costUsd, MODELS, type Role } from '../config.ts';
+import { config, costUsd, ROOT, MODELS, type Role } from '../config.ts';
 import type { Emit } from '../types.ts';
 
 export interface ChatMessage {
@@ -94,7 +94,9 @@ export class Ledger {
  * server). Live calls add their cost; once MENUSMITH_TOTAL_BUDGET_USD is reached no
  * new model call starts until the owner raises it. Separate from per-job ledgers.
  */
-const spendFile = () => resolve(config.cacheDir, 'spend.json');
+// Fixed location (not the per-run cache dir), so a benchmark with its own cache can't
+// start a fresh meter and slip past the project budget.
+const spendFile = () => resolve(process.env.MENUSMITH_SPEND_FILE || resolve(ROOT, '.cache', 'spend.json'));
 export function totalSpend(): { usd: number; calls: number; since: string } {
   if (!existsSync(spendFile())) return { usd: 0, calls: 0, since: new Date().toISOString() };
   try {
@@ -107,7 +109,7 @@ export function totalSpend(): { usd: number; calls: number; since: string } {
 function addTotalSpend(usd: number) {
   const t = totalSpend();
   if (!Number.isFinite(t.usd)) return;
-  mkdirSync(config.cacheDir, { recursive: true });
+  mkdirSync(dirname(spendFile()), { recursive: true });
   const tmp = `${spendFile()}.${process.pid}.tmp`;
   writeFileSync(tmp, JSON.stringify({ usd: Math.round((t.usd + usd) * 1e6) / 1e6, calls: t.calls + 1, since: t.since }));
   renameSync(tmp, spendFile()); // atomic: a kill mid-write can't corrupt the meter

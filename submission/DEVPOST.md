@@ -23,14 +23,19 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
 - **Nebius Token Factory** serves every model call through one OpenAI-compatible API.
 - **Nemotron 3 Nano** (thinking off): triages menu links and arbitrates disputed items.
 - **Nemotron 3 Super** (thinking off, JSON mode, chunked): the oracle that reads the menu.
-- **Nemotron 3 Ultra** (thinking on, multi-turn): writes and repairs the extractor code from test
-  feedback, including an execution trace of every selector it used.
+- **Nemotron 3 Super** (thinking on, multi-turn): writes and repairs the extractor code from test
+  feedback, including an execution trace of every selector it used. When Super stops improving,
+  **Nemotron 3 Ultra** takes over the same conversation.
+- **Nemotron 3.5 Super VL** reads menus that are only published as images.
 - **Headless Chromium** renders JavaScript-built menus and captures the menu API the page calls;
   extractors over that JSON replay the request directly on re-runs.
 - **Isolated sandbox** for model-written code: separate process, empty environment, Node permission
   model, no string code generation, CPU/memory limits.
-- **Tavily** finds a restaurant's official site from its name and maps its pages.
-- **Nebius AI Cloud Serverless** — Endpoint for the app, Job for the nightly fleet.
+- **Tavily** `/search` finds a restaurant's official site from its name (ranked by brand, city and
+  country) and `/map` finds menu pages the homepage doesn't link clearly.
+- **Hosting is portable:** the public demo runs in Docker on a free host with a durable store, and
+  the nightly fleet is a scheduled job (GitHub Actions). Deployment scripts for Nebius AI Cloud
+  Serverless (Endpoint for the app, Job for the fleet) are included but not what the demo runs on.
 - React + Hono app streaming every agent step live over Server-Sent Events.
 
 ## Challenges
@@ -46,11 +51,16 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
 
 ## Accomplishments
 - **82 of 120 real restaurant websites** (Oslo + Palo Alto) get a working extractor starting from
-  the homepage — 79 from the stored menu link alone; **82% of sites with a text menu**.
-- **59%** of written extractors pass on the **first attempt**; average F1 **0.976** against the
-  oracle; **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
-- **10/10 perfect** (F1 1.0) against ground truth on our fictional fixture sites, including after
-  a simulated website redesign that the fleet detects and heals on its own.
+  the homepage — 79 from the stored menu link alone.
+- **59%** of written extractors pass on the **first attempt**; average F1 **0.976** against a fresh
+  Nemotron reading of the page (self-consistency; against nearBite's independently scraped menus,
+  which merge several pages per site: precision 0.74, recall 0.63); **100% deterministic** on re-run (78/78 measured); re-runs take ~170 ms and **$0**.
+- **10/10 perfect** (F1 1.0) against ground truth on our fictional fixture sites.
+- **Self-healing measured, not just demoed:** we redesigned all 10 fixture websites (new markup plus
+  real price and dish changes). The fleet detected and rewrote the extractor on **10/10**, and every
+  healed extractor scores **F1 1.0 against the true new menu** — median repair **$0.005 and 10 s**.
+- **Start from just a name:** Tavily search plus our ranking finds a restaurant's official website
+  from name + city for **85%** of held-out restaurants.
 - Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,
   **18 PDF menus** and **image menus** (Nemotron 3.5 Super VL), all re-checked for free.
 - Running publicly on a **free** host (512 MB / 0.1 CPU) with a durable token-gated store, a
@@ -61,11 +71,11 @@ Putting the LLM in the *build* step instead of the *run* step changes the econom
 model runs once per website, and then only when something breaks.
 
 ## What's next
-Vision path for image/PDF menus with Nemotron 3.5 Super VL; platform-level adapters shared across
+Scanned-PDF menus (render pages to images for the vision model); platform-level adapters shared across
 every restaurant on the same ordering system; a public restaurant price index for Oslo.
 
 ## Built with
-nvidia-nemotron, nebius-token-factory, nebius-ai-cloud, tavily, typescript, node.js, react, hono,
+nvidia-nemotron, nebius-token-factory, tavily, docker, typescript, node.js, react, hono,
 playwright, cheerio, vitest
 
 ## Pre-existing work
@@ -74,7 +84,7 @@ nearBite (restaurant URLs and previously scraped menus) as a benchmark reference
 
 ## Feedback on Nebius Token Factory / NVIDIA models
 
-Specific notes from building Menusmith (several hundred recorded Token Factory calls across five NVIDIA models — the final count is in bench/results):
+Specific notes from building Menusmith (more than 850 metered Token Factory calls across five NVIDIA models, about $8 in total):
 
 **What worked really well**
 - One OpenAI-compatible endpoint for Nano, Super, Ultra, Lightning and Super-VL made

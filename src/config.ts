@@ -33,7 +33,7 @@ export const MODELS: Record<Role, string[]> = {
     process.env.MENUSMITH_MODEL_ESCALATE || 'nvidia/Nemotron-3-Ultra-550b-a55b',
     'nvidia/nemotron-3-super-120b-a12b',
   ],
-  // Image / scanned-PDF menus — NVIDIA's own vision-language model on Token Factory.
+  // Image menus — NVIDIA's own vision-language model on Token Factory.
   vision: [process.env.MENUSMITH_MODEL_VISION || 'nvidia/Nemotron-3.5-Super-VL'],
 };
 

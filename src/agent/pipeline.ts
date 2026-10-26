@@ -368,7 +368,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     }
   }
 
-  // 5. Forge → test → repair loop (Nemotron Ultra).
+  // 5. Forge → test → repair loop (Nemotron Super, escalating to Ultra).
   const messages: ChatMessage[] =
     mode === 'json'
       ? initialMessagesJson({

@@ -4,7 +4,7 @@ import type { Emit, MenuItem, Platform, RunResult, Score } from '../types.ts';
 import { normName } from './evaluate.ts';
 
 /**
- * The FORGE: Nemotron 3 Ultra writes a deterministic extractor for one website,
+ * The FORGE: Nemotron 3 Super (escalating to Ultra) writes a deterministic extractor for one website,
  * and repairs it from test feedback. The conversation is kept across rounds so the
  * model sees its own previous attempts.
  */

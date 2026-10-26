@@ -1,0 +1,331 @@
+{
+  "runAt": "2026-10-26T10:01:47.913Z",
+  "summary": {
+    "sites": 40,
+    "matched": 32,
+    "matchRate": 80,
+    "medianMs": 124
+  },
+  "rows": [
+    {
+      "name": "Grotten øl- & vinbar",
+      "city": "Oslo",
+      "expected": "thonhotels.no",
+      "found": "thonhotels.com",
+      "match": false,
+      "ms": 488
+    },
+    {
+      "name": "Aji",
+      "city": "Oslo",
+      "expected": "ajispiseri.no",
+      "found": "ajispiseri.no",
+      "match": true,
+      "ms": 336
+    },
+    {
+      "name": "Damaskus Huset restaurant",
+      "city": "Oslo",
+      "expected": "beacons.ai",
+      "found": "restaurants-info.com",
+      "match": false,
+      "ms": 171
+    },
+    {
+      "name": "Afghan House Oslo",
+      "city": "Oslo",
+      "expected": "winorder.no",
+      "found": "winorder.no",
+      "match": true,
+      "ms": 117
+    },
+    {
+      "name": "Grytelokket Avd. Torshov",
+      "city": "Oslo",
+      "expected": "grytelokket.no",
+      "found": "grytelokket.no",
+      "match": true,
+      "ms": 175
+    },
+    {
+      "name": "Pizzabakeren Lambertseter",
+      "city": "Oslo",
+      "expected": "pizzabakeren.no",
+      "found": "pizzabakeren.no",
+      "match": true,
+      "ms": 116
+    },
+    {
+      "name": "Flamenco Pizza Ammerud Oslo",
+      "city": "Oslo",
+      "expected": "winorder.no",
+      "found": "winorder.no",
+      "match": true,
+      "ms": 127
+    },
+    {
+      "name": "Saigon Express Sagene",
+      "city": "Oslo",
+      "expected": "ordera.no",
+      "found": "saigonexpress.no",
+      "match": false,
+      "ms": 115
+    },
+    {
+      "name": "DIGG Burger Grønland",
+      "city": "Oslo",
+      "expected": "diggburger.com",
+      "found": "diggburger.com",
+      "match": true,
+      "ms": 151
+    },
+    {
+      "name": "Hidden Leaf",
+      "city": "Oslo",
+      "expected": "winorder.no",
+      "found": "hiddenleafoslo.no",
+      "match": false,
+      "ms": 118
+    },
+    {
+      "name": "Peppes Pizza - Grorud Senter",
+      "city": "Oslo",
+      "expected": "peppes.no",
+      "found": "peppes.no",
+      "match": true,
+      "ms": 189
+    },
+    {
+      "name": "Los Tacos Torshov",
+      "city": "Oslo",
+      "expected": "lostacos.no",
+      "found": "lostacos.no",
+      "match": true,
+      "ms": 1245
+    },
+    {
+      "name": "Clarion Hotel The Hub",
+      "city": "Oslo",
+      "expected": "strawberry.no",
+      "found": "strawberryhotels.com",
+      "match": false,
+      "ms": 129
+    },
+    {
+      "name": "Sumo Restaurant Bjørvika",
+      "city": "Oslo",
+      "expected": "sumorestaurant.no",
+      "found": "sumorestaurant.no",
+      "match": true,
+      "ms": 124
+    },
+    {
+      "name": "Listen to Delhi",
+      "city": "Oslo",
+      "expected": "listentodelhi.no",
+      "found": "listentodelhi.no",
+      "match": true,
+      "ms": 123
+    },
+    {
+      "name": "Pizza Pancetta GREFSEN",
+      "city": "Oslo",
+      "expected": "pancettapizza.no",
+      "found": "pancettapizza.no",
+      "match": true,
+      "ms": 118
+    },
+    {
+      "name": "Domino's Pizza Lambertseter",
+      "city": "Oslo",
+      "expected": "dominos.no",
+      "found": "dominos.no",
+      "match": true,
+      "ms": 122
+    },
+    {
+      "name": "Kammis Grill Frogner",
+      "city": "Oslo",
+      "expected": "winorder.no",
+      "found": "winorder.no",
+      "match": true,
+      "ms": 2143
+    },
+    {
+      "name": "AKI SUSHI WOK (Sofienberg, Oslo)",
+      "city": "Oslo",
+      "expected": "ordera.no",
+      "found": "ordera.no",
+      "match": true,
+      "ms": 125
+    },
+    {
+      "name": "Pizzabakeren Nesodden",
+      "city": "Oslo",
+      "expected": "pizzabakeren.no",
+      "found": "pizzabakeren.no",
+      "match": true,
+      "ms": 156
+    },
+    {
+      "name": "Izakaya by Vladimir Pak",
+      "city": "Oslo",
+      "expected": "omakasegroup.no",
+      "found": "omakasegroup.no",
+      "match": true,
+      "ms": 123
+    },
+    {
+      "name": "Réal mat",
+      "city": "Oslo",
+      "expected": "st1.no",
+      "found": "realmat.no",
+      "match": false,
+      "ms": 115
+    },
+    {
+      "name": "Peppes Pizza - Ensjø",
+      "city": "Oslo",
+      "expected": "peppes.no",
+      "found": "peppes.no",
+      "match": true,
+      "ms": 121
+    },
+    {
+      "name": "Golden Mountain",
+      "city": "Oslo",
+      "expected": "goldenmountain.no",
+      "found": "goldenmountain.no",
+      "match": true,
+      "ms": 120
+    },
+    {
+      "name": "Domino's Pizza Pilestredet",
+      "city": "Oslo",
+      "expected": "dominos.no",
+      "found": "dominos.no",
+      "match": true,
+      "ms": 135
+    },
+    {
+      "name": "Pele Pele",
+      "city": "Oslo",
+      "expected": "pelepele.no",
+      "found": "pelepele.no",
+      "match": true,
+      "ms": 123
+    },
+    {
+      "name": "Raffiné",
+      "city": "Oslo",
+      "expected": "raffine.no",
+      "found": "raffine.no",
+      "match": true,
+      "ms": 123
+    },
+    {
+      "name": "Noa Asian Food",
+      "city": "Oslo",
+      "expected": "ordera.no",
+      "found": "aorder.no",
+      "match": false,
+      "ms": 114
+    },
+    {
+      "name": "Holmenkollen Restaurant",
+      "city": "Oslo",
+      "expected": "holmenkollenrestaurant.no",
+      "found": "holmenkollenrestaurant.no",
+      "match": true,
+      "ms": 120
+    },
+    {
+      "name": "Vettakollen Pizzeria",
+      "city": "Oslo",
+      "expected": "vettakollenpizzeria.no",
+      "found": "vettakollenpizzeria.no",
+      "match": true,
+      "ms": 118
+    },
+    {
+      "name": "Sabi Sushi Manglerud",
+      "city": "Oslo",
+      "expected": "sabi.no",
+      "found": "sabi.no",
+      "match": true,
+      "ms": 124
+    },
+    {
+      "name": "Honsan Restaurant",
+      "city": "Oslo",
+      "expected": "honsan.no",
+      "found": "honsan.no",
+      "match": true,
+      "ms": 112
+    },
+    {
+      "name": "New Delhi",
+      "city": "Oslo",
+      "expected": "newdelhi.no",
+      "found": "newdelhi.no",
+      "match": true,
+      "ms": 125
+    },
+    {
+      "name": "Campo de' Fiori",
+      "city": "Oslo",
+      "expected": "campo.no",
+      "found": "campo.no",
+      "match": true,
+      "ms": 118
+    },
+    {
+      "name": "Sushi hjørnet Adamstuen",
+      "city": "Oslo",
+      "expected": "sushihjornet.no",
+      "found": "sushihjornet.no",
+      "match": true,
+      "ms": 142
+    },
+    {
+      "name": "Alshahba Restaurant Oslo",
+      "city": "Oslo",
+      "expected": "alshahba.no",
+      "found": "alshahba.no",
+      "match": true,
+      "ms": 125
+    },
+    {
+      "name": "The Wild Rover",
+      "city": "Oslo",
+      "expected": "thewildrover.no",
+      "found": "thewildroverpub.com",
+      "match": false,
+      "ms": 1128
+    },
+    {
+      "name": "PIREN - et glass og en bit",
+      "city": "Oslo",
+      "expected": "piren.no",
+      "found": "piren.no",
+      "match": true,
+      "ms": 119
+    },
+    {
+      "name": "Spiseriet",
+      "city": "Oslo",
+      "expected": "spiseriet-ogk.no",
+      "found": "spiseriet-ogk.no",
+      "match": true,
+      "ms": 122
+    },
+    {
+      "name": "Shanti Indian Cuisine",
+      "city": "Oslo",
+      "expected": "shantioslo.no",
+      "found": "shantioslo.no",
+      "match": true,
+      "ms": 138
+    }
+  ]
+}

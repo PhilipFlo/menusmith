@@ -28,7 +28,7 @@ export function FleetPage({ fleet }: { fleet: FleetController }) {
         <p className="eyebrow">Fleet</p>
         <h1>The nightly re-run — for free</h1>
         <p className="lead">
-          Every night the fleet re-runs every extractor in the library as a Nebius Serverless Job. A healthy run is plain JavaScript: <strong>zero tokens</strong>. Only when a website redesign breaks an extractor does Nemotron step in — to tell a real menu change from broken code, and to heal it.
+          Every night the fleet re-runs every extractor in the library as a scheduled job. A healthy run is plain JavaScript: <strong>zero tokens</strong>. Only when a website redesign breaks an extractor does Nemotron step in — to tell a real menu change from broken code, and to heal it.
         </p>
       </header>
 

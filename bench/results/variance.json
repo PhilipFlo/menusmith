@@ -1,0 +1,56 @@
+{
+  "runAt": "2026-10-26T10:11:12.847Z",
+  "summary": {
+    "sites": 3,
+    "extractorIdentical": 3,
+    "llmAllThreeIdentical": 1,
+    "llmSitesWithCountChange": 2,
+    "avgLlmCountSpreadPct": 8.87,
+    "avgLlmMinJaccard": 0.77,
+    "avgLlmPriceFlipPct": 7
+  },
+  "rows": [
+    {
+      "site": "telefericbarcelona.com",
+      "extractorItems": 92,
+      "extractorIdentical": true,
+      "llmCounts": [
+        84,
+        93,
+        87
+      ],
+      "llmCountSpreadPct": 9.7,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.851,
+      "llmPriceFlipPct": 19.2
+    },
+    {
+      "site": "eero.no",
+      "extractorItems": 82,
+      "extractorIdentical": true,
+      "llmCounts": [
+        64,
+        77,
+        74
+      ],
+      "llmCountSpreadPct": 16.9,
+      "llmIdenticalNameSets": false,
+      "llmMinJaccard": 0.453,
+      "llmPriceFlipPct": 1.8
+    },
+    {
+      "site": "frognerseteren.no",
+      "extractorItems": 39,
+      "extractorIdentical": true,
+      "llmCounts": [
+        39,
+        39,
+        39
+      ],
+      "llmCountSpreadPct": 0,
+      "llmIdenticalNameSets": true,
+      "llmMinJaccard": 1,
+      "llmPriceFlipPct": 0
+    }
+  ]
+}

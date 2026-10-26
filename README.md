@@ -12,6 +12,12 @@ agent heals its own code.
 > Nebius × NVIDIA Global AI Hackathon 2026 · Track: **Coding and Agentic Engineering**
 > **Live demo: https://menusmith.onrender.com** (free tier — the first request after a quiet spell takes ~1 min to wake up) · Demo video: _(link)_
 
+> **Judges — a 2-minute tour.** Open the live demo (allow ~1 min to wake up) →
+> **Fleet** → in *“Demo: simulate a website redesign”* flip a restaurant → **Run fleet now** →
+> open the healed extractor and its **version diff**. On any extractor page, **Re-scrape now** ($0) and **Check against
+> Nemotron** show the coverage check. On **Live Forge**, *“Just a name”* starts from a restaurant
+> name only (Tavily finds the website). Offline, no key: `npm ci && npm run demo`.
+
 ---
 
 <p align="center">
@@ -53,7 +59,7 @@ flowchart LR
   J --> I
   I -- fail --> H
   I -- pass, deterministic --> K[Commit to library]
-  K --> L[Fleet re-runs nightly<br/>Nebius Serverless Job, 0 tokens]
+  K --> L[Fleet re-runs nightly<br/>scheduled job, 0 tokens]
   L -- drift detected --> F
 ```
 
@@ -99,6 +105,16 @@ flowchart LR
 
 **Ground truth — 10 fictional restaurant sites** (`fixtures/sites`, true menus known): average F1 **1** against the truth, 10/10 perfect, 10/10 deterministic.
 
+**Self-healing, measured** (`bench/heal.ts`): each fixture site gets a fresh extractor, then its
+website is **redesigned** (new markup *and* real price/dish changes). The nightly fleet noticed and
+rewrote the extractor on **10/10** sites; afterwards every one scores **F1 1.0 against the true
+redesigned menu**. Median repair: **$0.005, 10 s**.
+
+**From just a name** (`bench/tavily.ts`): Tavily search plus our ranking found the restaurant's
+official website from *name + city* for **80%** of 40 benchmark restaurants and **85%** of 40
+held-out ones (several “misses” are the restaurant's own site where nearBite stored an ordering
+platform).
+
 **Real restaurant websites — 120 sites in Oslo and Palo Alto** (sampled across WordPress, Squarespace, Wix, Webflow, hosted ordering systems and custom sites):
 
 | Metric | Result |
@@ -113,12 +129,12 @@ flowchart LR
 | Precision vs. nearBite's independently scraped menus | 0.737 |
 | Source mix of successes | json: 9 · html: 34 · rendered: 18 · image: 2 · document: 19 |
 
-Remaining failures: no-html-menu (JS/PDF/image) 12 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.
+Remaining failures after the rescue pass: no-html-menu (JS/PDF/image) 12 · extractor-not-converged 15 · unreachable 2 · llm-error 1 · blocked 7 · other 1.
 
 _Recall against nearBite is lower by design: nearBite merges several pages of a site, Menusmith extracts one menu page._
 
 All numbers above are generated from `bench/results/*.json` by `npx tsx bench/report.ts` — one
-clean run of the final code over all 120 sites (Oct 23, 2026), plus one rescue pass that restarts
+benchmark run over all 120 sites (Oct 23, 2026), plus one rescue pass that restarts
 failed sites from the restaurant's homepage. Failures are kept and categorised, not hidden: sites
 that block automated visitors (HTTP 403/429) are not bypassed by design.
 
@@ -153,9 +169,10 @@ made the cheap calls cheap and the code-writing calls smart.
   library mirrored to a token-gated Postgres table, nightly fleet on GitHub Actions — see
   `deploy/RENDER-SETUP.md`). The full image with the headless browser deploys to **Nebius AI
   Cloud Serverless** — an Endpoint for the app and a Job for the nightly fleet
-  (`deploy/nebius.sh`, `deploy/NEBIUS-SETUP.md`).
-- **Tavily** — `/search` finds a restaurant's official website from its name; `/map` discovers
-  the menu pages of a site.
+  (`deploy/nebius.sh`, `deploy/NEBIUS-SETUP.md`); the public demo does not run there.
+- **Tavily** — `/search` finds a restaurant's official website from its name (ranked by brand
+  name in the domain, city and country — 85% correct on held-out restaurants, see Results);
+  `/map` discovers the menu pages of a site when the homepage doesn't link them clearly.
 
 ## Screenshots
 
@@ -198,7 +215,7 @@ npm run forge -- "Restaurant Name" --city Oslo    # find the site with Tavily fi
 npm run fleet                                     # re-run everything, heal what broke
 npx tsx src/cli.ts redesign fjord-burger on       # simulate a website redesign…
 npm run fleet                                     # …and watch it heal
-npm test                                          # 140+ tests, no API key needed
+npm test                                          # 160+ tests, no API key needed
 npm run demo                                      # full loop + self-heal, replayed — no API key
 ```
 
@@ -207,6 +224,9 @@ npm run demo                                      # full loop + self-heal, repla
 - `bench/fixtures.ts` — 10 fictional restaurant sites in `fixtures/sites/` (WordPress/Elementor,
   Squarespace, Wix, Webflow, Shopify, tables, JSON-LD, …) each with a **redesigned** version and
   the true menu. Scores extractors against the truth.
+- `bench/heal.ts` — redesigns every fixture site and measures whether the fleet heals it (vs truth).
+- `bench/tavily.ts` — name + city → official website, with a held-out set (`--offset 40`).
+- `bench/variance.ts` — reads the same page 3× with the LLM vs runs the extractor 3×.
 - `bench/run.ts` — real restaurant websites. Our evaluation set comes from nearBite (private
   data; only per-site metrics are published in `bench/results/`).
 
@@ -222,7 +242,7 @@ src/server/    Hono API with Server-Sent Events
 web/           React app: Live Forge · Library · Fleet · How it works
 fixtures/      fictional restaurant sites with ground truth and redesigns
 bench/         benchmarks
-deploy/        Nebius Serverless deployment
+deploy/        Render (free demo) and Nebius AI Cloud Serverless deployment
 ```
 
 ## What was built during the hackathon

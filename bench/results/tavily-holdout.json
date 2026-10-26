@@ -1,0 +1,331 @@
+{
+  "runAt": "2026-10-26T10:02:58.683Z",
+  "summary": {
+    "sites": 40,
+    "matched": 34,
+    "matchRate": 85,
+    "medianMs": 1406
+  },
+  "rows": [
+    {
+      "name": "Grini Golf Café",
+      "city": "Oslo",
+      "expected": "grinigolfcafe.no",
+      "found": "grinigolfklubb.no",
+      "match": false,
+      "ms": 2151
+    },
+    {
+      "name": "Der Peppern Gror Aker Brygge",
+      "city": "Oslo",
+      "expected": "derpepperngror.no",
+      "found": "derpepperngror.no",
+      "match": true,
+      "ms": 1566
+    },
+    {
+      "name": "The Salmon",
+      "city": "Oslo",
+      "expected": "thesalmon.com",
+      "found": "thesalmon.com",
+      "match": true,
+      "ms": 2323
+    },
+    {
+      "name": "Pizza Plutselig DA",
+      "city": "Oslo",
+      "expected": "pizzaplutselig.no",
+      "found": "pizzaplutselig.no",
+      "match": true,
+      "ms": 2062
+    },
+    {
+      "name": "CASBAR",
+      "city": "Oslo",
+      "expected": "casbar.no",
+      "found": "casbar.no",
+      "match": true,
+      "ms": 1951
+    },
+    {
+      "name": "Festningen",
+      "city": "Oslo",
+      "expected": "festningenrestaurant.no",
+      "found": "festningenrestaurant.no",
+      "match": true,
+      "ms": 2218
+    },
+    {
+      "name": "Solsiden Restaurant",
+      "city": "Oslo",
+      "expected": "solsiden.no",
+      "found": "restaurants-us.com",
+      "match": false,
+      "ms": 1325
+    },
+    {
+      "name": "House of Sushi",
+      "city": "Oslo",
+      "expected": "houseofsushi.no",
+      "found": "sushihouse.no",
+      "match": false,
+      "ms": 1649
+    },
+    {
+      "name": "Frognerseteren Café & Restaurant",
+      "city": "Oslo",
+      "expected": "frognerseteren.no",
+      "found": "frognerseteren.no",
+      "match": true,
+      "ms": 1156
+    },
+    {
+      "name": "Vadio Restaurante & Bar",
+      "city": "Oslo",
+      "expected": "vadio-oslo.com",
+      "found": "grand.no",
+      "match": false,
+      "ms": 1182
+    },
+    {
+      "name": "Lutlaget L/L",
+      "city": "Oslo",
+      "expected": "lutlaget.no",
+      "found": "lutlaget.no",
+      "match": true,
+      "ms": 1204
+    },
+    {
+      "name": "Brasserie Opera",
+      "city": "Oslo",
+      "expected": "brasserieopera.no",
+      "found": "brasserieopera.no",
+      "match": true,
+      "ms": 1643
+    },
+    {
+      "name": "Lofoten Fiskerestaurant",
+      "city": "Oslo",
+      "expected": "lofoten-fiskerestaurant.no",
+      "found": "lofoten-fiskerestaurant.no",
+      "match": true,
+      "ms": 1227
+    },
+    {
+      "name": "Skansen",
+      "city": "Oslo",
+      "expected": "cafeskansen.no",
+      "found": "cafeskansen.no",
+      "match": true,
+      "ms": 1560
+    },
+    {
+      "name": "Vinderen Sushi",
+      "city": "Oslo",
+      "expected": "vinderensushi.no",
+      "found": "vinderensushi.no",
+      "match": true,
+      "ms": 1479
+    },
+    {
+      "name": "Kinnara Thai Restaurant",
+      "city": "Oslo",
+      "expected": "kinnara.no",
+      "found": "kinnara.no",
+      "match": true,
+      "ms": 1398
+    },
+    {
+      "name": "175°C K-fried",
+      "city": "Oslo",
+      "expected": "175k-fried.no",
+      "found": "175k-fried.no",
+      "match": true,
+      "ms": 1088
+    },
+    {
+      "name": "Pappabuene",
+      "city": "Oslo",
+      "expected": "pappabuene.no",
+      "found": "pappabuene.no",
+      "match": true,
+      "ms": 1160
+    },
+    {
+      "name": "Vineria Ventidue",
+      "city": "Oslo",
+      "expected": "vineriaventidue.no",
+      "found": "vineriaventidue.no",
+      "match": true,
+      "ms": 1768
+    },
+    {
+      "name": "FYR Bistronomi & Bar",
+      "city": "Oslo",
+      "expected": "fyrbistronomi.no",
+      "found": "fyrbistronomi.no",
+      "match": true,
+      "ms": 1337
+    },
+    {
+      "name": "Lille Saigon",
+      "city": "Oslo",
+      "expected": "lillesaigon1.com",
+      "found": "lillesaigon1.com",
+      "match": true,
+      "ms": 1406
+    },
+    {
+      "name": "Crispy Chicken House - Fast-Food vIA VILLAGE",
+      "city": "Oslo",
+      "expected": "crispychickenhouse.com",
+      "found": "crispychickenhouse.com",
+      "match": true,
+      "ms": 1315
+    },
+    {
+      "name": "Thorvald Pizza (Cue Pizzeria)",
+      "city": "Oslo",
+      "expected": "cueoslo.no",
+      "found": "cueoslo.no",
+      "match": true,
+      "ms": 1600
+    },
+    {
+      "name": "Håndbakt Tøyen",
+      "city": "Oslo",
+      "expected": "handbakt.no",
+      "found": "handbakt.no",
+      "match": true,
+      "ms": 1155
+    },
+    {
+      "name": "Kinabolle Ensjø",
+      "city": "Oslo",
+      "expected": "kinabolle.no",
+      "found": "kinabolle.no",
+      "match": true,
+      "ms": 1132
+    },
+    {
+      "name": "Bennys Burger",
+      "city": "Oslo",
+      "expected": "ordera.no",
+      "found": "ordera.no",
+      "match": true,
+      "ms": 1307
+    },
+    {
+      "name": "Tyrkisk kjøkken",
+      "city": "Oslo",
+      "expected": "xn--tyrkiskkjkken-jnb.no",
+      "found": "xn--tyrkiskkjkken-jnb.no",
+      "match": true,
+      "ms": 1330
+    },
+    {
+      "name": "Sushi og Thai Lambertseter",
+      "city": "Oslo",
+      "expected": "sushi-thai.no",
+      "found": "sushi-thai.no",
+      "match": true,
+      "ms": 1377
+    },
+    {
+      "name": "Istanbul Kebab/Restaurant avd. Trondheimsveien, Oslo",
+      "city": "Oslo",
+      "expected": "istanbulkebab.no",
+      "found": "istanbulkebab.no",
+      "match": true,
+      "ms": 1247
+    },
+    {
+      "name": "Koi Sushi Vollebekk",
+      "city": "Oslo",
+      "expected": "ordera.no",
+      "found": "koisushi.no",
+      "match": false,
+      "ms": 1519
+    },
+    {
+      "name": "Bun's Sørenga - Tex-Mex og Burger Bar",
+      "city": "Oslo",
+      "expected": "buns.no",
+      "found": "buns.no",
+      "match": true,
+      "ms": 1078
+    },
+    {
+      "name": "Hy's sushi & BOBA tea avd.Ensjø",
+      "city": "Oslo",
+      "expected": "hysushi.no",
+      "found": "hysushi.no",
+      "match": true,
+      "ms": 1532
+    },
+    {
+      "name": "Noods Norway",
+      "city": "Oslo",
+      "expected": "noodsnorway.no",
+      "found": "noodsnorway.no",
+      "match": true,
+      "ms": 1995
+    },
+    {
+      "name": "Eero",
+      "city": "Oslo",
+      "expected": "eero.no",
+      "found": "eero.no",
+      "match": true,
+      "ms": 1312
+    },
+    {
+      "name": "Prima Fila Restaurant",
+      "city": "Oslo",
+      "expected": "primafila.no",
+      "found": "primafila.no",
+      "match": true,
+      "ms": 1477
+    },
+    {
+      "name": "JOE & THE JUICE",
+      "city": "Oslo",
+      "expected": "joejuice.com",
+      "found": "joeandthejuice.is",
+      "match": false,
+      "ms": 1417
+    },
+    {
+      "name": "JOE & THE JUICE",
+      "city": "Oslo",
+      "expected": "joejuice.com",
+      "found": "joejuice.com",
+      "match": true,
+      "ms": 1954
+    },
+    {
+      "name": "Castello Restaurant - Oslo",
+      "city": "Oslo",
+      "expected": "castellorestaurant.no",
+      "found": "castellorestaurant.no",
+      "match": true,
+      "ms": 1516
+    },
+    {
+      "name": "Døgnvill Burger Bjørvika",
+      "city": "Oslo",
+      "expected": "dognvillburger.no",
+      "found": "dognvillburger.no",
+      "match": true,
+      "ms": 1240
+    },
+    {
+      "name": "Hakuna Matata ( Lailbela ) Ethiopian Resturant",
+      "city": "Oslo",
+      "expected": "oslohakunamatata.org",
+      "found": "oslohakunamatata.org",
+      "match": true,
+      "ms": 1100
+    }
+  ]
+}

@@ -19,4 +19,9 @@ library/extractors/*
 bench/results/*
 !bench/results/fixtures.json
 !bench/results/latest.json
+!bench/results/heal.json
+!bench/results/tavily.json
+!bench/results/tavily-holdout.json
+!bench/results/variance.json
 submission/clips/
+submission/CHECKLIST.md

@@ -44,7 +44,7 @@ case "$cmd" in
       --container-port 8790 \
       --platform cpu-d3 --preset 4vcpu-16gb --disk-size 30Gi \
       --volume "${VOLUME:?set VOLUME}:/data" \
-      --env "MENUSMITH_LIBRARY=/data/library" --env "MENUSMITH_CACHE=/data/cache" \
+      --env "MENUSMITH_LIBRARY=/data/library" --env "MENUSMITH_CACHE=/data/cache" --env "MENUSMITH_SPEND_FILE=/data/cache/spend.json" \
       --env-secret "NEBIUS_API_KEY=menusmith-nebius-api-key" \
       --env-secret "TAVILY_API_KEY=menusmith-tavily-api-key" \
       --env "MENUSMITH_FORGES_PER_HOUR=12" \
@@ -63,7 +63,7 @@ case "$cmd" in
       --container-command npx --args "tsx src/cli.ts fleet" \
       --platform cpu-d3 --preset 4vcpu-16gb --disk-size 30Gi \
       --volume "${VOLUME:?set VOLUME}:/data" \
-      --env "MENUSMITH_LIBRARY=/data/library" --env "MENUSMITH_CACHE=/data/cache" \
+      --env "MENUSMITH_LIBRARY=/data/library" --env "MENUSMITH_CACHE=/data/cache" --env "MENUSMITH_SPEND_FILE=/data/cache/spend.json" \
       --env-secret "NEBIUS_API_KEY=menusmith-nebius-api-key" \
       --env-secret "TAVILY_API_KEY=menusmith-tavily-api-key" \
       --timeout 2h --restart-policy never \

@@ -11,16 +11,15 @@ import { bestTest, isReasoning, STEP_INFO, upcomingSteps, type ForgeState } from
 import { duration, int, plural, score as fmtScore, usd } from '../format.ts';
 import { href } from '../router.ts';
 
-/**
- * Real restaurant sites for the quick-pick row.
- * TODO: replace these placeholders with the two real menus used in the demo.
- */
+/** Real restaurant sites for the quick-pick row. */
 const EXAMPLE_SITES: { label: string; url: string }[] = [
   { label: 'Damaskus Huset · Oslo', url: 'https://semeny.no/sted/634damaskushusetrestaurant' },
   { label: 'Pizzabakeren · Oslo', url: 'https://www.pizzabakeren.no/glutenfri' },
   { label: 'Pele Pele · PDF menu', url: 'https://pelepele.no/wp-content/uploads/2025/09/PelePele-Menu.pdf' },
   { label: 'Listen to Delhi · image menu', url: 'https://listentodelhi.no/' },
 ];
+
+const NAME_EXAMPLE = { label: 'Just a name: “Alex Sushi, Oslo” · Tavily', name: 'Alex Sushi', city: 'Oslo' };
 
 function toRequest(raw: string, city: string) {
   const v = raw.trim();
@@ -58,6 +57,13 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
   const pick = (url: string) => {
     setValue(url);
     go(url);
+  };
+  /** Start from just a name: Tavily finds the official website, then the agents take over. */
+  const pickName = (name: string, inCity: string) => {
+    if (running) return;
+    setValue(name);
+    setCity(inCity);
+    void start({ restaurant: name, city: inCity, noReuse: noReuse || undefined });
   };
 
   return (
@@ -134,6 +140,9 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
                   {s.label}
                 </button>
               ))}
+              <button type="button" className="chip chip-outline" onClick={() => pickName(NAME_EXAMPLE.name, NAME_EXAMPLE.city)} disabled={running} title="No URL — Tavily search finds the official website">
+                {NAME_EXAMPLE.label}
+              </button>
             </div>
           </div>
         </form>
