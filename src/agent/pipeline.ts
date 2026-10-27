@@ -490,7 +490,14 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     }
   }
 
+  // A visitor is waiting: past the forge deadline, stop repairing and go to the safety nets
+  // (line parser, second reading) with what we have.
+  const deadline = t0 + Number(process.env.MENUSMITH_FORGE_DEADLINE_MS || 10 * 60_000);
   for (let round = 1; round <= maxRounds; round++) {
+    if (round > 1 && Date.now() > deadline) {
+      emit({ type: 'log', message: `Time limit reached after ${round - 1} round(s) — finishing with the best result so far` });
+      break;
+    }
     roundsUsed = round;
     emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1
           ? `${modelName(MODELS.forge[0]!)} is writing the extractor`

@@ -203,7 +203,11 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
   const t0 = Date.now();
   let lastErr: unknown;
   let useJsonMode = !!o.json;
+  // Hard wall-clock budget for one call including retries: a slow or flaky endpoint must not
+  // keep a visitor waiting for many minutes.
+  const deadline = t0 + Number(process.env.MENUSMITH_CALL_BUDGET_MS || 180_000);
   for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0 && Date.now() > deadline) throw new LlmError(`${model}: no answer within the time budget`, 504);
     try {
       const body = {
         model,
@@ -215,7 +219,8 @@ async function callLive(model: string, o: ChatOptions): Promise<Omit<ChatResult,
         ...(useJsonMode ? { response_format: { type: 'json_object' as const } } : {}),
       };
       // chat_template_kwargs is a Token Factory / vLLM extension the SDK types don't know.
-      const res = await c.chat.completions.create(body as Parameters<typeof c.chat.completions.create>[0] & { stream?: false });
+      const left = Math.max(10_000, deadline - Date.now());
+      const res = await c.chat.completions.create(body as Parameters<typeof c.chat.completions.create>[0] & { stream?: false }, { timeout: Math.min(150_000, left) });
       const choice = res.choices[0];
       const msg = choice?.message as (OpenAI.Chat.Completions.ChatCompletionMessage & { reasoning?: string; reasoning_content?: string }) | undefined;
       let text = (msg?.content ?? '').toString();

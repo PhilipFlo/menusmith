@@ -119,7 +119,7 @@ const TRACKERS =
 const MAX_JSON = 4 * 1024 * 1024;
 const MAX_HTML = 6 * 1024 * 1024;
 // A 0.1-CPU host needs ~20 s just to load a React bundle — give small hosts more time.
-const RENDER_LIMIT_MS = LOWMEM ? 240_000 : 60_000;
+const RENDER_LIMIT_MS = LOWMEM ? 240_000 : 90_000;
 
 export async function renderPage(url: string, opts: { timeoutMs?: number } = {}): Promise<Rendered> {
   if (!LOWMEM) return renderOnce(url, opts);

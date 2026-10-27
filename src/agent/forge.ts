@@ -194,10 +194,15 @@ export async function writeCode(
   // Escalation: Nemotron 3 Super writes the first attempts; if they keep failing,
   // Nemotron 3 Ultra takes over the same conversation for the harder reasoning.
   const role = round <= ESCALATE_AFTER ? 'forge' : 'escalate';
-  const r = await chat(
-    { role, label: round === 1 ? 'forge' : role === 'escalate' ? `repair ${round - 1} (escalated)` : `repair ${round - 1}`, thinking: true, maxTokens: 24_000, messages },
-    ledger,
-    emit,
-  );
+  const label = round === 1 ? 'forge' : role === 'escalate' ? `repair ${round - 1} (escalated)` : `repair ${round - 1}`;
+  let r;
+  try {
+    r = await chat({ role, label, thinking: true, maxTokens: 24_000, messages }, ledger, emit);
+  } catch (e) {
+    // The reasoning used up the whole output budget: ask again without it rather than fail.
+    if ((e as { status?: number }).status !== 413) throw e;
+    emit?.({ type: 'log', message: 'The model reasoned past its output budget — asking again without step-by-step reasoning' });
+    r = await chat({ role, label: `${label} (no reasoning)`, thinking: false, maxTokens: 12_000, messages }, ledger, emit);
+  }
   return { code: extractCode(r.text), reply: r.text, reasoning: r.reasoning };
 }
