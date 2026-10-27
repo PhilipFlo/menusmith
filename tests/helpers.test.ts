@@ -12,6 +12,13 @@ describe('parsePrice', () => {
   const cases: [unknown, number | null][] = [
     ['189,-', 189],
     ['kr 189', 189],
+    // US menus: bare price after the dish name; numbers inside the name are not prices.
+    ['Grouper Bites 25', 25],
+    ['Category “5” Shrimp 21', 21],
+    ['3 Cheese Pizza 18', 18],
+    ['Oysters Rockefeller 24.50', 24.5],
+    ['Combo 2 $14', 14],
+    ['2 for $10', 10],
     ['NOK 1 290', 1290],
     ['1.290,00 kr', 1290],
     ['$12.50', 12.5],

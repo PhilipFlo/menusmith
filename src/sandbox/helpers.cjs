@@ -57,6 +57,7 @@ function parsePrice(input) {
   if (!s) return null;
   const re = /\d{1,3}(?:[ .,'’]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?/g;
   const cands = [];
+  const ends = [];
   let m;
   while ((m = re.exec(s))) {
     const before = s.slice(Math.max(0, m.index - 6), m.index);
@@ -65,11 +66,19 @@ function parsePrice(input) {
     if (value === null) continue;
     const isNumbering = m.index === 0 && /^\s*[.)]\s+\S/.test(after) && /^\d{1,3}$/.test(m[0]);
     const isUnit = UNIT_AFTER.test(after);
-    const hasCurrency = CURRENCY_BEFORE.test(before) || CURRENCY_AFTER.test(after);
-    cands.push({ value, hasCurrency, skip: isNumbering || (isUnit && !hasCurrency) });
+    const currencyBefore = CURRENCY_BEFORE.test(before);
+    const hasCurrency = currencyBefore || CURRENCY_AFTER.test(after);
+    // A number followed by a word is part of the dish name ("Category “5” Shrimp 21",
+    // "3 Cheese Pizza 18") — when another number follows to be the price.
+    const inName = !hasCurrency && /^\s*["”’']?\s*\p{L}/u.test(after);
+    cands.push({ value, hasCurrency, currencyBefore, skip: isNumbering || (isUnit && !hasCurrency), inName });
+    ends.push(m.index + m[0].length);
   }
+  for (let k = 0; k < cands.length - 1; k++) if (cands[k].inName && !cands[k].skip) cands[k].skip = cands.slice(k + 1).some((c) => !c.skip);
   if (!cands.length) return null;
-  const withCurrency = cands.find((c) => c.hasCurrency && !c.skip);
+  // "$14" / "kr 189" (marker right before the number) beats a marker after one: in
+  // "Combo 2 $14" the "$" belongs to 14, not to 2.
+  const withCurrency = cands.find((c) => c.currencyBefore && !c.skip) || cands.find((c) => c.hasCurrency && !c.skip);
   if (withCurrency) return withCurrency.value;
   const plain = cands.find((c) => !c.skip);
   if (plain) return plain.value;
