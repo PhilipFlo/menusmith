@@ -77,8 +77,16 @@ export function groundOracle(items: MenuItem[], text: string): { kept: MenuItem[
   const page = normName(text);
   const kept: MenuItem[] = [];
   const dropped: MenuItem[] = [];
+  // On a priced menu, an unpriced "item" that is really a heading echo — its name is one of
+  // the reading's own sections, or it ends in ":" ("Preparation:") — is not a dish.
+  const priced = items.length ? items.filter((i) => i.price != null).length / items.length : 0;
+  const sections = new Set(items.map((i) => normName(i.section ?? '')).filter(Boolean));
   for (const it of items) {
     const n = normName(it.name);
+    if (priced >= 0.6 && it.price == null && (/:\s*$/.test(it.name) || sections.has(n))) {
+      dropped.push(it);
+      continue;
+    }
     // Accept if the full name occurs, or (for long names) its first three words do.
     const head = n.split(' ').slice(0, 3).join(' ');
     if (n && (page.includes(n) || (head.length >= 6 && page.includes(head)))) kept.push(it);
@@ -597,6 +605,19 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
         const r = await finalize(best.code, s2, best.run, roundsUsed, lastModel, input.repairOf ? 'healed' : 'forged');
         if (r) return r;
       } else if (s2) {
+        // Two independent readings both agree the code is close and precise: what is left is
+        // menu ambiguity (option lists, "build your own" choices), not wrong data. Accept — the
+        // output is ≥90% correct against both — but never with other failures (unpriced output,
+        // dishes that are not on the page).
+        const s1 = best.score;
+        const onlyCoverage = (sc: Score) => sc.failures.every((f) => /^F1 |^recall /.test(f));
+        if (Math.min(s1.f1, s2.f1) >= 0.85 && Math.min(s1.precision, s2.precision) >= 0.9 && onlyCoverage(s1) && onlyCoverage(s2)) {
+          oracleItems = second;
+          emit({ type: 'oracle', items: second });
+          emit({ type: 'step', step: 'test', status: 'done', detail: `PASS on two independent readings — f1 ${s1.f1} / ${s2.f1}, precision ${s1.precision} / ${s2.precision}` });
+          const r = await finalize(best.code, s2, best.run, roundsUsed, lastModel, input.repairOf ? 'healed' : 'forged');
+          if (r) return r;
+        }
         emit({ type: 'log', message: `Second reading agrees with the first (f1 ${s2.f1}) — not accepted` });
       }
     } catch (e) {

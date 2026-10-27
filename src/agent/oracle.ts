@@ -41,6 +41,7 @@ Rules:
 - "section" is the heading the item is listed under (e.g. "Pizza", "Drinks"), or null.
 - "description" is the short text describing the dish, or null. Do not invent descriptions.
 - Never invent items. Ignore navigation, opening hours, addresses, newsletter text, cookie banners, events.
+- Section headings, sub-headings and option labels (e.g. "Seafood", "Entree Complements", "Preparation:", "Choose your side") are NOT items — use them as the section of the dishes below them.
 - Allergen labels and badges (e.g. "Hvete", "Egg", "Melk", "Gluten", "Nøtter", "Soya", "Sesam", "Vegan", "Spicy") are NOT dishes.
 - If the page has no menu, return {"is_menu": false, "currency": null, "items": []}.
 - If the input is a list of lines exported from a menu API ("[Category > Sub] Name | price=… | description | flags"), use the category path as section, skip items flagged unavailable/hidden/archived/deleted, skip modifier/option groups (sizes, extras, sauces, add-ons) unless they are standalone dishes, and convert prices given in minor units (e.g. 18900 for a 189 kr dish) to the normal amount.`;
