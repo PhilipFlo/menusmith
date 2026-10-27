@@ -384,6 +384,8 @@ function nextStep(reason: string): string | null {
     return 'The website could not be loaded right now. Check the address, or try again in a minute.';
   if (/no passing extractor/i.test(reason))
     return 'The agent wrote code that extracts most of the menu (below), but it did not agree closely enough with Nemotron’s own reading to be trusted, so nothing was committed.';
+  if (/time budget|request timed out|code generation failed|oracle failed|rate.?limit|HTTP 50\d|overloaded/i.test(reason))
+    return 'The AI service (NVIDIA Nemotron on Nebius Token Factory) was slow to answer just now — please try again in a minute.';
   if (/budget|busy|too many/i.test(reason)) return 'The public demo is rate-limited to keep it free — try again in a little while.';
   return null;
 }

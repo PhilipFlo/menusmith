@@ -83,7 +83,11 @@ export function groundOracle(items: MenuItem[], text: string): { kept: MenuItem[
   const sections = new Set(items.map((i) => normName(i.section ?? '')).filter(Boolean));
   for (const it of items) {
     const n = normName(it.name);
-    if (priced >= 0.6 && it.price == null && (/:\s*$/.test(it.name) || sections.has(n))) {
+    // On a strongly priced menu (≥75%), unpriced lines are option lists ("Protein", "Tuscan
+    // Cream"), bases, notes ("Entrees served with …") — not dishes to demand from the code.
+    // A real unpriced dish the code does return still isn't penalised (it is on the page).
+    const noteLike = /^\p{Ll}/u.test(it.name) || /\b(served with|choice of|includes?|add\b|with your)\b/i.test(it.name) || it.name.split(/\s+/).length > 6;
+    if (it.price == null && ((priced >= 0.75) || (priced >= 0.6 && (/:\s*$/.test(it.name) || sections.has(n) || noteLike)))) {
       dropped.push(it);
       continue;
     }

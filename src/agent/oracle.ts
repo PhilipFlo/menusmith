@@ -37,7 +37,7 @@ Return ONLY a JSON object:
 Rules:
 - Include every dish and drink that is listed on the page, in page order. Include items without a price with price null.
 - "name" is the dish name as written (keep original language, keep diacritics; drop leading numbering like "12." and trailing allergen codes like "(1,7)").
-- "price" is a plain number in the menu's currency: "189,-" -> 189, "kr 1 290" -> 1290, "$12.50" -> 12.5. If several prices are listed (sizes, glass/bottle), use the FIRST one.
+- "price" is a plain number in the menu's currency: "189,-" -> 189, "kr 1 290" -> 1290, "$12.50" -> 12.5. If several prices are listed (sizes, glass/bottle), use the FIRST one. If a section heading states one price for all its items ("Cocktails $17") and the items show none, give each item that price; the section is the heading text without the price. List each dish once even if the page repeats a menu (tabs per location or meal).
 - "section" is the heading the item is listed under (e.g. "Pizza", "Drinks"), or null.
 - "description" is the short text describing the dish, or null. Do not invent descriptions.
 - Never invent items. Ignore navigation, opening hours, addresses, newsletter text, cookie banners, events.
