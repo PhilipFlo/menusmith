@@ -1,0 +1,10 @@
+{
+  "text": "\n\n```javascript\nfunction extract($, ctx) {\n  // Get the raw list from the provided helper\n  const items = textDishes($);\n\n  // Deduplicate exact repeats (same section, name, description and price)\n  const seen = new Set();\n  const deduped = [];\n\n  for (const it of items) {\n    // Build a stable key; use empty string for null/undefined values\n    const key = `${it.section ?? ''}|${it.name ?? ''}|${it.description ?? ''}|${it.price ?? ''}`;\n    if (!seen.has(key)) {\n      seen.add(key);\n      deduped.push(it);\n    }\n  }\n\n  return deduped;\n}\n```",
+  "reasoning": "We need to respond with JavaScript function extract($, ctx) that calls textDishes($) and possibly cleans up duplicates etc. According to instruction: Note: a tested helper global textDishes($) already reads this page correctly — alone it returns 25 items and passes the test (f1 1). Unless you see something it gets wrong, build on it: call textDishes($) and return its result (optionally cleaned up).\n\nThus we can simply do:\n\nfunction extract($, ctx) {\n  const items = textDishes($);\n  // optional dedup by combination of section,name,description,price maybe using Set keyed\n  const seen = new Set();\n  const uniq = [];\n  for (const it of items) {\n    const key = `${it.section}|${it.name}|${it.description}|${it.price}`;\n    if (!seen.has(key)) {\n      seen.add(key);\n      uniq.push(it);\n    }\n  }\n  return uniq;\n}\n\nMake sure we use only given globals. We assume textDishes returns array of objects with those fields.\n\nReturn array.\n\nEdge cases: ensure we don't modify original but fine.\n\nLet's produce final answer.",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "promptTokens": 7851,
+  "completionTokens": 398,
+  "ms": 2806,
+  "label": "forge",
+  "preview": "Write ONE JavaScript function with exactly this signature:\n\n  function extract($, ctx) { ... return items; }\n\n- $ is a cheerio root already loaded with the page"
+}

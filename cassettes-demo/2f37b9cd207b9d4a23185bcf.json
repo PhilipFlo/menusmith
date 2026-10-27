@@ -1,0 +1,9 @@
+{
+  "text": "{\n  \"verdicts\": [\n    {\n      \"i\": 0,\n      \"dish\": true\n    },\n    {\n      \"i\": 1,\n      \"dish\": true\n    }\n  ]\n}",
+  "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "promptTokens": 468,
+  "completionTokens": 48,
+  "ms": 408,
+  "label": "arbitrate",
+  "preview": "[{\"i\":0,\"section\":\"Sides\",\"name\":\"Med flaksalt og aioli\",\"price\":59,\"context\":\"mi, rødbetehummus og syltet rødløk kr 185 Falafelburger kr 175 Hjemmelaget falafe"
+}

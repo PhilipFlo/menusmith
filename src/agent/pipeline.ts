@@ -447,6 +447,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   let best: { score: Score; code: string; run: RunResult } | null = null;
   const maxRounds = 1 + config.maxRepairs;
   let lastModel = '';
+  const deferredHints: ChatMessage[] = [];
   let stagnant = 0;
   let arbitrations = 0;
   let roundsUsed = 0;
@@ -466,12 +467,16 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       const lineCode = 'function extract($, ctx) {\n  return textDishes($);\n}';
       const run = await runExtractor(lineCode, acq.payload, menuUrl, mode);
       const score = run.ok && run.items.length ? scoreAgainstOracle(oracleItems, run.items, text) : null;
-      if (score && score.f1 >= 0.6 && !score.pass) {
-        emit({ type: 'log', message: `Line parser: ${run.items.length} items, f1 ${score.f1} — offered to the model as a starting point` });
+      if (score && score.f1 >= 0.6) {
+        emit({ type: 'log', message: `Line parser: ${run.items.length} items, f1 ${score.f1}${score.pass ? ' (already passes — offered if round 1 fails)' : ' — offered to the model as a starting point'}` });
         best = { score, code: lineCode, run }; // nothing scored before this point
-        messages.push({
+        // Round 1 stays the model's own reading of the page (on simple pages it writes exact
+        // code); if the parser already passes, it is offered only after round 1 fails.
+        (score.pass ? deferredHints : messages).push({
           role: 'user',
-          content: `Note: a tested helper global textDishes($) reads this page's text lines (dish lines ending in a price, descriptions below, headings above) and alone returns ${run.items.length} items (f1 ${score.f1}; ${score.failures.slice(0, 2).join('; ')}). You may build on it — e.g. call it and then add what it misses or drop non-dishes — or write your own parser if the page structure is clearer.`,
+          content: score.pass
+            ? `Note: a tested helper global textDishes($) already reads this page correctly — alone it returns ${run.items.length} items and passes the test (f1 ${score.f1}). Unless you see something it gets wrong, build on it: call textDishes($) and return its result (optionally cleaned up).`
+            : `Note: a tested helper global textDishes($) reads this page's text lines (dish lines ending in a price, descriptions below, headings above) and alone returns ${run.items.length} items (f1 ${score.f1}; ${score.failures.slice(0, 2).join('; ')}). You may build on it — e.g. call it and then add what it misses or drop non-dishes — or write your own parser if the page structure is clearer.`,
         });
       }
     }
@@ -596,7 +601,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
             : selectorReport(code, acq.payload)
         : null;
     if (diagnostics) emit({ type: 'log', message: `Debugger: ${diagnostics.split('\n').slice(1, 6).join(' ').trim()}` });
-    messages.push({ role: 'user', content: feedbackMessage(round, run, score, hard, diagnostics) });
+    messages.push({ role: 'user', content: feedbackMessage(round, run, score, hard, diagnostics) + (round === 1 && deferredHints.length ? `\n\n${deferredHints.map((h) => h.content).join('\n')}` : '') });
   }
 
   // Safety net for ordinary line-based menus when the written code didn't pass: the tested
@@ -607,7 +612,13 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     const lineCode = 'function extract($, ctx) {\n  // A line-based menu: dish lines ending in a price, descriptions below, headings above (tested helper).\n  return textDishes($);\n}';
     const run = await runExtractor(lineCode, acq.payload, menuUrl, mode);
     const score = run.ok && run.items.length ? scoreAgainstOracle(oracleItems, run.items, text) : null;
-    if (score) emit({ type: 'log', message: `Line parser as a safety net: ${run.items.length} items, f1 ${score.f1}${score.pass ? ' — passes' : ''}` });
+    if (score) {
+      emit({ type: 'log', message: `Line parser as a safety net: ${run.items.length} items, f1 ${score.f1}${score.pass ? ' — passes' : ''}` });
+      // Show it as its own round, so the committed code is visible next to the model's attempts.
+      const safetyRound = roundsUsed + 1;
+      emit({ type: 'code', version: safetyRound, round: safetyRound, code: lineCode });
+      emit({ type: 'test', round: safetyRound, score, run: { ok: run.ok, error: run.error, ms: run.ms, count: run.items.length, trace: run.trace } });
+    }
     if (score?.pass) {
       emit({ type: 'step', step: 'test', status: 'done', detail: `PASS f1=${score.f1} (${score.extractorCount}/${score.oracleCount}) — tested line parser` });
       const r = await finalize(lineCode, score, run, roundsUsed, 'line-parser', 'forged');
