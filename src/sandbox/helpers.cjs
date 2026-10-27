@@ -353,4 +353,87 @@ function visualDishes($) {
   return out.filter((d) => d.price !== null && d.price !== undefined).map(({ x, ...d }) => d);
 }
 
-module.exports = { parsePrice, cleanText, normName, priceColumns, pairPriceColumns, visualRows, visualDishes };
+const INLINE_TAGS = new Set(['span', 'b', 'strong', 'em', 'i', 'a', 'small', 'sup', 'sub', 'br', 'u', 'mark', 'abbr', 'font', 'label', 'img']);
+const PRICE_TAIL = /^(.{2,90}?)[\s.·…\-–—|]+(?:\$|kr\.?\s?|€|£)?\s?(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:,-|kr|nok|\$|€)?$/i;
+const PRICE_ONLY = /^(?:\$|kr\.?\s?|€|£)?\s?\d{1,4}(?:[.,]\d{1,2})?\s*(?:,-|kr|nok|\$|€)?(?:\s*[/|]\s*(?:\$|kr\.?\s?)?\d{1,4}(?:[.,]\d{1,2})?)*$/i;
+
+/** Text of an element with a space between inline pieces (<span>Bisque</span><span>12</span>). */
+function spacedText(el) {
+  if (el.type === 'text') return el.data;
+  if (el.type !== 'tag' || /^(script|style|noscript)$/.test(el.name)) return '';
+  return (el.children || []).map(spacedText).join(' ');
+}
+
+/**
+ * Simple line-based menus (most small-restaurant sites): read the page's text lines in order.
+ * "Grouper Bites 25" → a dish with its price; the lines after it → its description; a price on
+ * its own line belongs to the line before; a short line just above priced lines → section.
+ * [{section, name, description, price}]
+ */
+function textDishes($) {
+  // Leaf text lines in document order (an element with text and no line-level children).
+  const lines = [];
+  const visit = (el, depth) => {
+    if (depth > 60 || lines.length > 6000) return;
+    const kids = (el.children || []).filter((c) => c.type === 'tag' && !/^(script|style|noscript|svg|template)$/.test(c.name));
+    // One line = an element whose element children are all inline (<span>, <b>, <em> …).
+    const hasBlockKid = kids.some((c) => !INLINE_TAGS.has(c.name) && cleanText($(c).text()));
+    if (!hasBlockKid) {
+      // <br> separates lines inside one element ("Grouper 32<br>Snapper 34").
+      for (const t of kids.some((c) => c.name === 'br') ? brLines($, el) : [cleanText(spacedText(el))]) if (t && t.length <= 300) lines.push(t);
+      return;
+    }
+    for (const c of el.children || []) {
+      if (c.type === 'text') {
+        const t = cleanText(c.data);
+        if (t) lines.push(t);
+      } else if (c.type === 'tag' && !/^(script|style|noscript|svg|template|nav|header|footer)$/.test(c.name)) visit(c, depth + 1);
+    }
+  };
+  const body = $('body')[0];
+  if (body) visit(body, 0);
+  const out = [];
+  let section = null;
+  let last = null;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i];
+    if (PRICE_ONLY.test(t)) {
+      // "Grouper Bites" / "25": the price closes the previous line's dish.
+      if (last && last.price === null) last.price = parsePrice(t);
+      else if (!last && i > 0 && lines[i - 1].length <= 90) {
+        last = { section, name: lines[i - 1], description: null, price: parsePrice(t) };
+        out.push(last);
+      }
+      continue;
+    }
+    const m = t.match(PRICE_TAIL);
+    if (m && /\p{L}{2}/u.test(m[1]) && m[1].length <= 90) {
+      last = { section, name: cleanText(m[1]), description: null, price: parsePrice(t) };
+      out.push(last);
+      continue;
+    }
+    // Headings are short, capitalised, without commas; descriptions start lowercase or list
+    // ingredients ("served with …", "citrus butter sauce, onions & tomatoes").
+    const headingLike = t.length <= 40 && /^[\p{Lu}\d"“]/u.test(t) && !/[,;]/.test(t) && !/[.!?:]$/.test(t);
+    const ownPriceNext = lines[i + 1] && PRICE_ONLY.test(lines[i + 1]);
+    if (last && last.price !== null && !last.description && !headingLike && t.length <= 250) {
+      last.description = t;
+      continue;
+    }
+    const nextPriced = lines.slice(i + 1, i + 4).some((l) => PRICE_TAIL.test(l) || PRICE_ONLY.test(l));
+    if (headingLike && nextPriced && !ownPriceNext) {
+      section = t;
+      last = null;
+      continue;
+    }
+    if (last && last.price !== null && last.description && !headingLike && t.length <= 250 && !ownPriceNext) {
+      last.description = `${last.description} ${t}`.slice(0, 300);
+    } else if (ownPriceNext) {
+      last = { section, name: t, description: null, price: null };
+      out.push(last);
+    }
+  }
+  return out.filter((d) => d.price !== null && d.name.length >= 2);
+}
+
+module.exports = { parsePrice, cleanText, normName, priceColumns, pairPriceColumns, visualRows, visualDishes, textDishes };

@@ -3,7 +3,7 @@
   "model": "nvidia/nemotron-3-super-120b-a12b",
   "promptTokens": 1799,
   "completionTokens": 662,
-  "ms": 4417,
+  "ms": 4375,
   "label": "oracle",
   "preview": "Page URL: fixture://fjord-burger/\n\nPAGE TEXT:\n0\nNå med levering via Foodora og Wolt! Ukens burger: spør i kassa.\nHjem\nMeny\nBestill bord\nSelskap\nGavekort\nOm oss\n"
 }

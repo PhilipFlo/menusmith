@@ -19,7 +19,7 @@
  */
 const vm = require('node:vm');
 const cheerio = require('cheerio');
-const { parsePrice, cleanText, priceColumns, visualRows, visualDishes } = require('./helpers.cjs');
+const { parsePrice, cleanText, priceColumns, visualRows, visualDishes, textDishes } = require('./helpers.cjs');
 
 const CPU_TIMEOUT_MS = 4000;
 const MAX_ITEMS = 3000;
@@ -141,6 +141,7 @@ async function main() {
       priceColumns,
       visualRows,
       visualDishes,
+      textDishes,
       __result: undefined,
     };
     let trace = null;

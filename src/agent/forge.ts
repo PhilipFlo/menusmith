@@ -17,7 +17,7 @@ export const CONTRACT = `Write ONE JavaScript function with exactly this signatu
 - ctx.url is the page URL.
 - Two helper globals exist: parsePrice(str) -> number|null (handles "189,-", "kr 1 290", "$12.50", "1.290,00"; skips dish numbering like "17." and quantities like "2 stk" / "33 cl"), cleanText(str) -> trimmed single-spaced string. Call parsePrice on the PRICE element's own text when one exists, not on a container that also holds the dish name or number.
 - Return an array of {section, name, description, price}: section = heading the dish is under (string or null), name = dish name (string), description = string or null, price = number or null (use parsePrice; when several prices are shown, the first).
-- Plain synchronous ES2020. No require/import, no fetch, no async, no eval, no Function constructor, no globals other than $, ctx, parsePrice, cleanText (and priceColumns / visualRows / visualDishes, see LAYOUT NOTE when present). Never throw: guard against missing elements.`;
+- Plain synchronous ES2020. No require/import, no fetch, no async, no eval, no Function constructor, no globals other than $, ctx, parsePrice, cleanText (and the tested helpers priceColumns / visualRows / visualDishes / textDishes when a note mentions them). Never throw: guard against missing elements.`;
 
 export const CONTRACT_JSON = `Write ONE JavaScript function with exactly this signature:
 

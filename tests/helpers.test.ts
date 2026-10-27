@@ -224,3 +224,31 @@ describe('free-positioned pages (Canva-style)', () => {
     expect(visualRows(cheerio.load('<body><p>Pizza 129,-</p></body>'))).toEqual([]);
   });
 });
+
+describe('line-based menus (textDishes)', () => {
+  const page = `<body><nav><a>Home</a><a>Menu</a></nav><main>
+    <h2>Appetizers</h2>
+    <p>Grouper Bites 25</p><p>crispy Florida Grouper served with sweet chili sauce</p>
+    <p>Coconut Shrimp 20</p><p>served with our pina colada sauce</p>
+    <p>Prince Edward Islands Mussels 21</p><p>citrus butter sauce, onions & tomatoes</p>
+    <h2>Soups</h2>
+    <div><span>Lobster Bisque</span><span>12</span></div>
+    <p>Category “5” Shrimp 21</p>
+  </main></body>`;
+  const { textDishes } = require('../src/sandbox/helpers.cjs') as {
+    textDishes: ($: unknown) => { section: string | null; name: string; description: string | null; price: number | null }[];
+  };
+  it('dishes with prices, descriptions below, headings above', async () => {
+    const cheerio = await import('cheerio');
+    const d = textDishes(cheerio.load(page));
+    expect(d.map((x) => [x.section, x.name, x.price])).toEqual([
+      ['Appetizers', 'Grouper Bites', 25],
+      ['Appetizers', 'Coconut Shrimp', 20],
+      ['Appetizers', 'Prince Edward Islands Mussels', 21],
+      ['Soups', 'Lobster Bisque', 12],
+      ['Soups', 'Category “5” Shrimp', 21],
+    ]);
+    expect(d[1]!.description).toBe('served with our pina colada sauce');
+    expect(d[2]!.description).toBe('citrus butter sauce, onions & tomatoes');
+  });
+});

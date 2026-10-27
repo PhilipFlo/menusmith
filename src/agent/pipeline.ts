@@ -456,12 +456,12 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
         emit({ type: 'step', step: 'test', status: 'done', detail: `PASS f1=${score.f1} (${score.extractorCount}/${score.oracleCount}) — layout parser, no code generation needed` });
         const r = await finalize(helperCode, score, run, 0, 'layout-parser', 'forged');
         if (r) return r;
-      } else if (score) {
+      } else if (score && score.f1 >= 0.5) {
         // Also a candidate for the near-miss second reading at the end.
         best = { score, code: helperCode, run }; // nothing scored before this point
         messages.push({
           role: 'user',
-          content: `Note: the layout helper alone returned ${run.items.length} items (f1 ${score.f1}). ${score.failures.slice(0, 2).join('; ')}. Start from its output and fix what it gets wrong rather than parsing from scratch.`,
+          content: `Note: a tested helper is available as a global — ${helperCode.includes('textDishes') ? 'textDishes($) (dish lines ending in a price, descriptions below, headings above)' : helperCode.includes('visualDishes') ? 'visualDishes($)' : 'priceColumns($)'} — and alone it returned ${run.items.length} items (f1 ${score.f1}). ${score.failures.slice(0, 2).join('; ')}. You may start from its output and fix what it gets wrong (add what it misses, drop non-dishes) rather than parsing from scratch.`,
         });
       }
     }
@@ -563,6 +563,22 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
         : null;
     if (diagnostics) emit({ type: 'log', message: `Debugger: ${diagnostics.split('\n').slice(1, 6).join(' ').trim()}` });
     messages.push({ role: 'user', content: feedbackMessage(round, run, score, hard, diagnostics) });
+  }
+
+  // Safety net for ordinary line-based menus when the written code didn't pass: the tested
+  // line parser (dish lines ending in a price, descriptions below, headings above). Deterministic
+  // code like any extractor, committed only if it passes; otherwise it may still be the best
+  // candidate for the second reading below.
+  if (mode === 'html' && !input.repairOf && !input.mustInclude?.length) {
+    const lineCode = 'function extract($, ctx) {\n  // A line-based menu: dish lines ending in a price, descriptions below, headings above (tested helper).\n  return textDishes($);\n}';
+    const run = await runExtractor(lineCode, acq.payload, menuUrl, mode);
+    const score = run.ok && run.items.length ? scoreAgainstOracle(oracleItems, run.items, text) : null;
+    if (score) emit({ type: 'log', message: `Line parser as a safety net: ${run.items.length} items, f1 ${score.f1}${score.pass ? ' — passes' : ''}` });
+    if (score?.pass) {
+      emit({ type: 'step', step: 'test', status: 'done', detail: `PASS f1=${score.f1} (${score.extractorCount}/${score.oracleCount}) — tested line parser` });
+      const r = await finalize(lineCode, score, run, roundsUsed, 'line-parser', 'forged');
+      if (r) return r;
+    } else if (score && (!best || score.f1 > best.score.f1)) best = { score, code: lineCode, run };
   }
 
   // A near miss is often the reading's fault, not the code's (one reading is noisy — see
