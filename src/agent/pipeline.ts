@@ -268,7 +268,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
 
   // Image menus: no structure to write code against. Read the pictures with Nemotron
   // 3.5 Super VL and store their fingerprints — re-runs only re-read a changed image.
-  if (acq.kind === 'image') {
+  imageMenu: if (acq.kind === 'image') {
     emit({ type: 'step', step: 'vision', status: 'start', detail: `${modelName(MODELS.vision[0]!)} is reading the menu images` });
     let v: Awaited<ReturnType<typeof readMenuImages>>;
     try {
@@ -278,8 +278,15 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       return fail(`could not read the menu images: ${(e as Error).message}`);
     }
     if (v.items.length < 3) {
-      emit({ type: 'step', step: 'vision', status: 'fail', detail: 'no readable menu in the images' });
-      return fail('the menu images could not be read');
+      // Pictures named "menu" are often banners or food photos. Not the end: read the page
+      // itself (its text, a widget, links) like any rendered page.
+      if (!acq.html || acq.text.length < 200) {
+        emit({ type: 'step', step: 'vision', status: 'fail', detail: 'no readable menu in the images' });
+        return fail('the menu images could not be read');
+      }
+      emit({ type: 'step', step: 'vision', status: 'fail', detail: 'the pictures are not a menu — reading the page itself' });
+      acq = { ...acq, kind: 'rendered', payload: acq.html, note: `${acq.note} → not a menu; the rendered page instead` };
+      break imageMenu;
     }
     emit({ type: 'oracle', items: v.items });
     emit({ type: 'step', step: 'vision', status: 'done', detail: `${v.items.length} dishes from ${v.images.length} image(s)` });

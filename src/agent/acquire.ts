@@ -109,7 +109,7 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
       await follow(ext, 1);
     }
   }
-  const text = pageText(r.html);
+  let text = pageText(r.html);
   const j = pickJson(r.json, domPrices);
   if (j) {
     emit({ type: 'step', step: 'render', status: 'done', detail: `Found the menu API: ${j.method} ${j.url.slice(0, 90)} (${j.menuObjects} menu objects)` });
@@ -136,6 +136,7 @@ export async function acquire(start: Page, emit: Emit, opts: { allowRender?: boo
     const imgs = withImages ? findMenuImages(withImages.html, withImages.finalUrl) : [];
     if (withImages && imgs.length) {
       r = withImages;
+      text = pageText(r.html); // the page the pictures are on (the fallback reads it)
       emit({ type: 'step', step: 'render', status: 'done', detail: `The menu is published as ${imgs.length} image(s)` });
       return {
         kind: 'image',

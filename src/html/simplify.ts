@@ -41,6 +41,13 @@ function linearizePriceColumns($: cheerio.CheerioAPI): number {
   return pairs.length;
 }
 
+/**
+ * A dish line ending in a bare price, common on US menus: "Grouper Bites 25",
+ * "Oysters Rockefeller 24.50". Letters first, 1–3 digit price last; addresses and phone
+ * numbers rarely fit (they carry more digits or start with a number).
+ */
+const BARE_PRICE_LINE = /^[\p{L}][\p{L}\p{M}'’&.,\-\s"“”()/]{2,60}\s\$?(\d{1,3})(?:\.\d{2})?$/u;
+
 /** Readable text, one block per line, for the oracle. */
 export function pageText(html: string): string {
   const $ = cheerio.load(html);
@@ -143,7 +150,8 @@ export function findMenuRoot($: cheerio.CheerioAPI): { root: Element; priceNodes
     }
     if (node.type !== 'tag' || tooLong) return { text: null, hasPrice: descendantPrice };
     const t = text.replace(/\s+/g, ' ').trim();
-    const isPrice = !!t && t.length <= 40 && PRICE_RE.test(t);
+    // "$12.50" / "189,-" — or a US-style bare price after the dish name ("Grouper Bites 25").
+    const isPrice = !!t && ((t.length <= 40 && PRICE_RE.test(t)) || (t.length <= 70 && BARE_PRICE_LINE.test(t)));
     if (isPrice && !descendantPrice) priceEls.push(node as Element);
     return { text, hasPrice: isPrice || descendantPrice };
   };
