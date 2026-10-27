@@ -156,7 +156,9 @@ export function scoreAgainstOracle(
   if (!extracted.length) failures.push('returned no items');
   if (f1 < PASS.minF1) failures.push(`F1 ${round(f1)} is below ${PASS.minF1}`);
   if (recall < PASS.minRecall) failures.push(`recall ${round(recall)} is below ${PASS.minRecall} — dishes are missing`);
-  if (oraclePriced >= 0.5 && pricedRatio < PASS.minPricedRatio)
+  // Relative to the reading: a menu where the reading itself prices only ~55% of the lines
+  // (preparation options, sides "+$4") can't demand 60% from the code.
+  if (oraclePriced >= 0.5 && pricedRatio < Math.min(PASS.minPricedRatio, oraclePriced - 0.1))
     failures.push(`only ${Math.round(pricedRatio * 100)}% of your items have a price, but the menu shows prices for ${Math.round(oraclePriced * 100)}%`);
   if (ungrounded > maxUngrounded) failures.push(`${ungrounded} returned items are not dishes on this menu (allowed: ${maxUngrounded})`);
   const pass = failures.length === 0;
