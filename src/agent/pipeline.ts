@@ -456,6 +456,21 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       : detectPriceColumns(acq.payload)
         ? 'function extract($, ctx) {\n  // Names and prices in side-by-side columns: paired by position (tested helper).\n  return priceColumns($);\n}'
         : null;
+    if (!helperCode) {
+      // Ordinary page: the tested line parser is not committed up front (the agent writes the
+      // extractor), but a decent result is shown to the model as a starting point.
+      const lineCode = 'function extract($, ctx) {\n  return textDishes($);\n}';
+      const run = await runExtractor(lineCode, acq.payload, menuUrl, mode);
+      const score = run.ok && run.items.length ? scoreAgainstOracle(oracleItems, run.items, text) : null;
+      if (score && score.f1 >= 0.6 && !score.pass) {
+        emit({ type: 'log', message: `Line parser: ${run.items.length} items, f1 ${score.f1} — offered to the model as a starting point` });
+        best = { score, code: lineCode, run }; // nothing scored before this point
+        messages.push({
+          role: 'user',
+          content: `Note: a tested helper global textDishes($) reads this page's text lines (dish lines ending in a price, descriptions below, headings above) and alone returns ${run.items.length} items (f1 ${score.f1}; ${score.failures.slice(0, 2).join('; ')}). You may build on it — e.g. call it and then add what it misses or drop non-dishes — or write your own parser if the page structure is clearer.`,
+        });
+      }
+    }
     if (helperCode) {
       const run = await runExtractor(helperCode, acq.payload, menuUrl, mode);
       const score = run.ok ? scoreAgainstOracle(oracleItems, run.items, text) : null;
