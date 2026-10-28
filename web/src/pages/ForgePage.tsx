@@ -308,13 +308,14 @@ function SuccessCard({ state }: { state: ForgeState }) {
   const rounds = s?.rounds ?? meta?.rounds ?? 0;
   const cost = s?.costUsd ?? meta?.costUsd ?? 0;
   const reused = s?.mode === 'reused' || !!meta?.reusedFrom;
+  const kind = meta?.source?.kind;
   return (
     <section className="result-card is-success" aria-label="Result">
       <div className="result-head">
         <StateIcon state="done" size={28} />
         <div>
           <h2 className="result-title">
-            Extractor v{meta?.version ?? 1} committed
+            {kind === 'listing' ? 'Menu saved from a public listing' : kind === 'document' ? 'PDF menu saved' : kind === 'image' ? 'Image menu saved' : `Extractor v${meta?.version ?? 1} committed`}
             {reused && (
               <Badge tone="info" title="Adopted from another site on the same platform">
                 reused
@@ -328,8 +329,26 @@ function SuccessCard({ state }: { state: ForgeState }) {
             <span className="sep">·</span>
             <strong>{usd(cost)}</strong> once
             <span className="sep">·</span>
-            <strong className="pass-text">$0.0000</strong> per re-run forever
+            {kind === 'listing' ? (
+              <span>read from a public listing — not re-run automatically</span>
+            ) : kind === 'document' || kind === 'image' ? (
+              <span>
+                <strong className="pass-text">$0.0000</strong> per check — re-read only when the {kind === 'image' ? 'pictures' : 'PDF'} change
+              </span>
+            ) : (
+              <>
+                <strong className="pass-text">$0.0000</strong> per re-run forever
+              </>
+            )}
           </p>
+          {kind === 'listing' && (
+            <p className="small muted">
+              {/blocks automated|bot protection/i.test(meta?.history?.[meta.history.length - 1]?.reason ?? '')
+                ? 'The restaurant’s own website blocks automated visitors, and Menusmith does not get around bot protection. '
+                : 'The restaurant’s own website shows no menu with prices. '}
+              This menu was read by Nemotron from a public listing on <strong>{hostOf(meta?.source?.request?.url)}</strong> found through search — prices there may lag behind the restaurant’s own.
+            </p>
+          )}
           {reused && meta?.reusedFrom && (
             <p className="small muted">
               Adopted <a href={href.extractor(meta.reusedFrom)}>{meta.reusedFrom}</a> from the library — no code was generated.
@@ -344,7 +363,8 @@ function SuccessCard({ state }: { state: ForgeState }) {
       </div>
       {meta && (
         <div className="result-metrics">
-          <ScoreBars score={{ ...meta.score, pass: true }} />
+          {/* Only written code is tested against a reading — listings, PDFs and images are readings themselves. */}
+          {kind !== 'listing' && kind !== 'document' && kind !== 'image' && <ScoreBars score={{ ...meta.score, pass: true }} />}
           <dl className="facts">
             <div>
               <dt>Platform</dt>
@@ -515,4 +535,12 @@ function Rounds({ state }: { state: ForgeState }) {
       </div>
     </Panel>
   );
+}
+
+function hostOf(u?: string | null): string {
+  try {
+    return u ? new URL(u).hostname.replace(/^www\./, '') : 'another site';
+  } catch {
+    return 'another site';
+  }
 }
