@@ -291,10 +291,14 @@ own scraper is not part of Menusmith.
 
 ## Limitations
 
-- Scanned PDFs without a text layer aren't read yet (the image path could rasterise them).
 - Some hosted APIs mix dishes with add-on options; arbitration settles most disputes, but very
   large option-heavy menus can still fail to converge.
-- Sites behind aggressive bot protection are not bypassed — by design.
+- Sites behind bot protection (Vercel / Cloudflare / DataDome … checkpoints, HTTP 403/405/429)
+  are never bypassed — by design. Menusmith recognises them at once and reads the menu from a
+  **public listing** found through Tavily search instead (the blocked site is excluded from the
+  search). The same fallback covers chains whose own site shows no prices (they price only
+  inside their ordering app). Such menus are labelled with their source, may lag behind the
+  restaurant's own prices, and are not re-checked by the fleet.
 
 ## License
 
