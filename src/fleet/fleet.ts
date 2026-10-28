@@ -360,6 +360,10 @@ async function checkWith(x: StoredExtractor, emit: Emit, opts: CheckOptions, led
   };
 
   const kind = x.meta.source?.kind ?? 'html';
+  // Read from a public listing because the restaurant's own site blocks automated visitors:
+  // there is nothing Menusmith may re-run against, so it is not re-checked automatically.
+  if (kind === 'listing')
+    return done({ status: 'stable', detail: 'menu read from a public listing (the restaurant’s own website could not be used) — not re-checked automatically; forge again to refresh', items: x.meta.baselineCount, changes: [] });
   if (kind === 'image') return checkImages(x, ledger, done, emit, opts);
   if (kind === 'document') return checkDocument(x, ledger, done, emit, opts);
   const mode = kind === 'json' ? 'json' : 'html';

@@ -21,7 +21,7 @@ export function RecheckPanel({ meta, onDone }: { meta: ExtractorMeta; onDone: ()
   const [busy, setBusy] = useState<null | 'rescrape' | 'audit'>(null);
   const [result, setResult] = useState<CheckResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const isFile = meta.source?.kind === 'image' || meta.source?.kind === 'document';
+  const isFile = meta.source?.kind === 'image' || meta.source?.kind === 'document' || meta.source?.kind === 'listing';
 
   async function run(kind: 'rescrape' | 'audit') {
     setBusy(kind);

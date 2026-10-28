@@ -35,6 +35,22 @@ async function post<T>(path: string, body: unknown, timeoutMs = 40_000): Promise
   }
 }
 
+/**
+ * Search with the full text of each result (Tavily's own copy). Used for the public-listing
+ * fallback: the blocked restaurant site is excluded, so it is never contacted.
+ */
+export async function tavilySearchFull(query: string, excludeDomains: string[], maxResults = 6): Promise<(TavilyResult & { raw_content?: string })[]> {
+  const r = await post<{ results: (TavilyResult & { raw_content?: string })[] }>('/search', {
+    query,
+    search_depth: 'basic',
+    max_results: maxResults,
+    include_answer: false,
+    include_raw_content: true,
+    exclude_domains: excludeDomains,
+  });
+  return r.results || [];
+}
+
 export async function tavilySearch(query: string, maxResults = 8, country?: string): Promise<TavilyResult[]> {
   const r = await post<{ results: TavilyResult[] }>('/search', {
     query,

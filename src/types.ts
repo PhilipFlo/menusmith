@@ -42,7 +42,7 @@ export interface Score {
 }
 
 /** Where an extractor's input comes from. */
-export type SourceKind = 'html' | 'rendered' | 'json' | 'image' | 'document';
+export type SourceKind = 'html' | 'rendered' | 'json' | 'image' | 'document' | 'listing';
 
 /** A captured API request that returns the menu as JSON — replayed on every re-run. */
 export interface SourceRequest {

@@ -376,7 +376,7 @@ function SuccessCard({ state }: { state: ForgeState }) {
 
 /** Plain-language "why, and what to try next" for the common ways a forge stops. */
 function nextStep(reason: string): string | null {
-  if (/HTTP 40[1356]|HTTP 429|blocked/i.test(reason))
+  if (/HTTP 40[1356]|HTTP 429|blocked|bot protection/i.test(reason))
     return 'This website blocks automated visitors. Menusmith respects that and does not try to get around it — try another restaurant.';
   if (/no menu with dishes found|too few menu items|menu images could not be read/i.test(reason))
     return 'No menu with prices was found on this website. Many chains only show prices inside a location-specific ordering app (pick a store, then order) — try a single restaurant’s own site, the URL of the page that lists dishes and prices, or just type the name and city.';

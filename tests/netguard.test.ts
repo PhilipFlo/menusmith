@@ -36,3 +36,16 @@ describe('SSRF guard — IPv6 forms of private IPv4 (review finding)', () => {
     expect(isBlockedUrlSync('http://[2606:4700::6810:84e5]/')).toBe(false);
   });
 });
+
+describe('bot protection is recognised, never bypassed', () => {
+  it('recognises common "checking your browser" walls', async () => {
+    const { detectBotWall } = await import('../src/html/botwall.ts');
+    expect(detectBotWall('<html><title>Vercel Security Checkpoint</title>We\'re verifying your browser</html>')).toBe('Vercel Security Checkpoint');
+    expect(detectBotWall('<html><head><title>Just a moment...</title></head><body>cf-chl-</body></html>')).toBe('Cloudflare');
+    expect(detectBotWall('<script src="https://ct.captcha-delivery.com/c.js"></script>')).toBe('DataDome');
+  });
+  it('a normal menu page is not a wall', async () => {
+    const { detectBotWall } = await import('../src/html/botwall.ts');
+    expect(detectBotWall('<html><title>Menu — Pizza Place</title><p>Margherita $14</p></html>')).toBeNull();
+  });
+});

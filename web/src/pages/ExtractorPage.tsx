@@ -83,14 +83,16 @@ export function ExtractorPage({ id }: { id: string }) {
 
       <div className="detail-grid">
         <Panel
-          title={meta.source?.kind === 'image' ? 'Read from menu images' : 'Quality at commit'}
+          title={meta.source?.kind === 'image' ? 'Read from menu images' : meta.source?.kind === 'listing' ? 'Read from a public listing' : 'Quality at commit'}
           subtitle={
             meta.source?.kind === 'image'
               ? `Nemotron 3.5 Super VL read ${int(meta.score.oracleCount)} dishes from ${meta.source.request?.images?.length ?? 0} picture(s). The fleet compares image fingerprints and only re-reads a picture that changed.`
-              : `Scored against Nemotron's own reading of ${int(meta.score.oracleCount)} dishes`
+              : meta.source?.kind === 'listing'
+                ? `${/blocks automated|bot protection/i.test(meta.history?.[meta.history.length - 1]?.reason ?? '') ? "This restaurant's own website blocks automated visitors, and Menusmith does not get around bot protection." : "This restaurant's own website shows no menu with prices (many chains only price items inside their ordering app)."} Nemotron read ${int(meta.score.oracleCount)} dishes from a public listing on ${hostOf(meta.source.request?.url)} found through search. Prices there may lag behind the restaurant's own; it is not re-checked automatically.`
+                : `Scored against Nemotron's own reading of ${int(meta.score.oracleCount)} dishes`
           }
         >
-          {meta.source?.kind !== 'image' && <ScoreBars score={{ ...meta.score, pass: true }} />}
+          {meta.source?.kind !== 'image' && meta.source?.kind !== 'listing' && <ScoreBars score={{ ...meta.score, pass: true }} />}
           <dl className="facts facts-grid">
             <div>
               <dt>Dishes extracted</dt>
@@ -205,4 +207,12 @@ export function ExtractorPage({ id }: { id: string }) {
       {error && <ErrorNote>{error}</ErrorNote>}
     </div>
   );
+}
+
+function hostOf(u?: string | null): string {
+  try {
+    return u ? new URL(u).hostname.replace(/^www\./, '') : 'another site';
+  } catch {
+    return 'another site';
+  }
 }

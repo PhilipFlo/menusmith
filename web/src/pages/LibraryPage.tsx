@@ -32,7 +32,7 @@ export function LibraryPage() {
 
   const totals = useMemo(() => {
     const cost = list.reduce((a, x) => a + (x.costUsd || 0), 0);
-    const coded = list.filter((x) => x.source?.kind !== 'image');
+    const coded = list.filter((x) => x.source?.kind !== 'image' && x.source?.kind !== 'listing');
     const f1 = coded.length ? coded.reduce((a, x) => a + x.score.f1, 0) / coded.length : 0;
     const dishes = list.reduce((a, x) => a + (x.baselineCount || 0), 0);
     const reused = list.filter((x) => x.reusedFrom).length;
@@ -126,12 +126,13 @@ export function LibraryPage() {
                       {x.history?.some((h) => h.reason.startsWith('self-heal')) && <Badge tone="accent">self-healed</Badge>}
                       {x.source?.kind === 'json' && <Badge tone="info" title="Written over the menu API the page calls">menu API</Badge>}
                       {x.source?.kind === 'image' && <Badge tone="info" title="Menu published as pictures — read by Nemotron 3.5 Super VL, re-checked by fingerprint">image menu</Badge>}
+                      {x.source?.kind === 'listing' && <Badge tone="info" title="The restaurant's own site blocks automated visitors — menu read from a public listing found through search">public listing</Badge>}
                     </div>
                     <dl className="lib-stats">
                       <div>
                         <dt>F1</dt>
                         <dd className="num" title={x.source?.kind === 'image' ? 'Image menus are read, not tested as code' : undefined}>
-                          {x.source?.kind === 'image' ? '—' : score(x.score.f1)}
+                          {x.source?.kind === 'image' || x.source?.kind === 'listing' ? '—' : score(x.score.f1)}
                         </dd>
                       </div>
                       <div>

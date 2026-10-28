@@ -16,6 +16,8 @@ export const STEP_INFO: Record<string, { label: string; blurb: string }> = {
   reuse: { label: 'Reuse', blurb: 'Try same-platform extractors from the library (0 tokens)' },
   render: { label: 'Render', blurb: 'Headless browser: rendered page, captured menu API, or menu images' },
   vision: { label: 'Read images', blurb: 'Nemotron 3.5 Super VL reads menu pictures; fingerprints make re-runs free' },
+  document: { label: 'Read the PDF', blurb: 'Text layer first; designed or scanned PDFs are read as images by Nemotron 3.5 Super VL' },
+  listing: { label: 'Public listing', blurb: 'The site blocks automated visitors — the menu is read from a public listing found by search' },
   forge: { label: 'Forge', blurb: 'Nemotron 3 Super writes a deterministic extractor (Ultra if repairs stall)' },
   test: { label: 'Test', blurb: 'Run in the sandbox, score against the oracle' },
   repair: { label: 'Repair', blurb: 'Feed failures back, rewrite the code' },

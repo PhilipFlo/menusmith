@@ -7,7 +7,8 @@ import { jsonMenuLines, jsonSkeletonText } from '../html/jsonview.ts';
 import { Ledger, type ChatMessage } from '../llm/client.ts';
 import { candidatesFor, idForUrl, loadExtractor, saveExtractor, saveSnapshot } from '../library/store.ts';
 import { runExtractor } from '../sandbox/runner.ts';
-import { findOfficialSite, tavilyEnabled } from '../tools/tavily.ts';
+import { findOfficialSite, tavilyEnabled, tavilySearchFull } from '../tools/tavily.ts';
+import { BLOCKED_STATUS, detectBotWall } from '../html/botwall.ts';
 import type { Emit, ExtractorMeta, MenuItem, RunResult, Score } from '../types.ts';
 import { findMenuPage, priceDensity } from './discover.ts';
 import { acquire, reacquire, type Acquired } from './acquire.ts';
@@ -53,7 +54,7 @@ export interface ForgeOutcome {
   ledger: Ledger;
   ms: number;
   /** "forged" | "reused" | "healed" | "vision" (image menu) | "document" (PDF menu) — the last two are fingerprinted */
-  mode?: 'forged' | 'reused' | 'healed' | 'vision' | 'document';
+  mode?: 'forged' | 'reused' | 'healed' | 'vision' | 'document' | 'listing';
   /** The reference reading the extractor was graded against (after arbitration). */
   oracle?: MenuItem[];
 }
@@ -64,6 +65,13 @@ const noop: Emit = () => {};
 export const DOCUMENT_EXTRACTOR = `// This restaurant publishes its menu as a PDF. Its text layer is extracted locally
 // (pdf.js) and read by Nemotron 3 Super; Menusmith stores the file's sha256
 // fingerprint and the fleet re-reads it only when the PDF changes.
+function extract() { return []; }`;
+
+/** Stored in place of code for menus read from a public listing (never executed). */
+export const LISTING_EXTRACTOR = `// This restaurant's own website blocks automated visitors (bot protection), and
+// Menusmith does not get around that. The menu was read by Nemotron 3 Super from a public
+// listing found through Tavily search (the restaurant's site was excluded and never
+// contacted). It is not re-checked automatically — forge again to refresh it.
 function extract() { return []; }`;
 
 /** Stored in place of code for image menus (never executed). */
@@ -206,6 +214,87 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     return { ok: true, meta, code: DOCUMENT_EXTRACTOR, items, oracleCount: items.length, rounds: 0, ledger, ms: Date.now() - t0, mode: 'document' };
   };
 
+  // Bot-protected restaurant site: never get around it. Look for the menu on a public listing
+  // through search instead (the blocked domain is excluded, so it is never contacted).
+  const listingPath = async (siteUrl: string, why: string): Promise<ForgeOutcome> => {
+    emit({ type: 'step', step: 'fetch', status: 'fail', detail: why });
+    if (!tavilyEnabled()) return fail(`${why} — Menusmith respects bot protection`);
+    const domain = domainOf(siteUrl);
+    const brand = input.restaurant || domain.replace(/^www\./, '').split('.')[0]!.replace(/[-_]+/g, ' ');
+    emit({ type: 'step', step: 'listing', status: 'start', detail: `Looking for ${brand}'s menu on a public listing (the site itself is not contacted)` });
+    let candidates: { url: string; text: string; prices: number }[] = [];
+    try {
+      const results = await tavilySearchFull(`${brand}${input.city ? ' ' + input.city : ''} menu prices`, [domain.replace(/^www\./, '')]);
+      candidates = results
+        .map((r) => {
+          const text = (r.raw_content || '').slice(0, 60_000);
+          const prices = (text.match(/(?:\$|€|£|kr\.?\s?)\d{1,4}(?:[.,]\d{1,2})?|\d{1,4}(?:[.,]\d{2})?\s?(?:kr|,-|€)/gi) || []).length;
+          return { url: r.url, text, prices };
+        })
+        .filter((c) => c.prices >= 8)
+        .sort((a, b) => b.prices - a.prices);
+    } catch (e) {
+      emit({ type: 'log', message: `Search failed: ${(e as Error).message}` });
+    }
+    const respects = /bot protection|blocks automated/.test(why) ? 'Menusmith respects bot protection, and ' : '';
+    if (!candidates.length) {
+      emit({ type: 'step', step: 'listing', status: 'fail', detail: 'no public listing with prices found' });
+      return fail(`${why} — ${respects}no public listing of the menu was found`);
+    }
+    // Try the two most price-rich listings: one may be a review page that only quotes prices.
+    let items: MenuItem[] = [];
+    let best = candidates[0]!;
+    // Readings vary: with a single usable listing, read it a second time before giving up.
+    for (const c of candidates.length > 1 ? candidates.slice(0, 2) : [candidates[0]!, candidates[0]!]) {
+      try {
+        const o = await readMenu(c.text, { url: c.url, restaurant: brand }, ledger, emit);
+        const got = groundOracle(o.items, c.text).kept;
+        if (got.length >= 5) {
+          items = got;
+          best = c;
+          break;
+        }
+      } catch (e) {
+        emit({ type: 'log', message: `Could not read ${c.url}: ${(e as Error).message}` });
+      }
+    }
+    if (items.length < 5) {
+      emit({ type: 'step', step: 'listing', status: 'fail', detail: 'no readable menu on the public listings found' });
+      return fail(`${why} — ${respects}the public listings found had no readable menu`);
+    }
+    const host = new URL(best.url).hostname.replace(/^www\./, '');
+    emit({ type: 'oracle', items });
+    emit({ type: 'step', step: 'listing', status: 'done', detail: `${items.length} dishes from a public listing on ${host} — not the restaurant's own website` });
+    const id = idForUrl(siteUrl, domain, 'listing');
+    const priced = items.filter((i) => i.price != null).length / items.length;
+    const meta = saveExtractor(
+      {
+        id,
+        url: siteUrl,
+        domain,
+        restaurant: input.restaurant ?? brand,
+        platform: 'unknown',
+        source: { kind: 'listing', request: { url: best.url, method: 'GET' } },
+        createdAt: new Date().toISOString(),
+        model: MODELS.oracle[0]!,
+        rounds: 0,
+        score: { precision: 1, recall: 1, f1: 1, pricedRatio: Math.round(priced * 1000) / 1000, oracleCount: items.length, extractorCount: items.length },
+        tokens: { prompt: ledger.promptTokens, completion: ledger.completionTokens },
+        costUsd: Math.round(ledger.listCostUsd * 1e6) / 1e6,
+        baselineHash: itemsHash(items),
+        baselineCount: items.length,
+        baselinePriced: Math.round(priced * 1000) / 1000,
+        reusedFrom: null,
+      },
+      LISTING_EXTRACTOR,
+      `listing: ${host} (${why})`,
+    );
+    saveSnapshot(id, items);
+    emit({ type: 'step', step: 'commit', status: 'done', detail: `${id} v${meta.version} (from a public listing on ${host})` });
+    emit({ type: 'result', ok: true, meta, items });
+    return { ok: true, meta, code: LISTING_EXTRACTOR, items, oracleCount: items.length, rounds: 0, ledger, ms: Date.now() - t0, mode: 'listing' };
+  };
+
   // 1. Locate the website.
   let url = input.url?.trim();
   if (!url) {
@@ -233,9 +322,13 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   try {
     page = await fetchPage(url);
   } catch (e) {
+    if (BLOCKED_STATUS.test((e as Error).message)) return listingPath(url, `${(e as Error).message} — the site blocks automated visitors`);
     emit({ type: 'step', step: 'fetch', status: 'fail', detail: (e as Error).message });
     return fail((e as Error).message);
   }
+  const wall = detectBotWall(page.html);
+  if (wall) return listingPath(page.finalUrl, `the site is behind bot protection (${wall})`);
+  if (BLOCKED_STATUS.test(`HTTP ${page.status}`)) return listingPath(page.finalUrl, `HTTP ${page.status} from ${url} — the site blocks automated visitors`);
   // Served as a PDF despite the URL.
   if (page.html.startsWith('%PDF')) return documentPath(page.finalUrl, page.finalUrl);
   if (page.status >= 400) {
@@ -343,6 +436,9 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     const o = await readMenu(text, { url: menuUrl, restaurant: input.restaurant }, ledger, emit);
     if (!o.isMenu) {
       emit({ type: 'step', step: 'oracle', status: 'fail', detail: 'no menu found on this page' });
+      // Chains that only price items inside an ordering app, sites without a menu page: the
+      // same public-listing fallback, clearly labelled.
+      if (!input.repairOf && /^https?:/.test(menuUrl)) return listingPath(menuUrl, 'the restaurant’s own website shows no menu with prices');
       return fail('no menu with dishes found on the page (it may be a PDF, an image, or rendered by JavaScript)');
     }
     const g = groundOracle(o.items, text);
@@ -354,7 +450,10 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     emit({ type: 'step', step: 'oracle', status: 'fail', detail: (e as Error).message });
     return fail(`oracle failed: ${(e as Error).message}`);
   }
-  if (oracleItems.length < 3) return fail('too few menu items to build a reliable extractor', { oracleCount: oracleItems.length });
+  if (oracleItems.length < 3) {
+    if (!input.repairOf && /^https?:/.test(menuUrl)) return listingPath(menuUrl, 'the restaurant’s own website shows too few dishes to read');
+    return fail('too few menu items to build a reliable extractor', { oracleCount: oracleItems.length });
+  }
 
   const baseMeta = {
     id,
