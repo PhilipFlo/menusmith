@@ -21,7 +21,7 @@ export interface Health {
 export interface ForgeSummary {
   ok: boolean;
   reason?: string;
-  mode?: 'forged' | 'reused' | 'healed';
+  mode?: 'forged' | 'reused' | 'healed' | 'vision' | 'document' | 'listing' | 'known';
   rounds: number;
   ms: number;
   costUsd: number;

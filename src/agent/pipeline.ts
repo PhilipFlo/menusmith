@@ -5,7 +5,7 @@ import { renderPdfPages } from '../html/render.ts';
 import { detectPriceColumns, skeleton } from '../html/simplify.ts';
 import { jsonMenuLines, jsonSkeletonText } from '../html/jsonview.ts';
 import { Ledger, type ChatMessage } from '../llm/client.ts';
-import { candidatesFor, idForUrl, loadExtractor, saveExtractor, saveSnapshot } from '../library/store.ts';
+import { candidatesFor, idForDomain, idForUrl, listExtractors, loadExtractor, loadSnapshot, saveExtractor, saveSnapshot, type StoredExtractor } from '../library/store.ts';
 import { runExtractor } from '../sandbox/runner.ts';
 import { findOfficialSite, tavilyEnabled, tavilySearchFull } from '../tools/tavily.ts';
 import { BLOCKED_STATUS, detectBotWall } from '../html/botwall.ts';
@@ -28,6 +28,8 @@ export interface ForgeInput {
   city?: string;
   /** Skip library reuse and always write fresh code. */
   noReuse?: boolean;
+  /** Forge even if this restaurant is already in the library (the demo chips: show the agents at work). */
+  fresh?: boolean;
   /** Existing extractor to repair (self-heal): its code seeds the conversation. */
   repairOf?: { code: string; reason: string };
   /** Dishes that must be in the output for a repair to pass (they are on the page and were lost). */
@@ -54,7 +56,7 @@ export interface ForgeOutcome {
   ledger: Ledger;
   ms: number;
   /** "forged" | "reused" | "healed" | "vision" (image menu) | "document" (PDF menu) — the last two are fingerprinted */
-  mode?: 'forged' | 'reused' | 'healed' | 'vision' | 'document' | 'listing';
+  mode?: 'forged' | 'reused' | 'healed' | 'vision' | 'document' | 'listing' | 'known';
   /** The reference reading the extractor was graded against (after arbitration). */
   oracle?: MenuItem[];
 }
@@ -311,6 +313,17 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     }
     url = site.url;
     emit({ type: 'step', step: 'discover', status: 'done', detail: `Tavily: ${site.title} → ${url}` });
+  }
+
+  // 1b. Already in the library? Answer from it — the whole point of keeping the code.
+  // Re-running saved code costs 0 tokens and takes seconds; a repeated test never
+  // spends the daily AI allowance again. "Forge fresh" (noReuse) skips this.
+  if (!input.noReuse && !input.fresh && !input.repairOf) {
+    const hit = knownExtractor(url);
+    if (hit) {
+      const answered = await answerFromLibrary(hit, emit);
+      if (answered) return { ...answered, ledger, ms: Date.now() - t0 };
+    }
   }
 
   // A link straight to a PDF menu.
@@ -776,6 +789,62 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     code: best?.code,
     items: best?.run.items,
   };
+}
+
+const hostKey = (u: string) => {
+  try {
+    const x = new URL(u);
+    return { host: x.hostname.replace(/^www\./, '').toLowerCase(), path: ((x.pathname.replace(/\/+$/, '') || '/') + x.search).toLowerCase() };
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The library entry for this URL: same page, or — for a site that is one restaurant per
+ * domain — any page of the same domain (a visitor types the homepage, we saved /menu).
+ * Location pages on shared hosts (ordering platforms, chains' /store/206) need the same path.
+ */
+export function knownExtractor(url: string, library: StoredExtractor[] = listExtractors()): StoredExtractor | null {
+  const want = hostKey(url);
+  if (!want) return null;
+  const all = library.filter((x) => hostKey(x.meta.url)?.host === want.host);
+  const samePage = all.find((x) => hostKey(x.meta.url)!.path === want.path);
+  if (samePage) return samePage;
+  const whole = all.filter((x) => x.meta.id === idForDomain(x.meta.domain));
+  return whole.length === 1 ? whole[0]! : null;
+}
+
+/** Serve a library hit: re-run its code on the live page, or show the saved menu for readings. */
+async function answerFromLibrary(hit: StoredExtractor, emit: Emit): Promise<Omit<ForgeOutcome, 'ledger' | 'ms'> | null> {
+  const { meta } = hit;
+  const kind = meta.source?.kind ?? 'html';
+  emit({ type: 'step', step: 'reuse', status: 'start', detail: `${meta.id} is already in the library — no AI needed` });
+  if (kind === 'listing' || kind === 'document' || kind === 'image') {
+    const items = loadSnapshot(meta.id) ?? [];
+    if (items.length < 3) return null;
+    const what = kind === 'listing' ? 'menu read from a public listing' : kind === 'document' ? 'PDF menu' : 'image menu';
+    emit({ type: 'step', step: 'reuse', status: 'done', detail: `Saved ${what} from ${meta.createdAt.slice(0, 10)}${kind === 'listing' ? '' : ' — the fleet re-checks it for changes'}` });
+    emit({ type: 'result', ok: true, meta, items });
+    return { ok: true, meta, code: hit.code, items, oracleCount: items.length, rounds: 0, mode: 'known' };
+  }
+  try {
+    const r = await Promise.race([
+      rerun(meta.id),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error('took too long')), kind === 'rendered' ? 150_000 : 60_000).unref()),
+    ]);
+    const n = r.run.items.length;
+    // A clear drop means the site changed: fall through and let the agent repair it.
+    if (r.run.ok && n >= 3 && n >= Math.floor(meta.baselineCount * 0.6)) {
+      emit({ type: 'step', step: 'reuse', status: 'done', detail: `Re-ran saved code v${meta.version} on the live page: ${n} dishes, 0 tokens` });
+      emit({ type: 'result', ok: true, meta, items: r.run.items });
+      return { ok: true, meta, code: hit.code, items: r.run.items, oracleCount: meta.score.oracleCount, rounds: 0, mode: 'known' };
+    }
+    emit({ type: 'step', step: 'reuse', status: 'skip', detail: `Saved code returned ${n} of ${meta.baselineCount} dishes — the page changed, repairing` });
+  } catch (e) {
+    emit({ type: 'step', step: 'reuse', status: 'skip', detail: `Saved code could not run (${(e as Error).message}) — forging again` });
+  }
+  return null;
 }
 
 /** Re-run a stored extractor on the live page — zero tokens. */

@@ -11,6 +11,8 @@ export interface ForgeRequest {
   restaurant?: string;
   city?: string;
   noReuse?: boolean;
+  /** Forge even when the restaurant is already in the library. */
+  fresh?: boolean;
 }
 
 /** Owns the live forge run — lives in App so it survives navigating between screens. */

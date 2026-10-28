@@ -1651,6 +1651,16 @@ select.input {
 .result-open {
   flex-shrink: 0;
 }
+.known-items,
+.ready-to-try {
+  margin-top: 20px;
+}
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
 .result-metrics {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -2635,7 +2645,8 @@ select.input {
   .result-head {
     flex-wrap: wrap;
   }
-  .result-open {
+  .result-open,
+  .result-actions {
     width: 100%;
   }
   .detail-head {

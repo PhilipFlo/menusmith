@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { api, type Fixture, type Health } from '../api.ts';
+import { api, type ExtractorMeta, type Fixture, type Health, type MenuItem } from '../api.ts';
 import { CodeViewer } from '../components/CodeViewer.tsx';
 import { ItemsTable } from '../components/ItemsTable.tsx';
 import { LlmLedger } from '../components/LlmLedger.tsx';
@@ -46,9 +46,11 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
       .catch(() => setFixtures([]));
   }, []);
 
-  const go = (raw: string) => {
+  // Typed restaurants are answered from the library when already known (instant, $0);
+  // the quick-pick chips always forge, so a visitor gets to watch the agents work.
+  const go = (raw: string, fresh?: boolean) => {
     if (!raw.trim() || running) return;
-    void start({ ...toRequest(raw, city), noReuse: noReuse || undefined });
+    void start({ ...toRequest(raw, city), noReuse: noReuse || undefined, fresh: fresh || undefined });
   };
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -56,14 +58,14 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
   };
   const pick = (url: string) => {
     setValue(url);
-    go(url);
+    go(url, true);
   };
   /** Start from just a name: Tavily finds the official website, then the agents take over. */
   const pickName = (name: string, inCity: string) => {
     if (running) return;
     setValue(name);
     setCity(inCity);
-    void start({ restaurant: name, city: inCity, noReuse: noReuse || undefined });
+    void start({ restaurant: name, city: inCity, noReuse: noReuse || undefined, fresh: true });
   };
 
   return (
@@ -115,7 +117,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
           <div className="forge-options">
             <label className="check">
               <input type="checkbox" checked={noReuse} onChange={(e) => setNoReuse(e.target.checked)} disabled={running} />
-              <span>Always write fresh code (skip library reuse)</span>
+              <span>Always write fresh code (skip the library)</span>
             </label>
           </div>
           <div className="chips-block">
@@ -163,7 +165,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
 
       <LiveStatus state={state} />
 
-      {state.phase !== 'idle' ? <RunView state={state} /> : <IdleExplainer />}
+      {state.phase !== 'idle' ? <RunView state={state} start={start} /> : <IdleExplainer />}
     </div>
   );
 }
@@ -216,7 +218,7 @@ function IdleExplainer() {
   );
 }
 
-function RunView({ state }: { state: ForgeState }) {
+function RunView({ state, start }: { state: ForgeState; start: ForgeController['start'] }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (state.phase !== 'running') return;
@@ -251,8 +253,13 @@ function RunView({ state }: { state: ForgeState }) {
           </Panel>
         </aside>
         <div className="run-main">
-          {state.phase === 'success' && <SuccessCard state={state} />}
-          {state.phase === 'failed' && <FailureCard state={state} />}
+          {state.phase === 'success' && (
+            <SuccessCard
+              state={state}
+              onFresh={() => state.input && void start({ url: state.input.url, restaurant: state.input.restaurant, city: state.input.city, fresh: true })}
+            />
+          )}
+          {state.phase === 'failed' && <FailureCard state={state} start={start} />}
           {(state.code.length > 0 || state.tests.length > 0) && <Rounds state={state} />}
           <Panel title="LLM calls" subtitle="Every model call, routed to the cheapest Nemotron that can do the job.">
             <LlmLedger calls={state.llm} />
@@ -301,7 +308,7 @@ function RunView({ state }: { state: ForgeState }) {
   );
 }
 
-function SuccessCard({ state }: { state: ForgeState }) {
+function SuccessCard({ state, onFresh }: { state: ForgeState; onFresh: () => void }) {
   const meta = state.result?.meta;
   const items = state.result?.items ?? [];
   const s = state.summary;
@@ -309,6 +316,7 @@ function SuccessCard({ state }: { state: ForgeState }) {
   const cost = s?.costUsd ?? meta?.costUsd ?? 0;
   const reused = s?.mode === 'reused' || !!meta?.reusedFrom;
   const kind = meta?.source?.kind;
+  if (s?.mode === 'known' && meta) return <KnownCard meta={meta} items={items} ms={s.ms} onFresh={onFresh} />;
   return (
     <section className="result-card is-success" aria-label="Result">
       <div className="result-head">
@@ -394,28 +402,80 @@ function SuccessCard({ state }: { state: ForgeState }) {
   );
 }
 
+/** A restaurant that is already in the library: answered by its saved code, no AI. */
+function KnownCard({ meta, items, ms, onFresh }: { meta: ExtractorMeta; items: MenuItem[]; ms: number; onFresh: () => void }) {
+  const kind = meta.source?.kind;
+  const reading = kind === 'listing' || kind === 'document' || kind === 'image';
+  return (
+    <section className="result-card is-success" aria-label="Result">
+      <div className="result-head">
+        <StateIcon state="done" size={28} />
+        <div>
+          <h2 className="result-title">
+            Already in the library
+            <Badge tone="info" title="Answered without calling the AI">
+              0 tokens
+            </Badge>
+          </h2>
+          <p className="result-line num">
+            <strong>{plural(items.length, 'dish', 'dishes')}</strong>
+            <span className="sep">·</span>
+            <strong className="pass-text">$0.0000</strong>
+            <span className="sep">·</span>
+            {duration(ms)}
+          </p>
+          <p className="small muted">
+            {reading
+              ? kind === 'listing'
+                ? `This menu was saved on ${meta.createdAt.slice(0, 10)} from a public listing on ${hostOf(meta.source?.request?.url)}.`
+                : `This ${kind === 'document' ? 'PDF' : 'image'} menu was saved on ${meta.createdAt.slice(0, 10)}; the nightly fleet re-reads it only when the ${kind === 'document' ? 'file' : 'pictures'} change.`
+              : `Menusmith re-ran the extractor it wrote earlier (v${meta.version}) on the live page just now — that is the point: once the code exists, every re-scrape is free.`}{' '}
+            Want to watch the agents do it from scratch?
+          </p>
+        </div>
+        <div className="result-actions">
+          <button type="button" className="btn btn-primary" onClick={onFresh}>
+            <ForgeIcon /> Forge it fresh
+          </button>
+          <a className="btn btn-secondary" href={href.extractor(meta.id)}>
+            Open in library →
+          </a>
+        </div>
+      </div>
+      {items.length > 0 && (
+        <div className="known-items">
+          <ItemsTable items={items} caption={reading ? 'Saved menu' : 'Dishes extracted just now by the saved extractor'} />
+        </div>
+      )}
+    </section>
+  );
+}
+
 /** Plain-language "why, and what to try next" for the common ways a forge stops. */
 function nextStep(reason: string): string | null {
   if (/HTTP 40[1356]|HTTP 429|blocked|bot protection/i.test(reason))
     return 'This website blocks automated visitors. Menusmith respects that and does not try to get around it — try another restaurant.';
   if (/no menu with dishes found|too few menu items|menu images could not be read/i.test(reason))
     return 'No menu with prices was found on this website. Many chains only show prices inside a location-specific ordering app (pick a store, then order) — try a single restaurant’s own site, the URL of the page that lists dishes and prices, or just type the name and city.';
-  if (/could not load|timed out|unreachable|ENOTFOUND|HTTP 404|HTTP 5\d\d/i.test(reason))
+  if (/could not load|fetch failed|timed out|unreachable|ENOTFOUND|HTTP 404|HTTP 5\d\d/i.test(reason))
     return 'The website could not be loaded right now. Check the address, or try again in a minute.';
   if (/no passing extractor/i.test(reason))
     return 'The agent wrote code that extracts most of the menu (below), but it did not agree closely enough with Nemotron’s own reading to be trusted, so nothing was committed.';
   if (/time budget|request timed out|code generation failed|oracle failed|rate.?limit|HTTP 50\d|overloaded/i.test(reason))
     return 'The AI service (NVIDIA Nemotron on Nebius Token Factory) was slow to answer just now — please try again in a minute.';
+  if (/used up/i.test(reason)) return null; // the message already says what still works
   if (/budget|busy|too many/i.test(reason)) return 'The public demo is rate-limited to keep it free — try again in a little while.';
   return null;
 }
 
-function FailureCard({ state }: { state: ForgeState }) {
+function FailureCard({ state, start }: { state: ForgeState; start: ForgeController['start'] }) {
   const reason = state.summary?.reason || state.result?.reason || state.error || 'The agent stopped before finishing.';
   const best = bestTest(state.tests);
   const keyHint = /api key|401|unauthor|NEBIUS/i.test(reason + (state.error ?? ''));
   const hint = keyHint ? null : nextStep(reason);
   const draft = state.result?.items ?? [];
+  const transient = /AI service|slow to answer|could not be loaded|rate-limited/.test(hint ?? '');
+  const retry = () => state.input && void start({ ...state.input });
   return (
     <section className="result-card is-fail" aria-label="Result">
       <div className="result-head">
@@ -430,8 +490,14 @@ function FailureCard({ state }: { state: ForgeState }) {
               The forge needs Nemotron on Nebius Token Factory — add <code>NEBIUS_API_KEY</code> to <code>.env</code> and restart the server.
             </p>
           )}
+          {transient && state.input && (
+            <button type="button" className="btn btn-secondary" onClick={retry}>
+              Try again
+            </button>
+          )}
         </div>
       </div>
+      <ReadyToTry start={start} />
       {best && (
         <div className="best-attempt">
           <h3 className="h3">
@@ -443,6 +509,36 @@ function FailureCard({ state }: { state: ForgeState }) {
       )}
       {draft.length > 0 && <ItemsTable items={draft} caption="Best attempt — not committed (shown for transparency)" />}
     </section>
+  );
+}
+
+/** A failure is never a dead end: real restaurants already in the library answer instantly. */
+function ReadyToTry({ start }: { start: ForgeController['start'] }) {
+  const [list, setList] = useState<ExtractorMeta[] | null>(null);
+  useEffect(() => {
+    api
+      .library()
+      .then(setList)
+      .catch(() => setList([]));
+  }, []);
+  // One per site; US and other non-Norwegian sites first (most visitors test near home).
+  const seen = new Set<string>();
+  const ready = (list ?? [])
+    .filter((m) => /^https?:/.test(m.url) && m.baselineCount >= 10 && !seen.has(hostOf(m.url)) && seen.add(hostOf(m.url)))
+    .sort((x, y) => Number(hostOf(x.url).endsWith('.no')) - Number(hostOf(y.url).endsWith('.no')))
+    .slice(0, 8);
+  if (!ready.length) return null;
+  return (
+    <div className="chips-block ready-to-try">
+      <span className="chips-label">Ready now · instant, $0</span>
+      <div className="chips">
+        {ready.map((m) => (
+          <button type="button" key={m.id} className="chip chip-outline" onClick={() => void start({ url: m.url })} title={m.url}>
+            {m.restaurant || hostOf(m.url)}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

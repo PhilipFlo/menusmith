@@ -7,7 +7,7 @@ import { streamSSE } from 'hono/streaming';
 import { config, MODELS, ROOT } from '../config.ts';
 import { redesignedFixtures, setFixtureRedesigned } from '../html/fetch.ts';
 import { listExtractors, loadExtractor, loadSnapshot, loadVersion } from '../library/store.ts';
-import { forge } from '../agent/pipeline.ts';
+import { forge, knownExtractor } from '../agent/pipeline.ts';
 import { CheckError, checkExtractor, fleetHistory, runFleet } from '../fleet/fleet.ts';
 import type { AgentEvent } from '../types.ts';
 import { Ledger } from '../llm/client.ts';
@@ -48,9 +48,12 @@ function budgetLeft(): number {
 
 let running = 0;
 const hits = new Map<string, number[]>();
-function allow(ip: string): string | null {
-  if (budgetLeft() <= 0) return `Today's model budget for this public demo ($${DAILY_BUDGET_USD}) is used up — browse the Library and Fleet, or run Menusmith locally with your own key.`;
-  if (running >= MAX_CONCURRENT_FORGES) return 'The agent is busy with other runs — try again in a minute.';
+function allow(ip: string, known = false): string | null {
+  if (running >= MAX_CONCURRENT_FORGES + (known ? 2 : 0)) return 'The agent is busy with other runs — try again in a minute.';
+  // A restaurant already in the library is answered by its saved code: no model calls,
+  // so it works after the daily budget is spent and does not count toward the hourly limit.
+  if (known) return null;
+  if (budgetLeft() <= 0) return `Today's AI budget for this public demo ($${DAILY_BUDGET_USD}) is used up — it resets at midnight UTC. Restaurants already in the library still answer instantly (see below), or run Menusmith locally with your own key.`;
   const now = Date.now();
   const recent = (hits.get(ip) || []).filter((t) => now - t < 3_600_000);
   if (recent.length >= FORGES_PER_HOUR) return 'Hourly limit reached for this demo.';
@@ -92,10 +95,12 @@ app.get('/api/health', (c) =>
 );
 
 app.post('/api/forge', async (c) => {
-  const body = (await c.req.json().catch(() => ({}))) as { url?: string; restaurant?: string; city?: string; noReuse?: boolean };
+  const body = (await c.req.json().catch(() => ({}))) as { url?: string; restaurant?: string; city?: string; noReuse?: boolean; fresh?: boolean };
   if (!body.url && !body.restaurant) return c.json({ error: 'url or restaurant required' }, 400);
   if (body.url && !/^(https?:\/\/|fixture:\/\/)/i.test(body.url)) return c.json({ error: 'URL must start with http(s)://' }, 400);
-  const denied = allow(clientIp(c));
+  await refresh();
+  const known = !!body.url && !body.fresh && !body.noReuse && !!knownExtractor(body.url);
+  const denied = allow(clientIp(c), known);
   if (denied) return c.json({ error: denied }, 429);
   running++;
   return streamSSE(c, async (stream) => {
@@ -107,7 +112,7 @@ app.post('/api/forge', async (c) => {
     stream.onAbort(() => abort.abort());
     const ledger = new Ledger(Math.min(PER_FORGE_USD, Math.max(0, budgetLeft())), abort.signal);
     try {
-      const out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse, ledger }, send);
+      const out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse, fresh: body.fresh, ledger }, send);
       await stream.writeSSE({
         event: 'summary',
         data: JSON.stringify({
