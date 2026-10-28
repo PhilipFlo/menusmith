@@ -1,0 +1,13 @@
+# The free Render instance sleeps after 15 quiet minutes and then needs ~1 minute to wake.
+# During judging, a light health ping keeps the live demo instant for the first visitor.
+name: keep-awake
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 https://menusmith.onrender.com/api/health -o /dev/null -w "%{http_code} in %{time_total}s\n"
