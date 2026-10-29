@@ -71,6 +71,21 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
     void start({ restaurant: name, city: inCity, noReuse: noReuse || undefined, fresh: true });
   };
 
+  const replay = health?.llmMode === 'replay';
+  const testSites = (
+    <div className="chips">
+      {fixtures === null && <span className="chip chip-skeleton" aria-hidden="true" />}
+      {fixtures?.length === 0 && <span className="small muted">No demo sites found on the server.</span>}
+      {fixtures?.map((f) => (
+        <button type="button" key={f.slug} className="chip" onClick={() => pick(f.url)} disabled={running} title={f.url}>
+          <span>{f.restaurant || f.slug}</span>
+          {f.platform && f.platform !== 'unknown' && <span className="chip-meta">{f.platform}</span>}
+          {f.redesigned && <span className="chip-flag">redesigned</span>}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="forge-page">
       <section className="hero">
@@ -123,42 +138,41 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
               <span>Always write fresh code (skip the library)</span>
             </label>
           </div>
-          <div className="chips-block">
-            <span className="chips-label">Real websites</span>
-            <div className="chips">
-              {EXAMPLE_SITES.map((s) => (
-                <button type="button" key={s.url} className="chip chip-outline" onClick={() => pick(s.url)} disabled={running} title={s.url}>
-                  <span>{s.label}</span>
-                  <span className="chip-meta">{s.meta}</span>
+          {/* Offline (replay) only the test sites have recorded model answers, so they lead and real sites are hidden. */}
+          {!replay && (
+            <div className="chips-block">
+              <span className="chips-label">Real websites</span>
+              <div className="chips">
+                {EXAMPLE_SITES.map((s) => (
+                  <button type="button" key={s.url} className="chip chip-outline" onClick={() => pick(s.url)} disabled={running} title={s.url}>
+                    <span>{s.label}</span>
+                    <span className="chip-meta">{s.meta}</span>
+                  </button>
+                ))}
+                <button type="button" className="chip chip-outline" onClick={() => pickName(NAME_EXAMPLE.name, NAME_EXAMPLE.city)} disabled={running} title="No URL — Tavily search finds the official website">
+                  <span>{NAME_EXAMPLE.label}</span>
+                  <span className="chip-meta">{NAME_EXAMPLE.meta}</span>
                 </button>
-              ))}
-              <button type="button" className="chip chip-outline" onClick={() => pickName(NAME_EXAMPLE.name, NAME_EXAMPLE.city)} disabled={running} title="No URL — Tavily search finds the official website">
-                <span>{NAME_EXAMPLE.label}</span>
-                <span className="chip-meta">{NAME_EXAMPLE.meta}</span>
-              </button>
+              </div>
             </div>
-          </div>
-          <div className="chips-block">
-            <span className="chips-label" title="Fictional sites with known menus — used for the self-healing demo on the Fleet page">Test sites</span>
-            <div className="chips">
-              {fixtures === null && <span className="chip chip-skeleton" aria-hidden="true" />}
-              {fixtures?.length === 0 && <span className="small muted">No demo sites found on the server.</span>}
-              {fixtures?.map((f) => (
-                <button type="button" key={f.slug} className="chip" onClick={() => pick(f.url)} disabled={running} title={f.url}>
-                  <span>{f.restaurant || f.slug}</span>
-                  {f.platform && f.platform !== 'unknown' && <span className="chip-meta">{f.platform}</span>}
-                  {f.redesigned && <span className="chip-flag">redesigned</span>}
-                </button>
-              ))}
+          )}
+          {replay ? (
+            <div className="chips-block">
+              <span className="chips-label">Demo restaurants</span>
+              {testSites}
             </div>
-          </div>
-
+          ) : (
+            <details className="test-sites">
+              <summary>{fixtures?.length ?? 10} test sites with known menus — used for the accuracy benchmark and the self-healing demo (Fleet)</summary>
+              {testSites}
+            </details>
+          )}
         </form>
         {health && health.llmMode === 'replay' && <p className="small muted hero-note">Replay mode: model calls are served from recorded cassettes.</p>}
         {health && health.browser && health.slowBrowser && (
           <p className="small muted hero-note">
             Menus that only appear after JavaScript runs are rendered in a real headless browser. On this free server (0.1 CPU) that step alone can take
-            2–4 minutes — the steps below keep updating while it works. The first request after a quiet spell also takes a minute to wake the server.
+            2–4 minutes — the steps below keep updating while it works.
           </p>
         )}
         {health && health.browser === false && (

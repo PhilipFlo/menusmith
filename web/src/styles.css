@@ -1385,6 +1385,18 @@ select.input {
   padding-top: 0;
   margin-top: 10px;
 }
+.test-sites {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.test-sites summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.test-sites .chips {
+  margin-top: 10px;
+}
 .chips-label {
   flex-shrink: 0;
   width: 132px;
