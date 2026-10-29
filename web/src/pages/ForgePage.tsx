@@ -11,15 +11,18 @@ import { bestTest, isReasoning, STEP_INFO, upcomingSteps, type ForgeState } from
 import { duration, int, plural, score as fmtScore, usd } from '../format.ts';
 import { href } from '../router.ts';
 
-/** Real restaurant sites for the quick-pick row. */
-const EXAMPLE_SITES: { label: string; url: string }[] = [
-  { label: 'Damaskus Huset · Oslo', url: 'https://semeny.no/sted/634damaskushusetrestaurant' },
-  { label: 'Pizzabakeren · Oslo', url: 'https://www.pizzabakeren.no/glutenfri' },
-  { label: 'Pele Pele · PDF menu', url: 'https://pelepele.no/wp-content/uploads/2025/09/PelePele-Menu.pdf' },
-  { label: 'Listen to Delhi · image menu', url: 'https://listentodelhi.no/' },
+/** Real restaurant sites for the quick-pick row — each one a different kind of menu, each
+ *  tested to forge from scratch twice in a row on the free-tier settings. */
+const EXAMPLE_SITES: { label: string; meta: string; url: string }[] = [
+  { label: 'Burma Superstar', meta: 'San Francisco', url: 'https://www.burmasuperstar.com/dinein-menu' },
+  { label: 'Tamarine', meta: 'Palo Alto', url: 'https://www.tamarinerestaurant.com/menu' },
+  { label: 'Tartine Manufactory', meta: 'PDF menu', url: 'https://tartinebakery.com/san-francisco/manufactory' },
+  { label: 'Petite Edith', meta: 'image menu', url: 'https://www.petiteedith.com/menus' },
+  { label: 'Chipotle', meta: 'chain · public listing', url: 'https://www.chipotle.com/' },
+  { label: 'Damaskus Huset', meta: 'Oslo · NOK', url: 'https://semeny.no/sted/634damaskushusetrestaurant' },
 ];
 
-const NAME_EXAMPLE = { label: 'Just a name: “Alex Sushi, Oslo” · Tavily', name: 'Alex Sushi', city: 'Oslo' };
+const NAME_EXAMPLE = { label: 'Just a name: “Nopalito, San Francisco”', meta: 'Tavily', name: 'Nopalito', city: 'San Francisco' };
 
 function toRequest(raw: string, city: string) {
   const v = raw.trim();
@@ -100,7 +103,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
               <label htmlFor={cityId}>
                 City <span className="muted">(optional)</span>
               </label>
-              <input id={cityId} className="input input-lg" type="text" placeholder="Oslo" value={city} onChange={(e) => setCity(e.target.value)} disabled={running || isUrl} />
+              <input id={cityId} className="input input-lg" type="text" placeholder="San Francisco" value={city} onChange={(e) => setCity(e.target.value)} disabled={running || isUrl} />
             </div>
             <div className="field field-action">
               {running ? (
@@ -121,7 +124,22 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
             </label>
           </div>
           <div className="chips-block">
-            <span className="chips-label">Demo restaurants</span>
+            <span className="chips-label">Real websites</span>
+            <div className="chips">
+              {EXAMPLE_SITES.map((s) => (
+                <button type="button" key={s.url} className="chip chip-outline" onClick={() => pick(s.url)} disabled={running} title={s.url}>
+                  <span>{s.label}</span>
+                  <span className="chip-meta">{s.meta}</span>
+                </button>
+              ))}
+              <button type="button" className="chip chip-outline" onClick={() => pickName(NAME_EXAMPLE.name, NAME_EXAMPLE.city)} disabled={running} title="No URL — Tavily search finds the official website">
+                <span>{NAME_EXAMPLE.label}</span>
+                <span className="chip-meta">{NAME_EXAMPLE.meta}</span>
+              </button>
+            </div>
+          </div>
+          <div className="chips-block">
+            <span className="chips-label" title="Fictional sites with known menus — used for the self-healing demo on the Fleet page">Test sites</span>
             <div className="chips">
               {fixtures === null && <span className="chip chip-skeleton" aria-hidden="true" />}
               {fixtures?.length === 0 && <span className="small muted">No demo sites found on the server.</span>}
@@ -134,19 +152,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
               ))}
             </div>
           </div>
-          <div className="chips-block">
-            <span className="chips-label">Real websites</span>
-            <div className="chips">
-              {EXAMPLE_SITES.map((s) => (
-                <button type="button" key={s.url} className="chip chip-outline" onClick={() => pick(s.url)} disabled={running} title={s.url}>
-                  {s.label}
-                </button>
-              ))}
-              <button type="button" className="chip chip-outline" onClick={() => pickName(NAME_EXAMPLE.name, NAME_EXAMPLE.city)} disabled={running} title="No URL — Tavily search finds the official website">
-                {NAME_EXAMPLE.label}
-              </button>
-            </div>
-          </div>
+
         </form>
         {health && health.llmMode === 'replay' && <p className="small muted hero-note">Replay mode: model calls are served from recorded cassettes.</p>}
         {health && health.browser && health.slowBrowser && (

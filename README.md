@@ -12,11 +12,12 @@ agent heals its own code.
 > Nebius × NVIDIA Global AI Hackathon 2026 · Track: **Coding and Agentic Engineering**
 > **Live demo: https://menusmith.onrender.com** (free tier — the first request after a quiet spell takes ~1 min to wake up) · Demo video: _(link)_
 
-> **Judges — a 2-minute tour.** Open the live demo (allow ~1 min to wake up) →
-> **Fleet** → in *“Demo: simulate a website redesign”* flip **Fjord Burger** → **Run fleet now** →
-> open the healed extractor and its **version diff**. On any extractor page, **Re-scrape now** ($0) and **Check against
-> Nemotron** show the coverage check. On **Live Forge**, *“Just a name”* starts from a restaurant
-> name only (Tavily finds the website). Offline, no key: `npm ci && npm run demo`.
+> **Judges — a 2-minute tour.** On **Live Forge**, click a real restaurant (Burma Superstar, a PDF
+> menu, an image menu, a chain) or type any restaurant you know — by URL or just its name and
+> city. On **Discover**, try *“pizza in San Francisco”* → **Forge all** → the price index. On
+> **Fleet**, flip **Fjord Burger** in *“Demo: simulate a website redesign”* → **Run fleet now** →
+> open the healed extractor and its **version diff**. On any extractor page, **Re-scrape now** ($0)
+> and **Check against Nemotron** show the coverage check. Offline, no key: `npm ci && npm run demo`.
 
 ---
 
