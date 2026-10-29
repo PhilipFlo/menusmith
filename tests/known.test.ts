@@ -34,10 +34,12 @@ describe('public listing must name the restaurant', () => {
     expect(mentionsBrand('Zuni Café, San Francisco', 'zunicafe')).toBe(true);
     expect(mentionsBrand("Katz's Delicatessen prices", 'katzsdeli')).toBe(true);
     expect(mentionsBrand('Alex Sushi Aker Brygge — meny', 'Alex Sushi')).toBe(true);
+    expect(mentionsBrand('https://cdn.example/tcolv-hattiebs-menu.pdf', "Hattie B's Hot Chicken")).toBe(true);
   });
   it('rejects another restaurant’s listing', () => {
     expect(mentionsBrand('Golden Gate Pizza menu $12.99', 'no such restaurant xyz 123')).toBe(false);
     expect(mentionsBrand('Tony’s Pizza Napoletana menu', 'joespizza')).toBe(false);
     expect(mentionsBrand('anything', 'ab')).toBe(false);
+    expect(mentionsBrand('Peter Pan Diner menu', 'Peter Luger Steak House')).toBe(false);
   });
 });
