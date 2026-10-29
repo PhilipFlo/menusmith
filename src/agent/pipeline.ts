@@ -883,8 +883,9 @@ export function knownExtractor(url: string, library: StoredExtractor[] = listExt
   if (samePage) return samePage;
   const whole = all.filter((x) => x.meta.id === idForDomain(x.meta.domain));
   if (whole.length === 1) return whole[0]!;
-  // Just the homepage, and the library holds one menu for this site: that is the one.
-  return want.path === '/' && all.length === 1 ? all[0]! : null;
+  // Just the homepage of a site whose one saved menu came from a public listing (listing ids
+  // carry the typed path). Never on hosted platforms, where the homepage is many restaurants.
+  return want.path === '/' && all.length === 1 && all[0]!.meta.source?.kind === 'listing' ? all[0]! : null;
 }
 
 /** Serve a library hit: re-run its code on the live page, or show the saved menu for readings. */

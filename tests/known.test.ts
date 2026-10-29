@@ -21,7 +21,7 @@ describe('library-first answers', () => {
     expect(knownExtractor('https://www.joejuice.com/store/300', lib)).toBeNull();
     expect(knownExtractor('https://semeny.no/sted/999other', lib)).toBeNull();
     // A bare homepage with exactly one menu saved for the site.
-    expect(knownExtractor('https://peterluger.com/', [...lib, x('peterluger-com-pages-menus', 'https://peterluger.com/pages/menus', 'peterluger.com')])?.meta.id).toBe('peterluger-com-pages-menus');
+    expect(knownExtractor('https://peterluger.com/', [...lib, { ...x('peterluger-com-pages-menus', 'https://peterluger.com/pages/menus', 'peterluger.com'), meta: { id: 'peterluger-com-pages-menus', url: 'https://peterluger.com/pages/menus', domain: 'peterluger.com', source: { kind: 'listing' } } } as unknown as StoredExtractor])?.meta.id).toBe('peterluger-com-pages-menus');
     expect(knownExtractor('https://semeny.no/', lib)).toBeNull();
   });
   it('unknown sites and junk input are not matched', () => {
