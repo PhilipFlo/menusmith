@@ -108,6 +108,18 @@ const CITY_COUNTRY: [RegExp, { country: string; tld: string }][] = [
   ],
 ];
 
+/** Short forms chains use in paths for a city. */
+const CITY_SHORT: Record<string, string[]> = {
+  'new york': ['nyc', 'ny', 'new-york', 'manhattan'],
+  nyc: ['nyc', 'ny', 'new-york'],
+  'san francisco': ['sf', 'san-francisco'],
+  'los angeles': ['la', 'los-angeles'],
+  chicago: ['chi', 'chicago'],
+  'las vegas': ['vegas', 'lv', 'las-vegas'],
+  washington: ['dc', 'washington'],
+};
+const OTHER_CITY = /(^|\/|-)(nyc|new-?york|brooklyn|manhattan|chicago|los-?angeles|sf|san-?francisco|seattle|austin|miami|boston|dallas|houston|denver|atlanta|nashville|vegas|las-?vegas|philadelphia|philly|london|oslo|portland|san-?diego|toronto|paris)(\/|-|$)/;
+
 /** Find the restaurant's own website from its name (+ city). */
 export async function findOfficialSite(restaurant: string, city?: string): Promise<{ url: string; title: string } | null> {
   const where = city ? CITY_COUNTRY.find(([re]) => re.test(city))?.[1] : undefined;
@@ -175,10 +187,15 @@ export async function findOfficialSite(restaurant: string, city?: string): Promi
   if (!best) return null;
   // On that website: its menu page if search found one, else a page for this city, else home.
   const same = own.filter((r) => host(r.url) === host(best.url));
-  // The main menu page: the shortest menu path (/menu, not /menu/not-so-secret-menu).
+  // Chains keep a menu per city (/nyc/menus, /chicago/menus): never another city's.
+  const path = (u: string) => new URL(u).pathname.toLowerCase();
+  const ours = (p: string) => !!city && (squash(p).includes(squash(city)) || (CITY_SHORT[city.toLowerCase().trim()] ?? []).some((s) => new RegExp(`(^|/|-)${s}(/|-|$)`).test(p)));
+  const elsewhere = (p: string) => !ours(p) && OTHER_CITY.test(p);
+  // The main menu page: this city's if there is one, else the shortest menu path
+  // (/menu, not /menu/not-so-secret-menu).
   const menuPage = same
-    .filter((r) => /\/(menus?|meny|food|eat)(\/|$|-)/i.test(new URL(r.url).pathname))
-    .sort((x, y) => new URL(x.url).pathname.length - new URL(y.url).pathname.length)[0];
+    .filter((r) => /\/(menus?|meny|food|eat)(\/|$|-)/i.test(path(r.url)) && !(city && elsewhere(path(r.url))))
+    .sort((x, y) => Number(ours(path(y.url))) - Number(ours(path(x.url))) || path(x.url).length - path(y.url).length)[0];
   const cityPage = city ? same.find((r) => squash(new URL(r.url).pathname).includes(squash(city))) : undefined;
   const pick = menuPage ?? cityPage;
   if (pick) return { url: pick.url, title: pick.title };
