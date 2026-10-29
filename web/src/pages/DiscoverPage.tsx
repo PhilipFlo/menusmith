@@ -29,7 +29,7 @@ interface Area {
   costUsd: number;
 }
 
-const EXAMPLES = ['tacos in Austin', 'pizza in San Francisco', 'ramen in New York', 'burgers in Chicago'];
+const EXAMPLES = ['pizza in San Francisco', 'ramen in New York', 'burgers in Chicago'];
 
 /** Owns the area run — lives in App so it survives navigating to the library and back. */
 export function useAreaController() {
@@ -153,7 +153,7 @@ export function DiscoverPage({ ctl }: { ctl: AreaController }) {
           <div className="forge-fields">
             <div className="field field-grow">
               <label htmlFor="area-q">What and where</label>
-              <input id="area-q" className="input input-lg" type="text" placeholder="tacos in Austin" value={value} onChange={(e) => setValue(e.target.value)} disabled={busy} autoComplete="off" />
+              <input id="area-q" className="input input-lg" type="text" placeholder="pizza in San Francisco" value={value} onChange={(e) => setValue(e.target.value)} disabled={busy} autoComplete="off" />
             </div>
             <div className="field field-action">
               <button type="submit" className="btn btn-lg btn-primary" disabled={busy || value.trim().length < 3}>
