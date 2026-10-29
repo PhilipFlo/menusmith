@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { knownExtractor } from '../src/agent/pipeline.ts';
+import { knownExtractor, mentionsBrand } from '../src/agent/pipeline.ts';
 import type { StoredExtractor } from '../src/library/store.ts';
 
 const x = (id: string, url: string, domain: string) => ({ meta: { id, url, domain }, code: '' }) as unknown as StoredExtractor;
@@ -24,5 +24,20 @@ describe('library-first answers', () => {
   it('unknown sites and junk input are not matched', () => {
     expect(knownExtractor('https://example.com/', lib)).toBeNull();
     expect(knownExtractor('not a url', lib)).toBeNull();
+  });
+});
+
+describe('public listing must name the restaurant', () => {
+  it('matches domain brands against how listings write the name', () => {
+    expect(mentionsBrand('Joe & The Juice — Menu & Prices', 'joejuice')).toBe(true);
+    expect(mentionsBrand("Lou & Herbert's menu", 'louandherberts')).toBe(true);
+    expect(mentionsBrand('Zuni Café, San Francisco', 'zunicafe')).toBe(true);
+    expect(mentionsBrand("Katz's Delicatessen prices", 'katzsdeli')).toBe(true);
+    expect(mentionsBrand('Alex Sushi Aker Brygge — meny', 'Alex Sushi')).toBe(true);
+  });
+  it('rejects another restaurant’s listing', () => {
+    expect(mentionsBrand('Golden Gate Pizza menu $12.99', 'no such restaurant xyz 123')).toBe(false);
+    expect(mentionsBrand('Tony’s Pizza Napoletana menu', 'joespizza')).toBe(false);
+    expect(mentionsBrand('anything', 'ab')).toBe(false);
   });
 });

@@ -233,12 +233,14 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
           const prices = (text.match(/(?:\$|€|£|kr\.?\s?)\d{1,4}(?:[.,]\d{1,2})?|\d{1,4}(?:[.,]\d{2})?\s?(?:kr|,-|€)/gi) || []).length;
           return { url: r.url, text, prices };
         })
-        .filter((c) => c.prices >= 8)
+        // Must be THIS restaurant's page: a listing that never names it is another restaurant.
+        .filter((c) => c.prices >= 8 && mentionsBrand(`${c.url} ${c.text.slice(0, 20_000)}`, brand))
         .sort((a, b) => b.prices - a.prices);
     } catch (e) {
       emit({ type: 'log', message: `Search failed: ${(e as Error).message}` });
     }
     const respects = /bot protection|blocks automated/.test(why) ? 'Menusmith respects bot protection, and ' : '';
+    if (!candidates.length && !input.restaurant) emit({ type: 'log', message: `No listing with prices names "${brand}"` });
     if (!candidates.length) {
       emit({ type: 'step', step: 'listing', status: 'fail', detail: 'no public listing with prices found' });
       return fail(`${why} — ${respects}no public listing of the menu was found`);
@@ -336,18 +338,15 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     page = await fetchPage(url);
   } catch (e) {
     if (BLOCKED_STATUS.test((e as Error).message)) return listingPath(url, `${(e as Error).message} — the site blocks automated visitors`);
-    emit({ type: 'step', step: 'fetch', status: 'fail', detail: (e as Error).message });
-    return fail((e as Error).message);
+    if (ledger.signal?.aborted) return fail((e as Error).message);
+    return listingPath(url, `the restaurant’s own website could not be loaded (${(e as Error).message})`);
   }
   const wall = detectBotWall(page.html);
   if (wall) return listingPath(page.finalUrl, `the site is behind bot protection (${wall})`);
   if (BLOCKED_STATUS.test(`HTTP ${page.status}`)) return listingPath(page.finalUrl, `HTTP ${page.status} from ${url} — the site blocks automated visitors`);
   // Served as a PDF despite the URL.
   if (page.html.startsWith('%PDF')) return documentPath(page.finalUrl, page.finalUrl);
-  if (page.status >= 400) {
-    emit({ type: 'step', step: 'fetch', status: 'fail', detail: `HTTP ${page.status}` });
-    return fail(`HTTP ${page.status} from ${url}`);
-  }
+  if (page.status >= 400) return listingPath(page.finalUrl, `the restaurant’s own website could not be loaded (HTTP ${page.status} from ${url})`);
   emit({ type: 'step', step: 'fetch', status: 'done', detail: `${Math.round(page.html.length / 1024)} KB` });
 
   if (!input.noDiscover) {
@@ -363,7 +362,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     acq = await acquire(page, emit, { allowRender: input.allowRender !== false });
   } catch (e) {
     emit({ type: 'step', step: 'render', status: 'fail', detail: (e as Error).message });
-    return fail(`could not load the page in a browser: ${(e as Error).message}`);
+    if (ledger.signal?.aborted || !/^https?:/.test(page.finalUrl)) return fail(`could not load the page in a browser: ${(e as Error).message}`);
+    return listingPath(page.finalUrl, `the restaurant’s own website could not be loaded in a browser (${(e as Error).message})`);
   }
   const mode: 'html' | 'json' = acq.kind === 'json' ? 'json' : 'html';
   const menuUrl = acq.url;
@@ -400,6 +400,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
       // itself (its text, a widget, links) like any rendered page.
       if (!acq.html || acq.text.length < 200) {
         emit({ type: 'step', step: 'vision', status: 'fail', detail: 'no readable menu in the images' });
+        if (!input.repairOf && /^https?:/.test(menuUrl)) return listingPath(menuUrl, 'the menu pictures on the restaurant’s own website could not be read');
         return fail('the menu images could not be read');
       }
       emit({ type: 'step', step: 'vision', status: 'fail', detail: 'the pictures are not a menu — reading the page itself' });
@@ -789,6 +790,29 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     code: best?.code,
     items: best?.run.items,
   };
+}
+
+/** Letters and digits only, accents dropped: "Zuni Café" → "zunicafe". */
+const compact = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+/**
+ * Does this listing page name the restaurant? The brand may be a domain ("joejuice",
+ * "louandherberts") or a typed name; listings write "Joe & The Juice", "Lou & Herbert's".
+ */
+export function mentionsBrand(text: string, brand: string): boolean {
+  const want = compact(brand);
+  if (want.length < 3) return false;
+  const t = text.toLowerCase();
+  const variants = [compact(t.replace(/&/g, 'and')), compact(t.replace(/&|\b(the|and|n)\b/g, ' '))];
+  if (variants.some((v) => v.includes(want))) return true;
+  // A typed name: every significant word must appear ("Alex Sushi" in "Alex Sushi Aker Brygge").
+  const words = brand.split(/\s+/).map(compact).filter((w) => w.length >= 3 && !['the', 'and', 'restaurant', 'cafe', 'bar'].includes(w));
+  return words.length > 0 && words.every((w) => variants[0]!.includes(w));
 }
 
 const hostKey = (u: string) => {

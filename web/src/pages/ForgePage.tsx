@@ -351,9 +351,7 @@ function SuccessCard({ state, onFresh }: { state: ForgeState; onFresh: () => voi
           </p>
           {kind === 'listing' && (
             <p className="small muted">
-              {/blocks automated|bot protection/i.test(meta?.history?.[meta.history.length - 1]?.reason ?? '')
-                ? 'The restaurant’s own website blocks automated visitors, and Menusmith does not get around bot protection. '
-                : 'The restaurant’s own website shows no menu with prices. '}
+              {listingWhy(meta?.history?.[meta.history.length - 1]?.reason ?? '')}
               This menu was read by Nemotron from a public listing on <strong>{hostOf(meta?.source?.request?.url)}</strong> found through search — prices there may lag behind the restaurant’s own.
             </p>
           )}
@@ -457,10 +455,10 @@ function nextStep(reason: string): string | null {
     return 'This website blocks automated visitors. Menusmith respects that and does not try to get around it — try another restaurant.';
   if (/no menu with dishes found|too few menu items|menu images could not be read/i.test(reason))
     return 'No menu with prices was found on this website. Many chains only show prices inside a location-specific ordering app (pick a store, then order) — try a single restaurant’s own site, the URL of the page that lists dishes and prices, or just type the name and city.';
-  if (/could not load|fetch failed|timed out|unreachable|ENOTFOUND|HTTP 404|HTTP 5\d\d/i.test(reason))
+  if (/could not load|could not be loaded|fetch failed|timed out|unreachable|ENOTFOUND|HTTP 404|HTTP 5\d\d/i.test(reason))
     return 'The website could not be loaded right now. Check the address, or try again in a minute.';
   if (/no passing extractor/i.test(reason))
-    return 'The agent wrote code that extracts most of the menu (below), but it did not agree closely enough with Nemotron’s own reading to be trusted, so nothing was committed.';
+    return 'The agent wrote code that extracts most of the menu, but it did not agree closely enough with Nemotron’s own reading to be trusted for free re-runs. Forging again often passes.';
   if (/time budget|request timed out|code generation failed|oracle failed|rate.?limit|HTTP 50\d|overloaded/i.test(reason))
     return 'The AI service (NVIDIA Nemotron on Nebius Token Factory) was slow to answer just now — please try again in a minute.';
   if (/used up/i.test(reason)) return null; // the message already says what still works
@@ -474,6 +472,8 @@ function FailureCard({ state, start }: { state: ForgeState; start: ForgeControll
   const keyHint = /api key|401|unauthor|NEBIUS/i.test(reason + (state.error ?? ''));
   const hint = keyHint ? null : nextStep(reason);
   const draft = state.result?.items ?? [];
+  // The agent's code did not pass, but Nemotron did read the menu: show it — never an empty result.
+  const reading = state.oracle && state.oracle.length >= 5 && !/listing/i.test(reason) ? state.oracle : null;
   const transient = /AI service|slow to answer|could not be loaded|rate-limited/.test(hint ?? '');
   const retry = () => state.input && void start({ ...state.input });
   return (
@@ -481,7 +481,7 @@ function FailureCard({ state, start }: { state: ForgeState; start: ForgeControll
       <div className="result-head">
         <StateIcon state="fail" size={28} />
         <div>
-          <h2 className="result-title">No extractor committed</h2>
+          <h2 className="result-title">{reading ? `Menu read — ${plural(reading.length, 'dish', 'dishes')}, no extractor committed yet` : 'No extractor committed'}</h2>
           <p className="result-reason">{reason}</p>
           {hint && <p className="small">{hint}</p>}
           {state.error && state.error !== reason && <ErrorNote>{state.error}</ErrorNote>}
@@ -507,7 +507,16 @@ function FailureCard({ state, start }: { state: ForgeState; start: ForgeControll
           <p className="small muted">Open round {best.round} below to see its code and what it missed.</p>
         </div>
       )}
-      {draft.length > 0 && <ItemsTable items={draft} caption="Best attempt — not committed (shown for transparency)" />}
+      {reading && (
+        <div className="known-items">
+          <p className="small muted">
+            Nemotron read this menu from the restaurant’s own page. The extractor the agent wrote did not match it closely enough to be trusted for free re-runs, so no code was saved — the reading
+            itself is shown here.
+          </p>
+          <ItemsTable items={reading} caption="The menu as read by Nemotron (not saved as code)" />
+        </div>
+      )}
+      {!reading && draft.length > 0 && <ItemsTable items={draft} caption="Best attempt — not committed (shown for transparency)" />}
     </section>
   );
 }
@@ -631,6 +640,12 @@ function Rounds({ state }: { state: ForgeState }) {
       </div>
     </Panel>
   );
+}
+
+function listingWhy(reason: string): string {
+  if (/blocks automated|bot protection/i.test(reason)) return 'The restaurant’s own website blocks automated visitors, and Menusmith does not get around bot protection. ';
+  if (/could not be (loaded|read)/i.test(reason)) return 'The restaurant’s own website could not be read just now. ';
+  return 'The restaurant’s own website shows no menu with prices. ';
 }
 
 function hostOf(u?: string | null): string {
