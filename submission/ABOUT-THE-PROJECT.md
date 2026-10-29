@@ -22,7 +22,7 @@ And because websites change, Menusmith takes care of itself:
 
 It handles the messy real web: normal websites, menus built by JavaScript (it catches the menu data the page loads), PDF menus, menus that are only a photo (read by Nemotron 3.5 Super VL), and websites that block bots — those it respects, and finds the menu on a public listing instead, clearly labelled.
 
-## What it can be used for
+### What it can be used for
 
 Menus are our test bed. The idea underneath is bigger: **put the expensive AI in the build step, not in every run.**
 
