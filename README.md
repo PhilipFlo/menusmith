@@ -13,7 +13,7 @@ agent heals its own code.
 > **Live demo: https://menusmith.onrender.com** (free tier — the first request after a quiet spell takes ~1 min to wake up) · Demo video: _(link)_
 
 > **Judges — a 2-minute tour.** On **Live Forge**, click a real restaurant (Burma Superstar, a PDF
-> menu, an image menu, a chain) or type any restaurant you know — by URL or just its name and
+> menu, an image menu) or type any restaurant you know — by URL or just its name and
 > city. On **Discover**, try *“pizza in San Francisco”* → **Forge all** → the price index. On
 > **Fleet**, flip **Fjord Burger** in *“Demo: simulate a website redesign”* → **Run fleet now** →
 > open the healed extractor and its **version diff**. On any extractor page, **Re-scrape now** ($0)

@@ -227,7 +227,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   // Bot-protected restaurant site: never get around it. Look for the menu on a public listing
   // through search instead (the blocked domain is excluded, so it is never contacted).
   const listingPath = async (siteUrl: string, why: string): Promise<ForgeOutcome> => {
-    emit({ type: 'step', step: 'fetch', status: 'fail', detail: why });
+    // Not an error: the run changes route (shown neutral, the reason stays visible).
+    emit({ type: 'step', step: 'fetch', status: 'done', detail: `${why} → reading a public listing instead` });
     if (!tavilyEnabled()) return fail(`${why} — Menusmith respects bot protection`);
     const domain = domainOf(siteUrl);
     const brand = input.restaurant || domain.replace(/^www\./, '').split('.')[0]!.replace(/[-_]+/g, ' ');

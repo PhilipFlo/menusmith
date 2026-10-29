@@ -18,7 +18,7 @@ const EXAMPLE_SITES: { label: string; meta: string; url: string }[] = [
   { label: 'Tamarine', meta: 'Palo Alto', url: 'https://www.tamarinerestaurant.com/menu' },
   { label: 'Tartine Manufactory', meta: 'PDF menu', url: 'https://tartinebakery.com/san-francisco/manufactory' },
   { label: 'Petite Edith', meta: 'image menu', url: 'https://www.petiteedith.com/menus' },
-  { label: 'Chipotle', meta: 'chain · public listing', url: 'https://www.chipotle.com/' },
+  { label: 'Rose Pizzeria', meta: 'San Francisco', url: 'https://www.rosepizzeria.com/location-sanfrancisco' },
   { label: 'Damaskus Huset', meta: 'Oslo · NOK', url: 'https://semeny.no/sted/634damaskushusetrestaurant' },
 ];
 

@@ -170,6 +170,8 @@ export function upcomingSteps(s: ForgeState): string[] {
   const order: string[] = [...PIPELINE];
   const seen = s.steps.map((r) => order.indexOf(r.step)).filter((i) => i >= 0);
   const max = seen.length ? Math.max(...seen) : -1;
+  // A public listing, PDF or image menu is read, not coded: only saving is left after it.
+  if (s.steps.some((r) => ['listing', 'document', 'vision'].includes(r.step))) return s.steps.some((r) => r.step === 'commit') ? [] : ['commit'];
   return order.filter((step, i) => {
     if (i <= max) return false;
     if (step === 'repair') return false; // only appears when needed
