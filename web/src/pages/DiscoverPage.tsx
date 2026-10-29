@@ -79,8 +79,9 @@ export function useAreaController() {
       try {
         await postSse(
           '/api/forge',
-          // Known restaurants go straight to their saved page: instant, $0, no search.
-          list[i]!.libraryUrl ? { url: list[i]!.libraryUrl } : { restaurant: list[i]!.name, city: list[i]!.city ?? undefined },
+          // Every restaurant is forged for real; a known one starts from its saved page (no search),
+          // and falls back to its saved menu only if the run fails.
+          { ...(list[i]!.libraryUrl ? { url: list[i]!.libraryUrl } : { restaurant: list[i]!.name, city: list[i]!.city ?? undefined }), fresh: true, noReuse: true },
           (m) => {
             if (m.event === 'summary') summary = parseData<ForgeSummary>(m);
             const e = parseData<AgentEvent>(m);
@@ -147,7 +148,7 @@ export function DiscoverPage({ ctl }: { ctl: AreaController }) {
           One search, a <em>price index</em> for a whole area.
         </h1>
         <p className="hero-sub">
-          Type a dish and a city. Tavily finds the places worth knowing, Nemotron names them, and Menusmith forges a menu extractor for each — then compares every dish across them. Restaurants already in the library answer instantly, for <strong>$0</strong>.
+          Type a dish and a city. Tavily finds the places worth knowing, Nemotron names them, and Menusmith forges a menu extractor for each — then compares every dish across them. After that, every re-scrape is free: <strong>$0</strong>.
         </p>
         <form className="forge-form card" onSubmit={submit} aria-label="Discover restaurants">
           <div className="forge-fields">
@@ -199,8 +200,7 @@ export function DiscoverPage({ ctl }: { ctl: AreaController }) {
                 <div className="area-main">
                   <div className="area-name">
                     {r.meta ? <a href={href.extractor(r.meta.id)}>{r.name}</a> : r.name}
-                    {r.libraryId && r.state === 'pending' && <Badge tone="info">in library</Badge>}
-                    {r.mode === 'known' && <Badge tone="info">from library · $0</Badge>}
+                    {r.mode === 'known' && <Badge tone="warn">saved menu — this run stopped</Badge>}
                     {r.mode === 'listing' && <Badge tone="warn">public listing</Badge>}
                     {r.mode === 'reading' && <Badge tone="warn">reading only</Badge>}
                   </div>

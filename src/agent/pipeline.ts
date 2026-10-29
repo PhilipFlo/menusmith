@@ -151,7 +151,15 @@ export async function readPdfMenu(
 export async function forge(input: ForgeInput, emit: Emit = noop): Promise<ForgeOutcome> {
   const t0 = Date.now();
   const ledger = input.ledger ?? new Ledger();
-  const fail = (reason: string, extra: Partial<ForgeOutcome> = {}): ForgeOutcome => {
+  // The site being forged, once known — a failed run on a restaurant the library already
+  // holds falls back to its saved menu instead of ending empty.
+  let resolvedUrl: string | undefined;
+  const fail = async (reason: string, extra: Partial<ForgeOutcome> = {}): Promise<ForgeOutcome> => {
+    if (!input.repairOf && resolvedUrl && !ledger.signal?.aborted) {
+      const hit = knownExtractor(resolvedUrl);
+      const saved = hit ? await answerFromLibrary(hit, emit, reason).catch(() => null) : null;
+      if (saved) return { ...saved, reason, ledger, ms: Date.now() - t0 };
+    }
     emit({ type: 'result', ok: false, reason });
     return { ok: false, reason, oracleCount: 0, rounds: 0, ledger, ms: Date.now() - t0, ...extra };
   };
@@ -359,6 +367,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   // 1b. Already in the library? Answer from it — the whole point of keeping the code.
   // Re-running saved code costs 0 tokens and takes seconds; a repeated test never
   // spends the daily AI allowance again. "Forge fresh" (noReuse) skips this.
+  resolvedUrl = url;
   if (!input.noReuse && !input.fresh && !input.repairOf) {
     const hit = knownExtractor(url);
     if (hit) {
@@ -889,10 +898,15 @@ export function knownExtractor(url: string, library: StoredExtractor[] = listExt
 }
 
 /** Serve a library hit: re-run its code on the live page, or show the saved menu for readings. */
-async function answerFromLibrary(hit: StoredExtractor, emit: Emit): Promise<Omit<ForgeOutcome, 'ledger' | 'ms'> | null> {
+async function answerFromLibrary(hit: StoredExtractor, emit: Emit, failed?: string): Promise<Omit<ForgeOutcome, 'ledger' | 'ms'> | null> {
   const { meta } = hit;
   const kind = meta.source?.kind ?? 'html';
-  emit({ type: 'step', step: 'reuse', status: 'start', detail: `${meta.id} is already in the library — no AI needed` });
+  emit({
+    type: 'step',
+    step: 'reuse',
+    status: 'start',
+    detail: failed ? `This run stopped (${failed}) — ${meta.id} is in the library, using its saved menu` : `${meta.id} is already in the library — no AI needed`,
+  });
   if (kind === 'listing' || kind === 'document' || kind === 'image') {
     const items = loadSnapshot(meta.id) ?? [];
     if (items.length < 3) return null;

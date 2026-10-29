@@ -101,8 +101,12 @@ app.post('/api/forge', async (c) => {
   if (!body.url && !body.restaurant) return c.json({ error: 'url or restaurant required' }, 400);
   if (body.url && !/^(https?:\/\/|fixture:\/\/)/i.test(body.url)) return c.json({ error: 'URL must start with http(s)://' }, 400);
   await refresh();
-  const known = !!body.url && !body.fresh && !body.noReuse && !!knownExtractor(body.url);
-  const denied = allow(clientIp(c), known);
+  const inLibrary = !!body.url && !!knownExtractor(body.url);
+  // Fresh runs by default. The library answers when asked to — or, for a known restaurant,
+  // when today's AI budget is spent, so a visitor gets its saved menu instead of an error.
+  const fromLibrary = inLibrary && ((!body.fresh && !body.noReuse) || budgetLeft() <= 0);
+  if (fromLibrary) Object.assign(body, { fresh: false, noReuse: false });
+  const denied = allow(clientIp(c), fromLibrary);
   if (denied) return c.json({ error: denied }, 429);
   running++;
   return streamSSE(c, async (stream) => {

@@ -35,7 +35,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
   const { state, start, cancel } = forge;
   const [value, setValue] = useState('');
   const [city, setCity] = useState('');
-  const [noReuse, setNoReuse] = useState(false);
+  const [useLibrary, setUseLibrary] = useState(false);
   const [fixtures, setFixtures] = useState<Fixture[] | null>(null);
   const inputId = useId();
   const cityId = useId();
@@ -49,11 +49,13 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
       .catch(() => setFixtures([]));
   }, []);
 
-  // Typed restaurants are answered from the library when already known (instant, $0);
-  // the quick-pick chips always forge, so a visitor gets to watch the agents work.
-  const go = (raw: string, fresh?: boolean) => {
+  // Every run goes through the whole pipeline (read → write → test → commit) unless the
+  // visitor opts into library answers. The server still falls back to a saved menu when a
+  // known restaurant's run fails or the day's AI budget is spent.
+  const mode = () => (useLibrary ? {} : { fresh: true, noReuse: true });
+  const go = (raw: string) => {
     if (!raw.trim() || running) return;
-    void start({ ...toRequest(raw, city), noReuse: noReuse || undefined, fresh: fresh || undefined });
+    void start({ ...toRequest(raw, city), ...mode() });
   };
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -61,14 +63,14 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
   };
   const pick = (url: string) => {
     setValue(url);
-    go(url, true);
+    go(url);
   };
   /** Start from just a name: Tavily finds the official website, then the agents take over. */
   const pickName = (name: string, inCity: string) => {
     if (running) return;
     setValue(name);
     setCity(inCity);
-    void start({ restaurant: name, city: inCity, noReuse: noReuse || undefined, fresh: true });
+    void start({ restaurant: name, city: inCity, ...mode() });
   };
 
   const replay = health?.llmMode === 'replay';
@@ -134,8 +136,8 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
           </div>
           <div className="forge-options">
             <label className="check">
-              <input type="checkbox" checked={noReuse} onChange={(e) => setNoReuse(e.target.checked)} disabled={running} />
-              <span>Always write fresh code (skip the library)</span>
+              <input type="checkbox" checked={useLibrary} onChange={(e) => setUseLibrary(e.target.checked)} disabled={running} />
+              <span>Answer from the library when the restaurant is already known (instant, $0)</span>
             </label>
           </div>
           {/* Offline (replay) only the test sites have recorded model answers, so they lead and real sites are hidden. */}
@@ -336,7 +338,7 @@ function SuccessCard({ state, onFresh }: { state: ForgeState; onFresh: () => voi
   const cost = s?.costUsd ?? meta?.costUsd ?? 0;
   const reused = s?.mode === 'reused' || !!meta?.reusedFrom;
   const kind = meta?.source?.kind;
-  if (s?.mode === 'known' && meta) return <KnownCard meta={meta} items={items} ms={s.ms} onFresh={onFresh} />;
+  if (s?.mode === 'known' && meta) return <KnownCard meta={meta} items={items} ms={s.ms} stopped={s.reason} onFresh={onFresh} />;
   return (
     <section className="result-card is-success" aria-label="Result">
       <div className="result-head">
@@ -421,7 +423,7 @@ function SuccessCard({ state, onFresh }: { state: ForgeState; onFresh: () => voi
 }
 
 /** A restaurant that is already in the library: answered by its saved code, no AI. */
-function KnownCard({ meta, items, ms, onFresh }: { meta: ExtractorMeta; items: MenuItem[]; ms: number; onFresh: () => void }) {
+function KnownCard({ meta, items, ms, stopped, onFresh }: { meta: ExtractorMeta; items: MenuItem[]; ms: number; stopped?: string; onFresh: () => void }) {
   const kind = meta.source?.kind;
   const reading = kind === 'listing' || kind === 'document' || kind === 'image';
   return (
@@ -430,7 +432,7 @@ function KnownCard({ meta, items, ms, onFresh }: { meta: ExtractorMeta; items: M
         <StateIcon state="done" size={28} />
         <div>
           <h2 className="result-title">
-            Already in the library
+            {stopped ? 'Saved menu from the library' : 'Already in the library'}
             <Badge tone="info" title="Answered without calling the AI">
               0 tokens
             </Badge>
@@ -442,6 +444,11 @@ function KnownCard({ meta, items, ms, onFresh }: { meta: ExtractorMeta; items: M
             <span className="sep">·</span>
             {duration(ms)}
           </p>
+          {stopped && (
+            <p className="small">
+              This run stopped before it finished ({stopped}). The restaurant is already in the library, so here is the menu its saved extractor returns.
+            </p>
+          )}
           <p className="small muted">
             {reading
               ? kind === 'listing'
@@ -541,7 +548,7 @@ function FailureCard({ state, start }: { state: ForgeState; start: ForgeControll
   );
 }
 
-/** A failure is never a dead end: real restaurants already in the library answer instantly. */
+/** A failure is never a dead end: restaurants that have forged before, one click away. */
 function ReadyToTry({ start }: { start: ForgeController['start'] }) {
   const [list, setList] = useState<ExtractorMeta[] | null>(null);
   useEffect(() => {
@@ -559,10 +566,10 @@ function ReadyToTry({ start }: { start: ForgeController['start'] }) {
   if (!ready.length) return null;
   return (
     <div className="chips-block ready-to-try">
-      <span className="chips-label">Ready now · instant, $0</span>
+      <span className="chips-label">These work — try one</span>
       <div className="chips">
         {ready.map((m) => (
-          <button type="button" key={m.id} className="chip chip-outline" onClick={() => void start({ url: m.url })} title={m.url}>
+          <button type="button" key={m.id} className="chip chip-outline" onClick={() => void start({ url: m.url, fresh: true, noReuse: true })} title={m.url}>
             {m.restaurant || hostOf(m.url)}
           </button>
         ))}
