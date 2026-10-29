@@ -140,6 +140,14 @@ official website from *name + city* for **80%** of 40 benchmark restaurants and 
 held-out ones (several “misses” are the restaurant's own site where nearBite stored an ordering
 platform).
 
+**A visitor types a US restaurant they know** (`bench/judge-sim.ts`): 22 restaurants by *name + city
+only* — San Francisco, Palo Alto, New York, Chicago, Seattle, Miami, Nashville, Los Angeles, Austin;
+famous places, small ones and chains. **20/22 got a menu** (19 saved as extractors or readings, 1
+near miss shown as Nemotron's reading): 13 from the restaurant's own site (6 HTML, 7 rendered),
+6 from a public listing when the own site blocks automated visitors or shows no prices. Total
+**$0.38**, median **85 s** on the free-tier settings. The 2 others block automated visitors and
+have no public listing with prices — Menusmith says so instead of guessing.
+
 **Real restaurant websites — 120 sites in Oslo and Palo Alto** (sampled across WordPress, Squarespace, Wix, Webflow, hosted ordering systems and custom sites):
 
 | Metric | Result |
