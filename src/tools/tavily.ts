@@ -17,8 +17,17 @@ export interface TavilyResult {
 
 export const tavilyEnabled = () => !!config.tavilyApiKey;
 
+// Tavily is paid per call: a daily ceiling so a busy public demo cannot run up the bill.
+// Over the ceiling, name search falls back to Nemotron's (verified) site suggestion.
+const DAILY_CALLS = Number(process.env.MENUSMITH_TAVILY_DAILY_CALLS || 150);
+const calls = { day: '', n: 0 };
+
 async function post<T>(path: string, body: unknown, timeoutMs = 40_000): Promise<T> {
   if (!config.tavilyApiKey) throw new Error('TAVILY_API_KEY is not set');
+  const today = new Date().toISOString().slice(0, 10);
+  if (calls.day !== today) Object.assign(calls, { day: today, n: 0 });
+  if (calls.n >= DAILY_CALLS) throw new Error(`Tavily daily limit reached (${DAILY_CALLS} calls)`);
+  calls.n++;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
