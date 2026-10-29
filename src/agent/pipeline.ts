@@ -10,7 +10,7 @@ import { runExtractor } from '../sandbox/runner.ts';
 import { findOfficialSite, tavilyEnabled, tavilySearchFull } from '../tools/tavily.ts';
 import { BLOCKED_STATUS, detectBotWall } from '../html/botwall.ts';
 import type { Emit, ExtractorMeta, MenuItem, RunResult, Score } from '../types.ts';
-import { findMenuPage, priceDensity } from './discover.ts';
+import { findMenuPage, guessOfficialSite, priceDensity } from './discover.ts';
 import { acquire, reacquire, type Acquired } from './acquire.ts';
 import { detectHardcoding, ESCALATE_AFTER, feedbackMessage, initialMessages, initialMessagesJson, writeCode } from './forge.ts';
 import { itemsHash, nameSimilarity, normName, scoreAgainstOracle } from './evaluate.ts';
@@ -224,32 +224,49 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     const domain = domainOf(siteUrl);
     const brand = input.restaurant || domain.replace(/^www\./, '').split('.')[0]!.replace(/[-_]+/g, ' ');
     emit({ type: 'step', step: 'listing', status: 'start', detail: `Looking for ${brand}'s menu on a public listing (the site itself is not contacted)` });
-    let candidates: { url: string; text: string; prices: number }[] = [];
-    try {
-      const results = await tavilySearchFull(`${brand}${input.city ? ' ' + input.city : ''} menu prices`, [domain.replace(/^www\./, '')]);
-      candidates = results
+    const own = domain.replace(/^www\./, '');
+    const where = `${brand}${input.city ? ' ' + input.city : ''}`;
+    type Hit = { url: string; title?: string; content?: string; raw_content?: string };
+    const usable = (rs: Hit[]) =>
+      rs
         .map((r) => {
           const text = (r.raw_content || '').slice(0, 60_000);
           const prices = (text.match(/(?:\$|€|£|kr\.?\s?)\d{1,4}(?:[.,]\d{1,2})?|\d{1,4}(?:[.,]\d{2})?\s?(?:kr|,-|€)/gi) || []).length;
           return { url: r.url, text, prices };
         })
         // Must be THIS restaurant's page: a listing that never names it is another restaurant.
-        .filter((c) => c.prices >= 8 && mentionsBrand(`${c.url} ${c.text.slice(0, 20_000)}`, brand))
+        .filter((c) => c.prices >= 8 && !looksLikePdfUrl(c.url) && mentionsBrand(`${c.url} ${c.text.slice(0, 20_000)}`, brand))
         .sort((a, b) => b.prices - a.prices);
+    // PDF menus the search turns up (often the restaurant's own, hosted on a CDN).
+    const pdfs = (rs: Hit[]) => rs.filter((r) => looksLikePdfUrl(r.url) && mentionsBrand(`${r.url} ${r.title ?? ''} ${(r.content ?? '').slice(0, 2000)}`, brand)).map((r) => r.url);
+    let candidates: { url: string; text: string; prices: number }[] = [];
+    const pdfUrls: string[] = [];
+    try {
+      const first = await tavilySearchFull(`${where} menu prices`, [own]);
+      candidates = usable(first);
+      pdfUrls.push(...pdfs(first));
+      // Review and delivery sites often come back without prices (built by JavaScript):
+      // ask again, only on menu sites that publish prices in their HTML.
+      if (!candidates.length) {
+        emit({ type: 'log', message: 'No prices on the first results — searching menu sites' });
+        const second = await tavilySearchFull(`${where} menu`, [own], 6, MENU_SITES);
+        candidates = usable(second);
+        pdfUrls.push(...pdfs(second).filter((u) => !pdfUrls.includes(u)));
+      }
     } catch (e) {
       emit({ type: 'log', message: `Search failed: ${(e as Error).message}` });
     }
     const respects = /bot protection|blocks automated/.test(why) ? 'Menusmith respects bot protection, and ' : '';
-    if (!candidates.length && !input.restaurant) emit({ type: 'log', message: `No listing with prices names "${brand}"` });
-    if (!candidates.length) {
+    if (!candidates.length && !pdfUrls.length) {
       emit({ type: 'step', step: 'listing', status: 'fail', detail: 'no public listing with prices found' });
       return fail(`${why} — ${respects}no public listing of the menu was found`);
     }
-    // Try the two most price-rich listings: one may be a review page that only quotes prices.
     let items: MenuItem[] = [];
-    let best = candidates[0]!;
+    let best: { url: string } = candidates[0] ?? { url: pdfUrls[0]! };
+    // Try the two most price-rich listings: one may be a review page that only quotes prices.
     // Readings vary: with a single usable listing, read it a second time before giving up.
-    for (const c of candidates.length > 1 ? candidates.slice(0, 2) : [candidates[0]!, candidates[0]!]) {
+    const tries = candidates.length > 1 ? candidates.slice(0, 2) : candidates.length ? [candidates[0]!, candidates[0]!] : [];
+    for (const c of tries) {
       try {
         const o = await readMenu(c.text, { url: c.url, restaurant: brand }, ledger, emit);
         const got = groundOracle(o.items, c.text).kept;
@@ -260,6 +277,20 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
         }
       } catch (e) {
         emit({ type: 'log', message: `Could not read ${c.url}: ${(e as Error).message}` });
+      }
+    }
+    for (const u of items.length < 5 ? pdfUrls.slice(0, 2) : []) {
+      try {
+        emit({ type: 'log', message: `Reading a PDF menu found by search: ${u}` });
+        const pdf = await fetchPdf(u);
+        const got = (await readPdfMenu(pdf.bytes, u, brand, ledger, emit)).items;
+        if (got.length >= 5) {
+          items = got;
+          best = { url: u };
+          break;
+        }
+      } catch (e) {
+        emit({ type: 'log', message: `Could not read ${u}: ${(e as Error).message}` });
       }
     }
     if (items.length < 5) {
@@ -303,12 +334,20 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   let url = input.url?.trim();
   if (!url) {
     if (!input.restaurant) return fail('give a URL or a restaurant name');
-    if (!tavilyEnabled()) return fail('no URL given and TAVILY_API_KEY is not set');
     emit({ type: 'step', step: 'discover', status: 'start', detail: `Searching the web for ${input.restaurant}` });
-    const site = await findOfficialSite(input.restaurant, input.city).catch((e) => {
-      emit({ type: 'log', message: `Tavily search failed: ${(e as Error).message}` });
-      return null;
-    });
+    let site = tavilyEnabled()
+      ? await findOfficialSite(input.restaurant, input.city).catch((e) => {
+          emit({ type: 'log', message: `Tavily search failed: ${(e as Error).message}` });
+          return null;
+        })
+      : null;
+    if (!site) {
+      emit({ type: 'log', message: 'Asking Nemotron for the official website (verified before use)' });
+      site = await guessOfficialSite(input.restaurant, input.city, ledger, emit).catch((e) => {
+        emit({ type: 'log', message: `Site suggestion failed: ${(e as Error).message}` });
+        return null;
+      });
+    }
     if (!site) {
       emit({ type: 'step', step: 'discover', status: 'fail' });
       return fail(`could not find an official website for ${input.restaurant}`);
@@ -792,6 +831,9 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   };
 }
 
+/** Menu sites that publish dishes and prices in plain HTML (not only after JavaScript). */
+const MENU_SITES = ['allmenus.com', 'menupages.com', 'grubhub.com', 'seamless.com', 'menuwithprice.com', 'restaurantji.com', 'sirved.com', 'menuism.com', 'zmenu.com', 'places.singleplatform.com', 'beyondmenu.com', 'menufy.com', 'slicelife.com', 'toasttab.com'];
+
 /** Letters and digits only, accents dropped: "Zuni Café" → "zunicafe". */
 const compact = (s: string) =>
   s
@@ -810,6 +852,10 @@ export function mentionsBrand(text: string, brand: string): boolean {
   const t = text.toLowerCase();
   const variants = [compact(t.replace(/&/g, 'and')), compact(t.replace(/&|\b(the|and|n)\b/g, ' '))];
   if (variants.some((v) => v.includes(want))) return true;
+  // Long names are often shortened: "Hattie B's Hot Chicken" → "hattiebs-menu.pdf".
+  const tokens = brand.split(/\s+/).filter(Boolean);
+  const head = compact(tokens.slice(0, 2).join(''));
+  if (tokens.length >= 3 && head.length >= 6 && variants.some((v) => v.includes(head))) return true;
   // A typed name: every significant word must appear ("Alex Sushi" in "Alex Sushi Aker Brygge").
   const words = brand.split(/\s+/).map(compact).filter((w) => w.length >= 3 && !['the', 'and', 'restaurant', 'cafe', 'bar'].includes(w));
   return words.length > 0 && words.every((w) => variants[0]!.includes(w));

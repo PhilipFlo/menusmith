@@ -11,6 +11,8 @@ export interface Page {
   html: string;
   fetchedAt: string;
   fromCache: boolean;
+  /** Seconds the server asked us to wait (HTTP 429 Retry-After). */
+  retryAfter?: number;
 }
 
 const UA =
@@ -79,6 +81,15 @@ function decode(buf: ArrayBuffer, contentType: string | null): string {
  * `maxAgeMs: 0` forces a fresh fetch (the fleet does this).
  */
 export async function fetchPage(url: string, opts: { maxAgeMs?: number } = {}): Promise<Page> {
+  const page = await fetchPageOnce(url, opts);
+  if (page.status !== 429) return page;
+  // "Too many requests" is often a short rate limit, not a block: wait as asked (capped)
+  // and ask once more. A second 429 is reported as is — and respected.
+  await new Promise((r) => setTimeout(r, Math.min(8, page.retryAfter || 5) * 1000));
+  return fetchPageOnce(url, opts);
+}
+
+async function fetchPageOnce(url: string, opts: { maxAgeMs?: number }): Promise<Page> {
   const fixture = readFixture(url);
   if (fixture) return fixture;
   if (!/^https?:\/\//i.test(url)) throw new Error(`unsupported URL: ${url}`);
@@ -127,6 +138,7 @@ export async function fetchPage(url: string, opts: { maxAgeMs?: number } = {}): 
       html: decode(buf, res.headers.get('content-type')),
       fetchedAt: new Date().toISOString(),
       fromCache: false,
+      ...(res.status === 429 ? { retryAfter: Number(res.headers.get('retry-after')) || undefined } : {}),
     };
     if (res.ok) {
       mkdirSync(dir, { recursive: true });

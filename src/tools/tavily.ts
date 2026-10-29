@@ -39,7 +39,12 @@ async function post<T>(path: string, body: unknown, timeoutMs = 40_000): Promise
  * Search with the full text of each result (Tavily's own copy). Used for the public-listing
  * fallback: the blocked restaurant site is excluded, so it is never contacted.
  */
-export async function tavilySearchFull(query: string, excludeDomains: string[], maxResults = 6): Promise<(TavilyResult & { raw_content?: string })[]> {
+export async function tavilySearchFull(
+  query: string,
+  excludeDomains: string[],
+  maxResults = 6,
+  includeDomains?: string[],
+): Promise<(TavilyResult & { raw_content?: string })[]> {
   const r = await post<{ results: (TavilyResult & { raw_content?: string })[] }>('/search', {
     query,
     search_depth: 'basic',
@@ -47,6 +52,7 @@ export async function tavilySearchFull(query: string, excludeDomains: string[], 
     include_answer: false,
     include_raw_content: true,
     exclude_domains: excludeDomains,
+    ...(includeDomains?.length ? { include_domains: includeDomains } : {}),
   });
   return r.results || [];
 }
@@ -80,14 +86,17 @@ export async function tavilyMap(url: string, limit = 40): Promise<string[]> {
 
 /** Sites that list restaurants but are not the restaurant's own website. */
 export const AGGREGATORS =
-  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|seamless|postmates|slicelife|menuwithprice|menupages|open-closed|nemtakeaway|osloarrangement|spisher|restaurantguru|menuism|sirved|zmenu|restaurantji|allmenus|b-cdn\.net|orderhouse\.io|tastesof|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews)/i;
+  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|seamless|postmates|slicelife|menuwithprice|menupages|open-closed|nemtakeaway|osloarrangement|spisher|restaurantguru|menuism|sirved|zmenu|restaurantji|allmenus|b-cdn\.net|orderhouse\.io|tastesof|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews|wheree|yably|resy\.com|zagat|cityseeker|menusandprices|fastfoodmenuprices|menu-price|placesmap|top-rated\.online|restaurantmenus|menu-world)/i;
 
 /** Country hints for the cities we know: boost local results ("Shanti, Oslo" is not shantiboston.com). */
 const CITY_COUNTRY: [RegExp, { country: string; tld: string }][] = [
   [/\b(oslo|bergen|trondheim|stavanger|tromsø|drammen|kristiansand|fredrikstad|bærum|lillestrøm|sandvika|asker)\b/i, { country: 'norway', tld: 'no' }],
   [/\b(stockholm|göteborg|gothenburg|malmö|uppsala)\b/i, { country: 'sweden', tld: 'se' }],
   [/\b(copenhagen|københavn|aarhus|odense)\b/i, { country: 'denmark', tld: 'dk' }],
-  [/\b(palo alto|san francisco|menlo park|mountain view|san jose|new york|los angeles|seattle|boston|chicago)\b/i, { country: 'united states', tld: 'com' }],
+  [
+    /\b(palo alto|san francisco|sf|menlo park|mountain view|san jose|sunnyvale|santa clara|cupertino|redwood city|oakland|berkeley|new york|nyc|brooklyn|manhattan|queens|los angeles|la|santa monica|san diego|seattle|portland|boston|chicago|austin|houston|dallas|miami|nashville|atlanta|denver|philadelphia|washington|dc|las vegas|phoenix|new orleans|minneapolis|detroit|honolulu|usa|united states|ca|ny|tx|fl|wa|il|ma|tn|ga|co)\b/i,
+    { country: 'united states', tld: 'com' },
+  ],
 ];
 
 /** Find the restaurant's own website from its name (+ city). */
@@ -137,11 +146,22 @@ export async function findOfficialSite(restaurant: string, city?: string): Promi
     if (/menu|price/i.test(h.split('.').slice(0, -1).join('.'))) p += 4;
     if (/^(careers|jobs|shop|store|gift|giftcards|blog|press|investors?|dev|staging|locations?)\./i.test(h)) p += 4;
     const tld = h.split('.').pop()!;
-    if (where && where.tld === 'com' && tld.length === 2 && tld !== 'us') p += 2;
+    if (where && where.tld === 'com' && tld.length === 2 && tld !== 'us') p += 4;
     if (where && where.tld !== 'com' && tld.length === 2 && tld !== where.tld) p += 2;
+    // Another country's branch of a chain: "dintaifung-uk.com", "uk.example.com".
+    const label = h.split('.').slice(0, -1).join('.');
+    if (where?.tld === 'com' && /(^|[-.])(uk|au|ca|sg|de|fr|jp|hk|tw|nz|ph|my|th|ae|in|cn|kr|es|it|nl)([-.]|$)/.test(label)) p += 4;
+    // A sister restaurant on the group's domain: "uchiba.uchirestaurants.com" for Uchi.
+    const parts = h.split('.');
+    if (parts.length >= 3 && words[0] && parts[0] !== words[0] && parts.slice(1).join('').includes(words[0]) && parts[0]!.includes(words[0])) p += 2;
     return p;
   };
-  const rank = (r: TavilyResult) => 2 * nameScore(r.url) + placeScore(r) - penalty(r.url);
+  // The restaurant's own site tends to dominate both searches, even when its domain is an
+  // abbreviation the name does not match (Din Tai Fung → dtf.com).
+  const hostCount = new Map<string, number>();
+  for (const r of own) hostCount.set(host(r.url), (hostCount.get(host(r.url)) ?? 0) + 1);
+  const frequency = (u: string) => (nameScore(u) > 0 ? 0 : Math.min(3, (hostCount.get(host(u)) ?? 1) - 1));
+  const rank = (r: TavilyResult) => 2 * nameScore(r.url) + placeScore(r) + frequency(r.url) - penalty(r.url);
   const best = [...own].sort((a, b) => rank(b) - rank(a) || b.score - a.score)[0];
   if (!best) return null;
   // On that website: its menu page if search found one, else a page for this city, else home.
