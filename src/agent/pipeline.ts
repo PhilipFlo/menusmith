@@ -882,7 +882,9 @@ export function knownExtractor(url: string, library: StoredExtractor[] = listExt
   const samePage = all.find((x) => hostKey(x.meta.url)!.path === want.path);
   if (samePage) return samePage;
   const whole = all.filter((x) => x.meta.id === idForDomain(x.meta.domain));
-  return whole.length === 1 ? whole[0]! : null;
+  if (whole.length === 1) return whole[0]!;
+  // Just the homepage, and the library holds one menu for this site: that is the one.
+  return want.path === '/' && all.length === 1 ? all[0]! : null;
 }
 
 /** Serve a library hit: re-run its code on the live page, or show the saved menu for readings. */
