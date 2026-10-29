@@ -2764,3 +2764,55 @@ select.input {
 .recheck-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .recheck-result { margin-top: 14px; display: grid; gap: 8px; }
 .recheck-audit { border-top: 1px solid var(--border); padding-top: 10px; }
+
+/* ---- Discover ---------------------------------------------------------------- */
+.area-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.area-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.area-row:first-child {
+  border-top: 0;
+}
+.area-main {
+  min-width: 0;
+  flex: 1;
+}
+.area-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.area-main .small {
+  overflow-wrap: anywhere;
+}
+.area-foot {
+  margin-top: 8px;
+}
+.area-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.area-stat {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.area-stat-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.area-sort {
+  width: auto;
+}

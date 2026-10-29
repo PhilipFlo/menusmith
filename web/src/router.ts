@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-/** Hash router: #/forge (default), #/library, #/library/:id, #/fleet, #/about. */
+/** Hash router: #/forge (default), #/discover, #/library, #/library/:id, #/fleet, #/about. */
 export interface Route {
-  page: 'forge' | 'library' | 'extractor' | 'fleet' | 'about' | 'notfound';
+  page: 'forge' | 'discover' | 'library' | 'extractor' | 'fleet' | 'about' | 'notfound';
   id?: string;
 }
 
@@ -13,6 +13,8 @@ export function parseHash(hash: string): Route {
     case '':
     case 'forge':
       return { page: 'forge' };
+    case 'discover':
+      return { page: 'discover' };
     case 'library':
       return rest.length ? { page: 'extractor', id: decodeURIComponent(rest.join('/')) } : { page: 'library' };
     case 'fleet':
@@ -39,6 +41,7 @@ export function useRoute(): Route {
 
 export const href = {
   forge: '#/forge',
+  discover: '#/discover',
   library: '#/library',
   extractor: (id: string) => `#/library/${encodeURIComponent(id)}`,
   fleet: '#/fleet',

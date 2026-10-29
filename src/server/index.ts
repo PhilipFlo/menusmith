@@ -8,6 +8,8 @@ import { config, MODELS, ROOT } from '../config.ts';
 import { redesignedFixtures, setFixtureRedesigned } from '../html/fetch.ts';
 import { listExtractors, loadExtractor, loadSnapshot, loadVersion } from '../library/store.ts';
 import { forge, knownExtractor } from '../agent/pipeline.ts';
+import { discoverArea } from '../agent/area.ts';
+import { tavilyEnabled } from '../tools/tavily.ts';
 import { CheckError, checkExtractor, fleetHistory, runFleet } from '../fleet/fleet.ts';
 import type { AgentEvent } from '../types.ts';
 import { Ledger } from '../llm/client.ts';
@@ -136,6 +138,26 @@ app.post('/api/forge', async (c) => {
       running--;
     }
   });
+});
+
+// "Tacos in Austin" → restaurants to forge (one Tavily search + one Nemotron Nano call).
+app.post('/api/discover', async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { query?: string };
+  const query = (body.query || '').trim();
+  if (query.length < 3) return c.json({ error: 'Type what and where, e.g. “tacos in Austin”' }, 400);
+  if (!tavilyEnabled()) return c.json({ error: 'Area search needs TAVILY_API_KEY' }, 503);
+  const denied = allow(clientIp(c));
+  if (denied) return c.json({ error: denied }, 429);
+  await refresh();
+  const ledger = new Ledger(Math.min(0.02, Math.max(0, budgetLeft())));
+  try {
+    const out = await discoverArea(query, ledger);
+    return c.json({ ...out, costUsd: ledger.costUsd });
+  } catch (e) {
+    return c.json({ error: `Search failed: ${(e as Error).message}` }, 502);
+  } finally {
+    addSpend(ledger.costUsd);
+  }
 });
 
 app.get('/api/library', async (c) => {

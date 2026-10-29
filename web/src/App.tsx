@@ -6,12 +6,14 @@ import { useFleetController, useForgeController } from './controllers.ts';
 import { AboutPage } from './pages/AboutPage.tsx';
 import { ExtractorPage } from './pages/ExtractorPage.tsx';
 import { FleetPage } from './pages/FleetPage.tsx';
+import { DiscoverPage, useAreaController } from './pages/DiscoverPage.tsx';
 import { ForgePage } from './pages/ForgePage.tsx';
 import { LibraryPage } from './pages/LibraryPage.tsx';
 import { href, useRoute, type Route } from './router.ts';
 
 const NAV: { page: Route['page']; label: string; href: string }[] = [
   { page: 'forge', label: 'Live Forge', href: href.forge },
+  { page: 'discover', label: 'Discover', href: href.discover },
   { page: 'library', label: 'Library', href: href.library },
   { page: 'fleet', label: 'Fleet', href: href.fleet },
   { page: 'about', label: 'How it works', href: href.about },
@@ -19,6 +21,7 @@ const NAV: { page: Route['page']; label: string; href: string }[] = [
 
 const TITLES: Record<Route['page'], string> = {
   forge: 'Live Forge',
+  discover: 'Discover',
   library: 'Library',
   extractor: 'Extractor',
   fleet: 'Fleet',
@@ -30,6 +33,7 @@ export function App() {
   const route = useRoute();
   const forge = useForgeController();
   const fleet = useFleetController();
+  const area = useAreaController();
   const [health, setHealth] = useState<Health | null>(null);
   const [healthError, setHealthError] = useState(false);
 
@@ -74,6 +78,7 @@ export function App() {
               <a key={n.page} href={n.href} className={`nav-link ${activeNav === n.page ? 'is-active' : ''}`} aria-current={activeNav === n.page ? 'page' : undefined}>
                 {n.label}
                 {n.page === 'forge' && forge.state.phase === 'running' && <span className="nav-dot" aria-label="(running)" />}
+                {n.page === 'discover' && area.forging && <span className="nav-dot" aria-label="(running)" />}
                 {n.page === 'fleet' && fleet.running && <span className="nav-dot" aria-label="(running)" />}
               </a>
             ))}
@@ -99,6 +104,7 @@ export function App() {
 
       <main id="main" className="container main" tabIndex={-1}>
         {route.page === 'forge' && <ForgePage forge={forge} health={health} />}
+        {route.page === 'discover' && <DiscoverPage ctl={area} />}
         {route.page === 'library' && <LibraryPage />}
         {route.page === 'extractor' && route.id && <ExtractorPage id={route.id} />}
         {route.page === 'fleet' && <FleetPage fleet={fleet} />}
