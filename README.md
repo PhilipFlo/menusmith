@@ -212,7 +212,11 @@ made the cheap calls cheap and the code-writing calls smart.
   (`deploy/nebius.sh`, `deploy/NEBIUS-SETUP.md`); the public demo does not run there.
 - **Tavily** — `/search` finds a restaurant's official website from its name (ranked by brand
   name in the domain, city and country — 85% correct on held-out restaurants, see Results);
-  `/map` discovers the menu pages of a site when the homepage doesn't link them clearly.
+  `/map` discovers the menu pages of a site when the homepage doesn't link them clearly; when a
+  site blocks automated visitors, `/search` with page text finds a public listing (or a PDF menu)
+  that names the restaurant. **Discover** turns one `/search` into a small price index: “pizza
+  in San Francisco” → Nemotron Nano names the restaurants in the results (kept only if the name
+  is really there) → each is forged → every dish compared across them, cheapest first.
 
 ## Screenshots
 

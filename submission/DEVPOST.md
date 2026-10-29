@@ -20,6 +20,10 @@ whole library; when a website redesign breaks an extractor, the agent notices an
 code. It doesn't trust quiet changes either: before recording "2 dishes removed", Nemotron re-reads
 the page — if those dishes are still there, the code was wrong, and it is rewritten.
 
+**Discover** turns one search into a price index for an area: type “pizza in San Francisco”,
+Tavily finds the places worth knowing, Nemotron names them, Menusmith forges an extractor for
+each, and every dish is compared side by side — cheapest first, re-scraped for $0 from then on.
+
 ## How we built it
 - **Nebius Token Factory** serves every model call through one OpenAI-compatible API.
 - **Nemotron 3 Nano** (thinking off): triages menu links and arbitrates disputed items.
@@ -33,7 +37,9 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
 - **Isolated sandbox** for model-written code: separate process, empty environment, Node permission
   model, no string code generation, CPU/memory limits.
 - **Tavily** `/search` finds a restaurant's official site from its name (ranked by brand, city and
-  country) and `/map` finds menu pages the homepage doesn't link clearly.
+  country), `/map` finds menu pages the homepage doesn't link clearly, `/search` with page text
+  finds a public listing or PDF menu when a site blocks automated visitors, and one `/search`
+  powers **Discover** (restaurants in an area → a price index).
 - **Hosting is portable:** the public demo runs in Docker on a free host with a durable store, and
   the nightly fleet is a scheduled job (GitHub Actions). Deployment scripts for Nebius AI Cloud
   Serverless (Endpoint for the app, Job for the fleet) are included but not what the demo runs on.
@@ -72,10 +78,13 @@ the page — if those dishes are still there, the code was wrong, and it is rewr
   temperature 0; the extractors: 22/22 identical.
 - **Start from just a name:** Tavily search plus our ranking finds a restaurant's official website
   from name + city for **85%** of held-out restaurants.
+- **Typed like a visitor would:** 22 US restaurants by name + city only (SF, New York, Chicago,
+  Seattle, LA, Miami, Nashville, Austin) — **20/22 got a menu**, $0.38 in total. The other two
+  block automated visitors and have no public listing; Menusmith says so instead of guessing.
 - Covers the real web's variety: server HTML, captured menu APIs, JavaScript-rendered pages,
   **19 PDF menus** and **image menus** (Nemotron 3.5 Super VL), all re-checked for free.
 - Running publicly on a **free** host (512 MB / 0.1 CPU) with a durable token-gated store, a
-  daily model-spend cap and SSRF protection — total model spend for the whole project, including every benchmark run, under $10.
+  daily model-spend cap and SSRF protection — the whole project, including every benchmark run, built within a $25 model budget.
 
 ## Beyond menus
 Restaurant menus are our test bed, not the limit. The same loop — read once with an LLM, compile a
