@@ -10,6 +10,7 @@ interface AreaRestaurant {
   city: string | null;
   source: string;
   libraryId?: string;
+  libraryUrl?: string;
 }
 interface Row extends AreaRestaurant {
   state: StepState;
@@ -78,7 +79,8 @@ export function useAreaController() {
       try {
         await postSse(
           '/api/forge',
-          { restaurant: list[i]!.name, city: list[i]!.city ?? undefined },
+          // Known restaurants go straight to their saved page: instant, $0, no search.
+          list[i]!.libraryUrl ? { url: list[i]!.libraryUrl } : { restaurant: list[i]!.name, city: list[i]!.city ?? undefined },
           (m) => {
             if (m.event === 'summary') summary = parseData<ForgeSummary>(m);
             const e = parseData<AgentEvent>(m);

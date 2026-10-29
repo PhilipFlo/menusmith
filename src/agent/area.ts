@@ -18,8 +18,9 @@ export interface AreaRestaurant {
   city: string | null;
   /** Page that mentioned it. */
   source: string;
-  /** Already in the library (answered instantly). */
+  /** Already in the library (answered instantly, via its saved page). */
   libraryId?: string;
+  libraryUrl?: string;
 }
 export interface AreaResult {
   query: string;
@@ -73,7 +74,7 @@ Return ONLY JSON: {"city": string|null, "dish": string|null, "restaurants": [{"n
   const parsed = Out.safeParse(r.json);
   if (!parsed.success) return { query: q, city: null, dish: null, restaurants: [] };
   const haystack = compact(docs.join(' '));
-  const known = listExtractors().map((x) => ({ id: x.meta.id, name: compact(x.meta.restaurant ?? '') }));
+  const known = listExtractors().map((x) => ({ id: x.meta.id, url: x.meta.url, name: compact(x.meta.restaurant ?? '') }));
   const seen = new Set<string>();
   const restaurants: AreaRestaurant[] = [];
   for (const it of parsed.data.restaurants) {
@@ -83,7 +84,7 @@ Return ONLY JSON: {"city": string|null, "dish": string|null, "restaurants": [{"n
     if (key.length < 3 || seen.has(key) || !haystack.includes(key)) continue;
     seen.add(key);
     const lib = known.find((k) => k.name && (k.name === key || k.name.startsWith(key) || key.startsWith(k.name)));
-    restaurants.push({ name, city: parsed.data.city ?? null, source: results[it.source ?? -1]?.url ?? results[0]?.url ?? '', ...(lib ? { libraryId: lib.id } : {}) });
+    restaurants.push({ name, city: parsed.data.city ?? null, source: results[it.source ?? -1]?.url ?? results[0]?.url ?? '', ...(lib ? { libraryId: lib.id, libraryUrl: lib.url } : {}) });
     if (restaurants.length >= MAX) break;
   }
   const dish = parsed.data.dish?.toLowerCase().trim() || null;
