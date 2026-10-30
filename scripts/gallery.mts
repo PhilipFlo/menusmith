@@ -70,7 +70,7 @@ if (want('result')) {
 if (want('discover')) {
   await page.goto(`${BASE}/#/discover`);
   await page.waitForLoadState('networkidle').catch(() => {});
-  await page.getByRole('button', { name: 'pizza in San Francisco' }).click();
+  await page.getByRole('button', { name: process.env.GALLERY_AREA || 'pizza in San Francisco' }).click();
   await page.getByRole('button', { name: /^Forge all/ }).waitFor({ timeout: 60_000 });
   await page.getByRole('button', { name: /^Forge all/ }).click();
   await page.waitForTimeout(3000);
@@ -78,6 +78,7 @@ if (want('discover')) {
   await scrollTo(page, 'Price index', 40);
   await save(page, '4-discover-price-index');
   await scrollTo(page, '6 restaurants', 40);
+  await scrollTo(page, '5 restaurants', 40);
   await save(page, '5-discover-restaurants');
 }
 

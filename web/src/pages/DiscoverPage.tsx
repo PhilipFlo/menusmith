@@ -262,20 +262,24 @@ export function DiscoverPage({ ctl }: { ctl: AreaController }) {
   );
 }
 
+const ADD_ON = /add[\s-]?ons?|extras?|toppings?|modifiers?|substitut|enhancements?/i;
+
 /** Every dish from every forged menu, side by side — the price index. */
 function PriceIndex({ rows, dish }: { rows: Row[]; dish: string | null }) {
   const [q, setQ] = useState(dish ?? '');
   const [sort, setSort] = useState<'price' | 'restaurant'>('price');
-  const all = useMemo(() => rows.flatMap((r) => (r.items ?? []).map((it) => ({ ...it, restaurant: r.name, reading: r.mode === 'reading' }))), [rows]);
+  // Add-ons and extras ("Mozzarella +$2") are not dishes to compare: leave them out.
+  const dishesOf = (r: Row) => (r.items ?? []).filter((i) => !ADD_ON.test(i.section ?? ''));
+  const all = useMemo(() => rows.flatMap((r) => dishesOf(r).map((it) => ({ ...it, restaurant: r.name, reading: r.mode === 'reading' }))), [rows]);
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase().replace(/s$/, '');
     const list = s ? all.filter((i) => `${i.section ?? ''} ${i.name} ${i.description ?? ''}`.toLowerCase().includes(s)) : all;
     return [...list].sort((a, b) => (sort === 'price' ? (a.price ?? Infinity) - (b.price ?? Infinity) : a.restaurant.localeCompare(b.restaurant)));
   }, [all, q, sort]);
   const stats = rows.map((r) => {
-    const ps = (r.items ?? []).map((i) => i.price).filter((p): p is number => typeof p === 'number' && p > 0).sort((a, b) => a - b);
-    const match = q.trim() ? (r.items ?? []).filter((i) => `${i.section ?? ''} ${i.name}`.toLowerCase().includes(q.trim().toLowerCase().replace(/s$/, ''))) : [];
-    return { name: r.name, n: r.items?.length ?? 0, median: ps.length ? ps[Math.floor(ps.length / 2)] : null, match: match.length, cheapest: match.filter((m) => m.price != null).sort((a, b) => a.price! - b.price!)[0] };
+    const ps = dishesOf(r).map((i) => i.price).filter((p): p is number => typeof p === 'number' && p > 0).sort((a, b) => a - b);
+    const match = q.trim() ? dishesOf(r).filter((i) => `${i.section ?? ''} ${i.name}`.toLowerCase().includes(q.trim().toLowerCase().replace(/s$/, ''))) : [];
+    return { name: r.name, n: dishesOf(r).length, median: ps.length ? ps[Math.floor(ps.length / 2)] : null, match: match.length, cheapest: match.filter((m) => m.price != null).sort((a, b) => a.price! - b.price!)[0] };
   });
 
   return (
