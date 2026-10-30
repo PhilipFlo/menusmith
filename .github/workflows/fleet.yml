@@ -27,7 +27,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run the fleet
-        run: npx tsx src/cli.ts fleet --max-usd 0.6
+        run: npx tsx src/cli.ts fleet --max-usd 0.15
         env:
           NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
@@ -37,4 +37,4 @@ jobs:
           MENUSMITH_LLM: live
           MENUSMITH_STORE_SYNC: '1'
           # Hard ceiling for one heal; --max-usd caps the whole nightly run.
-          MENUSMITH_MAX_JOB_USD: '0.3'
+          MENUSMITH_MAX_JOB_USD: '0.15'
