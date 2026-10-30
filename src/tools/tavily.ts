@@ -95,7 +95,7 @@ export async function tavilyMap(url: string, limit = 40): Promise<string[]> {
 
 /** Sites that list restaurants but are not the restaurant's own website. */
 export const AGGREGATORS =
-  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|seamless|postmates|slicelife|menuwithprice|menupages|open-closed|nemtakeaway|osloarrangement|spisher|restaurantguru|menuism|sirved|zmenu|restaurantji|allmenus|b-cdn\.net|orderhouse\.io|tastesof|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews|wheree|yably|resy\.com|zagat|cityseeker|menusandprices|fastfoodmenuprices|menu-price|placesmap|top-rated\.online|restaurantmenus|menu-world)/i;
+  /(tripadvisor|yelp|facebook|instagram|google\.|goo\.gl|wolt\.|foodora|doordash|ubereats|grubhub|seamless|postmates|slicelife|menuwithprice|menupages|open-closed|nemtakeaway|osloarrangement|spisher|restaurantguru|menuism|sirved|zmenu|restaurantji|allmenus|b-cdn\.net|orderhouse\.io|tastesof|opentable|thefork|dinnerbooking|bookatable|timeout\.|reddit|tiktok|wikipedia|menupix|allmenus|restaurantguru|zomato|happycow|linkedin|x\.com|twitter|visit[a-z]+\.|michelin|whitepages|gulesider|1881\.no|proff\.no|mapquest|foursquare|sluurpy|menu\.app|menuweb|eat\.no|matprat|aftenposten|vg\.no|dn\.no|infatuation|eater\.com|sfgate|mercurynews|wheree|yably|resy\.com|zagat|cityseeker|menusandprices|fastfoodmenuprices|menu-price|placesmap|top-rated\.online|dinersdriveinsdives|foodnetwork|restaurantmenus|menu-world)/i;
 
 /** Country hints for the cities we know: boost local results ("Shanti, Oslo" is not shantiboston.com). */
 const CITY_COUNTRY: [RegExp, { country: string; tld: string }][] = [
@@ -181,7 +181,9 @@ export async function findOfficialSite(restaurant: string, city?: string): Promi
   // abbreviation the name does not match (Din Tai Fung → dtf.com).
   const hostCount = new Map<string, number>();
   for (const r of own) hostCount.set(host(r.url), (hostCount.get(host(r.url)) ?? 0) + 1);
-  const frequency = (u: string) => (nameScore(u) > 0 ? 0 : Math.min(3, (hostCount.get(host(u)) ?? 1) - 1));
+  // Only when no result is clearly the restaurant's own site: a fan or listing site can dominate too.
+  const cleanMatch = own.some((r) => nameScore(r.url) >= 2 && penalty(r.url) === 0);
+  const frequency = (u: string) => (cleanMatch || nameScore(u) > 0 ? 0 : Math.min(3, (hostCount.get(host(u)) ?? 1) - 1));
   const rank = (r: TavilyResult) => 2 * nameScore(r.url) + placeScore(r) + frequency(r.url) - penalty(r.url);
   const best = [...own].sort((a, b) => rank(b) - rank(a) || b.score - a.score)[0];
   if (!best) return null;
