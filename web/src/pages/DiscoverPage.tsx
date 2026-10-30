@@ -29,6 +29,20 @@ interface Area {
   costUsd: number;
 }
 
+/** Poll the health endpoint for up to 2 minutes. */
+async function serverBack(signal: AbortSignal): Promise<boolean> {
+  for (let t = 0; t < 24 && !signal.aborted; t++) {
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      if (res.ok) return true;
+    } catch {
+      /* still down */
+    }
+    await new Promise((ok) => setTimeout(ok, 5000));
+  }
+  return false;
+}
+
 const EXAMPLES = ['pizza in San Francisco', 'ramen in New York', 'burgers in Chicago'];
 
 /** Owns the area run — lives in App so it survives navigating to the library and back. */
@@ -67,10 +81,23 @@ export function useAreaController() {
     const ac = new AbortController();
     abort.current = ac;
     setForging(true);
+    let retried = -1;
     for (let i = 0; i < list.length; i++) {
       if (ac.signal.aborted) break;
       if (list[i]!.state === 'done') continue;
       const t0 = Date.now();
+      // A dropped connection (the free server restarting) is not this restaurant's fault:
+      // wait for the server to answer again, then try the same restaurant once more.
+      const lost = async () => {
+        if (retried === i) return false;
+        retried = i;
+        patch(i, { detail: 'Connection to the server lost — waiting for it to come back…' });
+        if (await serverBack(ac.signal)) {
+          i--;
+          return true;
+        }
+        return false;
+      };
       patch(i, { state: 'running', detail: 'Finding the website…', reason: undefined });
       let summary: ForgeSummary | null = null;
       let items: MenuItem[] | undefined;
@@ -101,10 +128,13 @@ export function useAreaController() {
           patch(i, { state: 'pending', detail: undefined });
           break;
         }
+        if (!/limit|budget|busy|HTTP 4/i.test((e as Error).message) && (await lost())) continue;
         patch(i, { state: 'fail', reason: (e as Error).message, ms: Date.now() - t0 });
         if (/limit|budget|busy/i.test((e as Error).message)) break;
         continue;
       }
+      // The stream ended without a summary: the server went away mid-run.
+      if (!summary && !ac.signal.aborted && (await lost())) continue;
       const s = summary as ForgeSummary | null;
       const ok = !!s?.ok && !!items?.length;
       // A near miss still read the menu: use the reading, clearly marked.
