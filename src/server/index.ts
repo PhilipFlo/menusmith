@@ -7,7 +7,7 @@ import { streamSSE } from 'hono/streaming';
 import { config, MODELS, ROOT } from '../config.ts';
 import { redesignedFixtures, setFixtureRedesigned } from '../html/fetch.ts';
 import { listExtractors, loadExtractor, loadSnapshot, loadVersion } from '../library/store.ts';
-import { forge, knownExtractor } from '../agent/pipeline.ts';
+import { forge } from '../agent/pipeline.ts';
 import { discoverArea } from '../agent/area.ts';
 import { tavilyEnabled } from '../tools/tavily.ts';
 import { CheckError, checkExtractor, fleetHistory, runFleet } from '../fleet/fleet.ts';
@@ -55,7 +55,7 @@ function allow(ip: string, known = false): string | null {
   // A restaurant already in the library is answered by its saved code: no model calls,
   // so it works after the daily budget is spent and does not count toward the hourly limit.
   if (known) return null;
-  if (budgetLeft() <= 0) return `Today's AI budget for this public demo ($${DAILY_BUDGET_USD}) is used up — it resets at midnight UTC. Restaurants already in the library still answer instantly (see below), or run Menusmith locally with your own key.`;
+  if (budgetLeft() <= 0) return `Today's AI budget for this public demo ($${DAILY_BUDGET_USD}) is used up — it resets at midnight UTC. Browse the Library and Fleet meanwhile, or run Menusmith locally with your own key.`;
   const now = Date.now();
   const recent = (hits.get(ip) || []).filter((t) => now - t < 3_600_000);
   if (recent.length >= FORGES_PER_HOUR) return 'Hourly limit reached for this demo.';
@@ -101,12 +101,9 @@ app.post('/api/forge', async (c) => {
   if (!body.url && !body.restaurant) return c.json({ error: 'url or restaurant required' }, 400);
   if (body.url && !/^(https?:\/\/|fixture:\/\/)/i.test(body.url)) return c.json({ error: 'URL must start with http(s)://' }, 400);
   await refresh();
-  const inLibrary = !!body.url && !!knownExtractor(body.url);
-  // Fresh runs by default. The library answers when asked to — or, for a known restaurant,
-  // when today's AI budget is spent, so a visitor gets its saved menu instead of an error.
-  const fromLibrary = inLibrary && ((!body.fresh && !body.noReuse) || budgetLeft() <= 0);
-  if (fromLibrary) Object.assign(body, { fresh: false, noReuse: false });
-  const denied = allow(clientIp(c), fromLibrary);
+  // Every visitor run is the real thing: the whole pipeline, never a saved menu or adopted code.
+  Object.assign(body, { fresh: true, noReuse: true });
+  const denied = allow(clientIp(c));
   if (denied) return c.json({ error: denied }, 429);
   running++;
   return streamSSE(c, async (stream) => {

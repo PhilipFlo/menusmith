@@ -155,11 +155,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   // holds falls back to its saved menu instead of ending empty.
   let resolvedUrl: string | undefined;
   const fail = async (reason: string, extra: Partial<ForgeOutcome> = {}): Promise<ForgeOutcome> => {
-    if (!input.repairOf && resolvedUrl && !ledger.signal?.aborted) {
-      const hit = knownExtractor(resolvedUrl);
-      const saved = hit ? await answerFromLibrary(hit, emit, reason).catch(() => null) : null;
-      if (saved) return { ...saved, reason, ledger, ms: Date.now() - t0 };
-    }
+    // A failed run is shown as it is — never replaced by a menu saved earlier.
     emit({ type: 'result', ok: false, reason });
     return { ok: false, reason, oracleCount: 0, rounds: 0, ledger, ms: Date.now() - t0, ...extra };
   };

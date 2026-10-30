@@ -35,7 +35,6 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
   const { state, start, cancel } = forge;
   const [value, setValue] = useState('');
   const [city, setCity] = useState('');
-  const [useLibrary, setUseLibrary] = useState(false);
   const [fixtures, setFixtures] = useState<Fixture[] | null>(null);
   const inputId = useId();
   const cityId = useId();
@@ -52,7 +51,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
   // Every run goes through the whole pipeline (read → write → test → commit) unless the
   // visitor opts into library answers. The server still falls back to a saved menu when a
   // known restaurant's run fails or the day's AI budget is spent.
-  const mode = () => (useLibrary ? {} : { fresh: true, noReuse: true });
+  const mode = () => ({ fresh: true, noReuse: true });
   const go = (raw: string) => {
     if (!raw.trim() || running) return;
     void start({ ...toRequest(raw, city), ...mode() });
@@ -134,12 +133,7 @@ export function ForgePage({ forge, health }: { forge: ForgeController; health: H
               )}
             </div>
           </div>
-          <div className="forge-options">
-            <label className="check">
-              <input type="checkbox" checked={useLibrary} onChange={(e) => setUseLibrary(e.target.checked)} disabled={running} />
-              <span>Answer from the library when the restaurant is already known (instant, $0)</span>
-            </label>
-          </div>
+
           {/* Offline (replay) only the test sites have recorded model answers, so they lead and real sites are hidden. */}
           {!replay && (
             <div className="chips-block">
