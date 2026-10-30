@@ -96,6 +96,22 @@ app.get('/api/health', (c) =>
   }),
 );
 
+const AI_FAILURE = /no passing extractor|code generation failed|oracle failed|timed out|time budget|budget for this job/i;
+/** Totals of two runs for the summary line (the second ledger's spend is recorded separately). */
+function mergeLedgers(a: Ledger, b: Ledger): Ledger {
+  const byModel: Ledger['byModel'] = { ...a.byModel };
+  for (const [m, v] of Object.entries(b.byModel)) {
+    const p = byModel[m];
+    byModel[m] = p ? { calls: p.calls + v.calls, promptTokens: p.promptTokens + v.promptTokens, completionTokens: p.completionTokens + v.completionTokens, costUsd: p.costUsd + v.costUsd } : v;
+  }
+  return Object.assign(Object.create(Object.getPrototypeOf(a)), b, {
+    costUsd: a.costUsd + b.costUsd,
+    promptTokens: a.promptTokens + b.promptTokens,
+    completionTokens: a.completionTokens + b.completionTokens,
+    byModel,
+  });
+}
+
 app.post('/api/forge', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { url?: string; restaurant?: string; city?: string; noReuse?: boolean; fresh?: boolean };
   if (!body.url && !body.restaurant) return c.json({ error: 'url or restaurant required' }, 400);
@@ -115,7 +131,21 @@ app.post('/api/forge', async (c) => {
     stream.onAbort(() => abort.abort());
     const ledger = new Ledger(Math.min(PER_FORGE_USD, Math.max(0, budgetLeft())), abort.signal);
     try {
-      const out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse, fresh: body.fresh, ledger }, send);
+      let out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: body.noReuse, fresh: body.fresh, ledger }, send);
+      // A failure the AI caused (code that never passed, a slow or stuck model) gets a second,
+      // stronger attempt: Nemotron 3 Ultra from the first round, more rounds, a larger budget.
+      // Failures no model can fix (blocked site, no menu online) are not retried.
+      if (!out.ok && !abort.signal.aborted && AI_FAILURE.test(out.reason ?? '') && budgetLeft() - ledger.costUsd > 0.1) {
+        await send({ type: 'log', message: `First attempt failed (${out.reason}) — trying again with Nemotron 3 Ultra and more repair rounds` });
+        await send({ type: 'step', step: 'forge', status: 'start', detail: 'Second attempt: Nemotron 3 Ultra writes the extractor' });
+        const strong = new Ledger(Math.min(0.8, Math.max(0, budgetLeft() - ledger.costUsd)), abort.signal);
+        try {
+          out = await forge({ url: body.url, restaurant: body.restaurant, city: body.city, noReuse: true, fresh: true, strong: true, ledger: strong }, send);
+        } finally {
+          addSpend(strong.costUsd);
+        }
+        out = { ...out, ledger: mergeLedgers(ledger, strong) };
+      }
       await stream.writeSSE({
         event: 'summary',
         data: JSON.stringify({

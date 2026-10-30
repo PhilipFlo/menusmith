@@ -190,10 +190,11 @@ export async function writeCode(
   round: number,
   ledger: Ledger,
   emit?: Emit,
+  escalateAfter = ESCALATE_AFTER,
 ): Promise<{ code: string | null; reply: string; reasoning?: string }> {
   // Escalation: Nemotron 3 Super writes the first attempts; if they keep failing,
   // Nemotron 3 Ultra takes over the same conversation for the harder reasoning.
-  const role = round <= ESCALATE_AFTER ? 'forge' : 'escalate';
+  const role = round <= escalateAfter ? 'forge' : 'escalate';
   const label = round === 1 ? 'forge' : role === 'escalate' ? `repair ${round - 1} (escalated)` : `repair ${round - 1}`;
   let r;
   try {

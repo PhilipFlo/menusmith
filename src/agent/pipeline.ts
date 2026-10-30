@@ -30,6 +30,8 @@ export interface ForgeInput {
   noReuse?: boolean;
   /** Forge even if this restaurant is already in the library (the demo chips: show the agents at work). */
   fresh?: boolean;
+  /** Second attempt after a failed run: Nemotron 3 Ultra from the first round, more rounds, more time. */
+  strong?: boolean;
   /** Existing extractor to repair (self-heal): its code seeds the conversation. */
   repairOf?: { code: string; reason: string };
   /** Dishes that must be in the output for a repair to pass (they are on the page and were lost). */
@@ -603,7 +605,8 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
   }
 
   let best: { score: Score; code: string; run: RunResult } | null = null;
-  const maxRounds = 1 + config.maxRepairs;
+  const escalateAfter = input.strong ? 0 : ESCALATE_AFTER;
+  const maxRounds = 1 + config.maxRepairs + (input.strong ? 2 : 0);
   let lastModel = '';
   const deferredHints: ChatMessage[] = [];
   let stagnant = 0;
@@ -659,7 +662,7 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
 
   // A visitor is waiting: past the forge deadline, stop repairing and go to the safety nets
   // (line parser, second reading) with what we have.
-  const deadline = t0 + Number(process.env.MENUSMITH_FORGE_DEADLINE_MS || 10 * 60_000);
+  const deadline = t0 + Number(process.env.MENUSMITH_FORGE_DEADLINE_MS || 10 * 60_000) + (input.strong ? 5 * 60_000 : 0);
   for (let round = 1; round <= maxRounds; round++) {
     if (round > 1 && Date.now() > deadline) {
       emit({ type: 'log', message: `Time limit reached after ${round - 1} round(s) — finishing with the best result so far` });
@@ -667,13 +670,13 @@ export async function forge(input: ForgeInput, emit: Emit = noop): Promise<Forge
     }
     roundsUsed = round;
     emit({ type: 'step', step: round === 1 ? 'forge' : 'repair', status: 'start', detail: round === 1
-          ? `${modelName(MODELS.forge[0]!)} is writing the extractor`
-          : round > ESCALATE_AFTER
+          ? `${modelName((escalateAfter === 0 ? MODELS.escalate : MODELS.forge)[0]!)} is writing the extractor`
+          : round > escalateAfter
             ? `Repair round ${round - 1}: escalated to ${modelName(MODELS.escalate[0]!)}`
             : `Repair round ${round - 1}: ${modelName(MODELS.forge[0]!)} is fixing its code` });
     let code: string | null;
     try {
-      const w = await writeCode(messages, round, ledger, emit);
+      const w = await writeCode(messages, round, ledger, emit, escalateAfter);
       code = w.code;
       lastModel = Object.keys(ledger.byModel).pop() || '';
       messages.push({ role: 'assistant', content: w.reply || '(empty reply)' });
